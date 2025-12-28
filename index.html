@@ -22,7 +22,12 @@
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 13px; text-transform: uppercase; }
         .status-box { text-align: center; padding: 100px 20px; color: var(--ios-secondary); font-size: 20px; }
         .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; }
-        .update-body { font-size: 16px; line-height: 1.5; color: var(--ios-secondary); margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--separator); }
+        
+        /* IMPROVED LIST STYLING */
+        .update-body { font-size: 16px; line-height: 1.5; color: var(--ios-secondary); margin-top: 12px; padding-top: 12px; border-top: 0.5px solid var(--separator); }
+        .update-body ul { padding-left: 20px; margin: 10px 0; }
+        .update-body li { margin-bottom: 8px; }
+        .update-body h3 { font-size: 18px; color: var(--ios-text); margin: 15px 0 5px 0; }
     </style>
 </head>
 <body>
@@ -61,22 +66,24 @@
             const trendingList = document.getElementById('trending-list');
             const everythingList = document.getElementById('everything-list');
             updatesList.innerHTML = ''; trendingList.innerHTML = ''; everythingList.innerHTML = '';
-            let hasUpdates = false, hasTrending = false;
+            
             data.articles.forEach(item => {
                 const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "Recently";
                 if (item.repeats === -1) {
                     const card = document.createElement('div'); card.className = 'article-card';
+                    // USES innerHTML to render bullet points properly
                     card.innerHTML = `<div class="article-link" style="color:var(--update-blue)">${item.title}</div><div class="update-body">${item.link}</div>`;
-                    updatesList.appendChild(card); hasUpdates = true;
+                    updatesList.appendChild(card);
                 } else {
                     const anchor = document.createElement('a'); anchor.className = 'article-card'; anchor.href = item.link; anchor.target = "_blank";
                     anchor.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${item.repeats > 1 ? `<span class="badge">${item.repeats} Sources</span>` : ''}<span>${timeStr}</span></div>`;
-                    if (item.repeats > 1) { trendingList.appendChild(anchor); hasTrending = true; }
+                    if (item.repeats > 1) trendingList.appendChild(anchor);
                     else everythingList.appendChild(anchor);
                 }
             });
-            document.getElementById('updates-wrapper').style.display = hasUpdates ? 'block' : 'none';
-            document.getElementById('trending-wrapper').style.display = hasTrending ? 'block' : 'none';
+
+            document.getElementById('updates-wrapper').style.display = updatesList.children.length > 0 ? 'block' : 'none';
+            document.getElementById('trending-wrapper').style.display = trendingList.children.length > 0 ? 'block' : 'none';
             status.style.display = 'none'; document.getElementById('content').style.display = 'block';
         } catch (e) { status.innerHTML = "⚠️ Feed Unavailable.<br><small>Check Script Deployment.</small>"; }
     }
@@ -91,13 +98,9 @@
     async function markAsDone() {
         if (!confirm("Clear news?")) return;
         document.getElementById('content').style.display = 'none';
-        const status = document.getElementById('status-area');
-        status.style.display = 'block';
-        status.innerText = "Deleting rows...";
-        
-        // FORCE THE ACTION PARAMETER
+        document.getElementById('status-area').style.display = 'block';
+        document.getElementById('status-area').innerText = "Deleting rows...";
         await fetch(API_URL + "?action=clear", { method: "POST", mode: "no-cors" });
-        
         setTimeout(() => location.reload(), 3500);
     }
     fetchNews();
