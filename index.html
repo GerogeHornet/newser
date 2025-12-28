@@ -15,14 +15,14 @@
                 --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --trending: #ff453a; --separator: #38383a;
             }
         }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-font-smoothing: antialiased; }
         .container { max-width: 600px; margin: 0 auto; }
         header { padding: 30px 0 10px 0; display: flex; justify-content: space-between; align-items: flex-end; }
-        h1 { font-size: 42px; font-weight: 800; margin: 0; }
+        h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
         .update-time { font-size: 18px; color: var(--ios-secondary); font-weight: 500; }
         .refresh-btn { background: var(--ios-card); color: var(--ios-accent); border: 1px solid var(--separator); padding: 8px 16px; border-radius: 20px; font-weight: 600; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
-        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); }
+        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; flex-direction: column; text-decoration: none; }
         .article-card:last-child { border-bottom: none; }
         .article-link { color: var(--ios-text); font-weight: 600; font-size: 22px; line-height: 1.3; }
@@ -30,6 +30,12 @@
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 13px; text-transform: uppercase; }
         .done-container { margin-top: 50px; text-align: center; }
         .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; }
+        
+        /* UNDO BUTTON STYLES */
+        #undo-wrapper { margin-top: 25px; transition: opacity 0.5s ease; }
+        .undo-btn { background: var(--ios-card); color: var(--ios-accent); border: 1px solid var(--separator); padding: 12px 24px; border-radius: 12px; font-size: 16px; font-weight: 600; }
+        .undo-btn:active { background: var(--separator); }
+        
         .caught-up-box { text-align: center; padding: 100px 20px; }
     </style>
 </head>
@@ -47,7 +53,12 @@
     <div id="caught-up-area" class="caught-up-box" style="display:none;">
         <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
         <div style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">All Caught Up!</div>
-        <div id="last-cleared-text" style="font-size: 16px; color: var(--ios-secondary);"></div>
+        <div id="last-cleared-text" style="font-size: 16px; color: var(--ios-secondary); margin-bottom: 10px;"></div>
+        
+        <div id="undo-wrapper">
+            <button class="undo-btn" onclick="undoClear()">Oops, Undo Done</button>
+            <div id="timer-text" style="font-size: 12px; color: var(--ios-secondary); margin-top: 8px;">Available for 30s</div>
+        </div>
     </div>
 
     <div id="content" style="display:none;">
@@ -61,46 +72,62 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     async function fetchNews() {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        
-        if (!data.articles || data.articles.length === 0) {
-            document.getElementById('caught-up-area').style.display = 'block';
-            if (data.clearedTime) {
-                const clearDate = new Date(data.clearedTime);
-                document.getElementById('last-cleared-text').innerText = "Last cleared today at " + clearDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        try {
+            const response = await fetch(API_URL);
+            const data = await response.json();
+            
+            if (!data.articles || data.articles.length === 0) {
+                document.getElementById('caught-up-area').style.display = 'block';
+                if (data.clearedTime) {
+                    const clearDate = new Date(data.clearedTime);
+                    document.getElementById('last-cleared-text').innerText = "Last cleared at " + clearDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    // START THE 30 SECOND TIMER
+                    setTimeout(() => {
+                        const undoWrapper = document.getElementById('undo-wrapper');
+                        if (undoWrapper) {
+                            undoWrapper.style.opacity = '0';
+                            setTimeout(() => undoWrapper.style.display = 'none', 500);
+                        }
+                    }, 30000);
+                }
+                return;
             }
-            return;
-        }
 
-        const refDate = new Date(data.refreshTime);
-        document.getElementById('update-display').innerText = "Updated at " + refDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+            const refDate = new Date(data.refreshTime);
+            document.getElementById('update-display').innerText = "Updated at " + refDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
-        const trendingList = document.getElementById('trending-list');
-        const everythingList = document.getElementById('everything-list');
-        data.articles.sort((a, b) => b.repeats - a.repeats);
+            const trendingList = document.getElementById('trending-list');
+            const everythingList = document.getElementById('everything-list');
+            data.articles.sort((a, b) => b.repeats - a.repeats);
 
-        let hasTrending = false;
-        data.articles.forEach(item => {
-            const card = document.createElement('a');
-            card.className = 'article-card';
-            card.href = item.link; card.target = "_blank";
-            const badge = item.repeats > 1 ? `<span class="badge">${item.repeats} Sources</span>` : '';
-            card.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badge}<span>${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>`;
+            data.articles.forEach(item => {
+                const card = document.createElement('a');
+                card.className = 'article-card';
+                card.href = item.link; card.target = "_blank";
+                const badge = item.repeats > 1 ? `<span class="badge">${item.repeats} Sources</span>` : '';
+                card.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badge}<span>${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>`;
 
-            if (item.repeats > 1) { trendingList.appendChild(card); hasTrending = true; }
-            else everythingList.appendChild(card);
-        });
+                if (item.repeats > 1) trendingList.appendChild(card);
+                else everythingList.appendChild(card);
+            });
 
-        if (!hasTrending) document.getElementById('trending-wrapper').style.display = 'none';
-        document.getElementById('content').style.display = 'block';
+            if (trendingList.children.length === 0) document.getElementById('trending-wrapper').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        } catch (error) { console.error(error); }
     }
 
     async function markAsDone() {
         if (!confirm("Clear headlines?")) return;
         document.getElementById('content').style.display = 'none';
-        await fetch(API_URL, { method: 'POST', mode: 'no-cors' });
+        await fetch(API_URL + "?action=clear", { method: 'POST', mode: 'no-cors' });
+        location.reload();
+    }
+
+    async function undoClear() {
+        document.getElementById('caught-up-area').style.display = 'none';
+        await fetch(API_URL + "?action=undo", { method: 'POST', mode: 'no-cors' });
         location.reload();
     }
 
