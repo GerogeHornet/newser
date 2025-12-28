@@ -7,40 +7,117 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Newser</title>
     <style>
+        /* iOS Light & Dark Mode Variables */
         :root {
-            --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000;
-            --ios-secondary: #636366; --ios-accent: #007aff; --trending: #ff3b30; 
+            --ios-bg: #f2f2f7;
+            --ios-card: #ffffff;
+            --ios-text: #000000;
+            --ios-secondary: #636366;
+            --ios-accent: #007aff;
+            --trending: #ff3b30;
+            --separator: #d1d1d6;
         }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --ios-bg: #000000;
+                --ios-card: #1c1c1e;
+                --ios-text: #ffffff;
+                --ios-secondary: #8e8e93;
+                --ios-accent: #0a84ff;
+                --trending: #ff453a;
+                --separator: #38383a;
+            }
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--ios-bg); color: var(--ios-text); margin: 0;
+            background-color: var(--ios-bg);
+            color: var(--ios-text);
+            margin: 0;
             padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
             -webkit-font-smoothing: antialiased;
         }
+
         .container { max-width: 600px; margin: 0 auto; }
-        header { padding: 30px 0 10px 0; display: flex; justify-content: space-between; align-items: flex-end; }
-        h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
-        .update-time { font-size: 18px; color: var(--ios-secondary); font-weight: 500; margin-top: 5px;}
         
-        /* NEW REFRESH BUTTON STYLE */
-        .refresh-btn {
-            background: #e5e5ea; color: var(--ios-accent); border: none;
-            padding: 8px 16px; border-radius: 20px; font-size: 16px;
-            font-weight: 600; cursor: pointer; transition: 0.2s;
+        header { 
+            padding: 30px 0 10px 0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-end; 
         }
-        .refresh-btn:active { background: #d1d1d6; transform: scale(0.95); }
+
+        h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
+
+        .update-time { 
+            font-size: 18px; 
+            color: var(--ios-secondary); 
+            font-weight: 500; 
+            margin-top: 5px;
+        }
+        
+        .refresh-btn {
+            background: var(--ios-card);
+            color: var(--ios-accent);
+            border: 1px solid var(--separator);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .refresh-btn:active { background: var(--separator); }
 
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
-        .list-group { border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: var(--ios-card); }
-        .article-card { 
-            background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid #d1d1d6; 
-            display: flex; flex-direction: column; text-decoration: none; 
+
+        .list-group { 
+            border-radius: 14px; 
+            overflow: hidden; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2); 
+            background: var(--ios-card); 
         }
+
+        .article-card { 
+            background: var(--ios-card); 
+            padding: 22px 18px; 
+            border-bottom: 0.5px solid var(--separator); 
+            display: flex; 
+            flex-direction: column; 
+            text-decoration: none; 
+        }
+
         .article-card:last-child { border-bottom: none; }
-        .article-card:active { background-color: #d1d1d6; }
-        .article-link { color: var(--ios-text); font-weight: 600; font-size: 22px; line-height: 1.3; text-decoration: none; }
-        .meta { font-size: 16px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; }
-        .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 13px; text-transform: uppercase; }
+
+        .article-card:active { background-color: var(--separator); }
+
+        .article-link { 
+            color: var(--ios-text); 
+            font-weight: 600; 
+            font-size: 22px; 
+            line-height: 1.3; 
+            text-decoration: none; 
+        }
+
+        .meta { 
+            font-size: 16px; 
+            color: var(--ios-secondary); 
+            margin-top: 10px; 
+            display: flex; 
+            align-items: center; 
+        }
+
+        .badge { 
+            background: var(--trending); 
+            color: white; 
+            padding: 3px 8px; 
+            border-radius: 6px; 
+            font-weight: 800; 
+            margin-right: 12px; 
+            font-size: 13px; 
+            text-transform: uppercase; 
+        }
+
         .status-box { text-align: center; padding: 100px 20px; }
     </style>
 </head>
@@ -57,7 +134,7 @@
     </header>
 
     <div id="status-area" class="status-box">
-        <p id="status-text" style="font-size: 20px; color: #888;">Updating your feed...</p>
+        <p id="status-text" style="font-size: 20px; color: var(--ios-secondary);">Updating your feed...</p>
     </div>
 
     <div id="content" style="display:none;">
@@ -85,7 +162,6 @@
                 return;
             }
 
-            // Set timestamps
             const refDate = data.refreshTime ? new Date(data.refreshTime) : new Date();
             document.getElementById('update-display').innerText = "Updated at " + refDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
@@ -93,7 +169,6 @@
             const trendingList = document.getElementById('trending-list');
             const everythingList = document.getElementById('everything-list');
             
-            // Sort: Big stories first, then chronologically
             data.articles.sort((a, b) => b.repeats - a.repeats || new Date(b.timestamp) - new Date(a.timestamp));
 
             let hasTrending = false;
@@ -110,7 +185,6 @@
                 else { everythingList.appendChild(card); }
             });
 
-            // Adjust layout if no trending stories exist
             if (!hasTrending) {
                 document.getElementById('trending-wrapper').style.display = 'none';
                 document.getElementById('everything-title').innerText = "🗞️ Latest Headlines";
@@ -120,7 +194,7 @@
             document.getElementById('content').style.display = 'block';
 
         } catch (error) {
-            document.getElementById('status-text').innerHTML = "Connection Error.<br><small>Ensure Web App is set to 'Anyone'.</small>";
+            document.getElementById('status-text').innerHTML = "Connection Error.<br><small>Check Spreadsheet and Script permissions.</small>";
         }
     }
     fetchNews();
