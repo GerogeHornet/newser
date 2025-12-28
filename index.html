@@ -104,7 +104,6 @@
         const caughtUp = document.getElementById('caught-up-area');
         try {
             const response = await fetch(API_URL);
-            if (!response.ok) throw new Error("Script Error");
             const data = await response.json();
             
             if (!data.articles || data.articles.length === 0) {
@@ -112,8 +111,10 @@
                 caughtUp.style.display = 'block';
                 if (data.clearedTime) {
                     document.getElementById('last-cleared-text').innerText = "Last cleared: " + new Date(data.clearedTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                    // Hide Undo after 30 seconds
-                    setTimeout(() => { document.getElementById('undo-wrapper').style.display = 'none'; }, 30000);
+                    setTimeout(() => { 
+                        const uw = document.getElementById('undo-wrapper');
+                        if(uw) uw.style.display = 'none'; 
+                    }, 30000);
                 }
                 return;
             }
@@ -125,7 +126,6 @@
             const trendingList = document.getElementById('trending-list');
             const everythingList = document.getElementById('everything-list');
             
-            // Clear lists before rendering
             updatesList.innerHTML = ''; trendingList.innerHTML = ''; everythingList.innerHTML = '';
             
             let hasUpdates = false, hasTrending = false;
@@ -135,11 +135,14 @@
                 const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "Recently";
                 
                 if (item.repeats === -1) {
-                    const card = document.createElement('div'); card.className = 'article-card';
-                    card.innerHTML = `<div class="article-link" style="color:var(--update-blue)">${item.title}</div><div style="font-size:16px; margin-top:10px; line-height:1.4; color:var(--ios-secondary);">${item.link}</div>`;
+                    const card = document.createElement('div'); 
+                    card.className = 'article-card';
+                    card.innerHTML = `<div class="article-link" style="color:var(--update-blue)">${item.title}</div><div style="font-size:16px; margin-top:10px; line-height:1.4;">${item.link}</div>`;
                     updatesList.appendChild(card); hasUpdates = true;
                 } else {
-                    const anchor = document.createElement('a'); anchor.className = 'article-card'; anchor.href = item.link; anchor.target = "_blank";
+                    const anchor = document.createElement('a'); 
+                    anchor.className = 'article-card'; 
+                    anchor.href = item.link; anchor.target = "_blank";
                     anchor.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${item.repeats > 1 ? `<span class="badge">${item.repeats} Sources</span>` : ''}<span>${timeStr}</span></div>`;
                     if (item.repeats > 1) { trendingList.appendChild(anchor); hasTrending = true; }
                     else everythingList.appendChild(anchor);
@@ -153,13 +156,15 @@
             caughtUp.style.display = 'none';
             document.getElementById('content').style.display = 'block';
         } catch (e) {
-            status.innerHTML = "⚠️ Feed Unavailable.<br><small>Check Script Deployment.</small>";
+            status.innerHTML = "⚠️ Feed Unavailable.<br><small>Refresh to try again.</small>";
+            console.error(e);
         }
     }
 
     async function runManualRefresh() {
         const btn = document.getElementById('refresh-trigger');
-        btn.innerText = "Syncing..."; btn.disabled = true;
+        btn.innerText = "Syncing..."; 
+        btn.disabled = true;
         await fetch(API_URL + "?action=refresh", { method: 'POST', mode: 'no-cors' });
         setTimeout(() => location.reload(), 2000);
     }
@@ -172,8 +177,10 @@
 
     async function undoClear() {
         document.getElementById('caught-up-area').style.display = 'none';
+        document.getElementById('status-area').style.display = 'block';
+        document.getElementById('status-area').innerText = "Restoring...";
         await fetch(API_URL + "?action=undo", { method: 'POST', mode: 'no-cors' });
-        setTimeout(() => location.reload(), 1000);
+        setTimeout(() => location.reload(), 1500);
     }
 
     fetchNews();
