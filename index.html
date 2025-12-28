@@ -18,9 +18,18 @@
             -webkit-font-smoothing: antialiased;
         }
         .container { max-width: 600px; margin: 0 auto; }
-        header { padding: 30px 0 15px 0; }
+        header { padding: 30px 0 10px 0; display: flex; justify-content: space-between; align-items: flex-end; }
         h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
-        .update-time { font-size: 18px; color: var(--ios-secondary); margin-bottom: 25px; font-weight: 500; }
+        .update-time { font-size: 18px; color: var(--ios-secondary); font-weight: 500; margin-top: 5px;}
+        
+        /* NEW REFRESH BUTTON STYLE */
+        .refresh-btn {
+            background: #e5e5ea; color: var(--ios-accent); border: none;
+            padding: 8px 16px; border-radius: 20px; font-size: 16px;
+            font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .refresh-btn:active { background: #d1d1d6; transform: scale(0.95); }
+
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
         .list-group { border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); background: var(--ios-card); }
         .article-card { 
@@ -33,23 +42,22 @@
         .meta { font-size: 16px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; }
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 13px; text-transform: uppercase; }
         .status-box { text-align: center; padding: 100px 20px; }
-        .btn-refresh { 
-            background: var(--ios-accent); color: white; border: none; padding: 12px 24px; 
-            border-radius: 10px; font-size: 18px; font-weight: 600; margin-top: 20px; 
-        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <div id="date-display" style="font-size: 16px; color: var(--ios-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 5px;"></div>
-        <h1>Newser</h1>
-        <div id="update-display" class="update-time">Connecting...</div>
+        <div>
+            <div id="date-display" style="font-size: 16px; color: var(--ios-secondary); text-transform: uppercase; font-weight: 700;"></div>
+            <h1>Newser</h1>
+            <div id="update-display" class="update-time">Connecting...</div>
+        </div>
+        <button class="refresh-btn" onclick="location.reload()">Refresh</button>
     </header>
 
     <div id="status-area" class="status-box">
-        <p id="status-text" style="font-size: 20px; color: #888;">Refreshing your briefing...</p>
+        <p id="status-text" style="font-size: 20px; color: #888;">Updating your feed...</p>
     </div>
 
     <div id="content" style="display:none;">
@@ -68,19 +76,16 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     async function fetchNews() {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 12000); 
-
         try {
-            const response = await fetch(API_URL, { signal: controller.signal });
+            const response = await fetch(API_URL);
             const data = await response.json();
-            clearTimeout(timeoutId);
 
             if (!data.articles || data.articles.length === 0) {
-                showError("No articles found in the spreadsheet.");
+                document.getElementById('status-text').innerText = "Spreadsheet is empty.";
                 return;
             }
 
+            // Set timestamps
             const refDate = data.refreshTime ? new Date(data.refreshTime) : new Date();
             document.getElementById('update-display').innerText = "Updated at " + refDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
@@ -88,7 +93,7 @@
             const trendingList = document.getElementById('trending-list');
             const everythingList = document.getElementById('everything-list');
             
-            // Sort by repeats first, then by time
+            // Sort: Big stories first, then chronologically
             data.articles.sort((a, b) => b.repeats - a.repeats || new Date(b.timestamp) - new Date(a.timestamp));
 
             let hasTrending = false;
@@ -101,32 +106,23 @@
 
                 card.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badge}<span>${timeStr}</span></div>`;
 
-                if (item.repeats > 1) { 
-                    trendingList.appendChild(card); 
-                    hasTrending = true; 
-                } else { 
-                    everythingList.appendChild(card); 
-                }
+                if (item.repeats > 1) { trendingList.appendChild(card); hasTrending = true; }
+                else { everythingList.appendChild(card); }
             });
 
-            // If no trending items, hide that section and rename headlines
+            // Adjust layout if no trending stories exist
             if (!hasTrending) {
                 document.getElementById('trending-wrapper').style.display = 'none';
-                document.getElementById('everything-title').innerText = "🗞️ Today's Headlines";
+                document.getElementById('everything-title').innerText = "🗞️ Latest Headlines";
             }
 
             document.getElementById('status-area').style.display = 'none';
             document.getElementById('content').style.display = 'block';
 
         } catch (error) {
-            showError("Connection timed out. Check Spreadsheet data.");
+            document.getElementById('status-text').innerHTML = "Connection Error.<br><small>Ensure Web App is set to 'Anyone'.</small>";
         }
     }
-
-    function showError(msg) {
-        document.getElementById('status-text').innerHTML = msg + '<br><button class="btn-refresh" onclick="location.reload()">Try Again</button>';
-    }
-
     fetchNews();
 </script>
 </body>
