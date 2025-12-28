@@ -1,19 +1,31 @@
-async function markAsDone() {
-    if (!confirm("Clear headlines and mark as read?")) return;
-    
-    // UI Feedback
-    document.getElementById('content').style.display = 'none';
-    document.getElementById('status-area').style.display = 'block';
-    document.getElementById('status-area').innerText = "Archiving...";
+<!DOCTYPE html>
+<html>
+<head>
+    </head>
+<body>
+    <script>
+        // YOUR CODE MUST GO HERE
+        const API_URL = "YOUR_URL_HERE";
 
-    // This tells the script: DO NOT FETCH, JUST CLEAR
-    await fetch(API_URL + "?action=clear", { 
-        method: 'POST', 
-        mode: 'no-cors' 
-    });
-    
-    // Reload the app to show the "All Caught Up" screen
-    setTimeout(() => {
-        location.reload();
-    }, 1500);
-}
+        async function fetchNews() { 
+            /* ... */ 
+        }
+
+        async function markAsDone() {
+            if (!confirm("Clear headlines and mark as read?")) return;
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('status-area').style.display = 'block';
+            document.getElementById('status-area').innerText = "Archiving...";
+
+            await fetch(API_URL + "?action=clear", { 
+                method: 'POST', 
+                mode: 'no-cors' 
+            });
+
+            setTimeout(() => { location.reload(); }, 1500);
+        }
+
+        fetchNews();
+    </script>
+</body>
+</html>
