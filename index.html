@@ -3,126 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>Newser</title>
     <style>
-        /* iOS Light & Dark Mode Variables */
         :root {
-            --ios-bg: #f2f2f7;
-            --ios-card: #ffffff;
-            --ios-text: #000000;
-            --ios-secondary: #636366;
-            --ios-accent: #007aff;
-            --trending: #ff3b30;
-            --separator: #d1d1d6;
+            --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000;
+            --ios-secondary: #636366; --ios-accent: #007aff; --trending: #ff3b30; --separator: #d1d1d6;
         }
-
         @media (prefers-color-scheme: dark) {
             :root {
-                --ios-bg: #000000;
-                --ios-card: #1c1c1e;
-                --ios-text: #ffffff;
-                --ios-secondary: #8e8e93;
-                --ios-accent: #0a84ff;
-                --trending: #ff453a;
-                --separator: #38383a;
+                --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff;
+                --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --trending: #ff453a; --separator: #38383a;
             }
         }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--ios-bg);
-            color: var(--ios-text);
-            margin: 0;
-            padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
-            -webkit-font-smoothing: antialiased;
-        }
-
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; }
         .container { max-width: 600px; margin: 0 auto; }
-        
-        header { 
-            padding: 30px 0 10px 0; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: flex-end; 
-        }
-
-        h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
-
-        .update-time { 
-            font-size: 18px; 
-            color: var(--ios-secondary); 
-            font-weight: 500; 
-            margin-top: 5px;
-        }
-        
-        .refresh-btn {
-            background: var(--ios-card);
-            color: var(--ios-accent);
-            border: 1px solid var(--separator);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .refresh-btn:active { background: var(--separator); }
-
+        header { padding: 30px 0 10px 0; display: flex; justify-content: space-between; align-items: flex-end; }
+        h1 { font-size: 42px; font-weight: 800; margin: 0; }
+        .update-time { font-size: 18px; color: var(--ios-secondary); font-weight: 500; }
+        .refresh-btn { background: var(--ios-card); color: var(--ios-accent); border: 1px solid var(--separator); padding: 8px 16px; border-radius: 20px; font-weight: 600; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
-
-        .list-group { 
-            border-radius: 14px; 
-            overflow: hidden; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2); 
-            background: var(--ios-card); 
-        }
-
-        .article-card { 
-            background: var(--ios-card); 
-            padding: 22px 18px; 
-            border-bottom: 0.5px solid var(--separator); 
-            display: flex; 
-            flex-direction: column; 
-            text-decoration: none; 
-        }
-
+        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); }
+        .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; flex-direction: column; text-decoration: none; }
         .article-card:last-child { border-bottom: none; }
-
-        .article-card:active { background-color: var(--separator); }
-
-        .article-link { 
-            color: var(--ios-text); 
-            font-weight: 600; 
-            font-size: 22px; 
-            line-height: 1.3; 
-            text-decoration: none; 
-        }
-
-        .meta { 
-            font-size: 16px; 
-            color: var(--ios-secondary); 
-            margin-top: 10px; 
-            display: flex; 
-            align-items: center; 
-        }
-
-        .badge { 
-            background: var(--trending); 
-            color: white; 
-            padding: 3px 8px; 
-            border-radius: 6px; 
-            font-weight: 800; 
-            margin-right: 12px; 
-            font-size: 13px; 
-            text-transform: uppercase; 
-        }
-
-        .status-box { text-align: center; padding: 100px 20px; }
+        .article-link { color: var(--ios-text); font-weight: 600; font-size: 22px; line-height: 1.3; }
+        .meta { font-size: 16px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; }
+        .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 13px; text-transform: uppercase; }
+        .done-container { margin-top: 50px; text-align: center; }
+        .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; }
+        .caught-up-box { text-align: center; padding: 100px 20px; }
     </style>
 </head>
 <body>
-
 <div class="container">
     <header>
         <div>
@@ -133,19 +44,16 @@
         <button class="refresh-btn" onclick="location.reload()">Refresh</button>
     </header>
 
-    <div id="status-area" class="status-box">
-        <p id="status-text" style="font-size: 20px; color: var(--ios-secondary);">Updating your feed...</p>
+    <div id="caught-up-area" class="caught-up-box" style="display:none;">
+        <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
+        <div style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">All Caught Up!</div>
+        <div id="last-cleared-text" style="font-size: 16px; color: var(--ios-secondary);"></div>
     </div>
 
     <div id="content" style="display:none;">
-        <section id="trending-wrapper">
-            <h2>🔥 Trending</h2>
-            <div id="trending-list" class="list-group"></div>
-        </section>
-        <section id="everything-wrapper">
-            <h2 id="everything-title">🗞️ Headlines</h2>
-            <div id="everything-list" class="list-group"></div>
-        </section>
+        <section id="trending-wrapper"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
+        <section id="everything-wrapper"><h2>🗞️ Headlines</h2><div id="everything-list" class="list-group"></div></section>
+        <div class="done-container"><button class="done-btn" onclick="markAsDone()">Done for Now</button></div>
     </div>
 </div>
 
@@ -153,50 +61,49 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     async function fetchNews() {
-        try {
-            const response = await fetch(API_URL);
-            const data = await response.json();
-
-            if (!data.articles || data.articles.length === 0) {
-                document.getElementById('status-text').innerText = "Spreadsheet is empty.";
-                return;
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        if (!data.articles || data.articles.length === 0) {
+            document.getElementById('caught-up-area').style.display = 'block';
+            if (data.clearedTime) {
+                const clearDate = new Date(data.clearedTime);
+                document.getElementById('last-cleared-text').innerText = "Last cleared today at " + clearDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             }
-
-            const refDate = data.refreshTime ? new Date(data.refreshTime) : new Date();
-            document.getElementById('update-display').innerText = "Updated at " + refDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
-
-            const trendingList = document.getElementById('trending-list');
-            const everythingList = document.getElementById('everything-list');
-            
-            data.articles.sort((a, b) => b.repeats - a.repeats || new Date(b.timestamp) - new Date(a.timestamp));
-
-            let hasTrending = false;
-            data.articles.forEach(item => {
-                const card = document.createElement('a');
-                card.className = 'article-card';
-                card.href = item.link; card.target = "_blank";
-                const badge = item.repeats > 1 ? `<span class="badge">${item.repeats} Sources</span>` : '';
-                const timeStr = new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-                card.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badge}<span>${timeStr}</span></div>`;
-
-                if (item.repeats > 1) { trendingList.appendChild(card); hasTrending = true; }
-                else { everythingList.appendChild(card); }
-            });
-
-            if (!hasTrending) {
-                document.getElementById('trending-wrapper').style.display = 'none';
-                document.getElementById('everything-title').innerText = "🗞️ Latest Headlines";
-            }
-
-            document.getElementById('status-area').style.display = 'none';
-            document.getElementById('content').style.display = 'block';
-
-        } catch (error) {
-            document.getElementById('status-text').innerHTML = "Connection Error.<br><small>Check Spreadsheet and Script permissions.</small>";
+            return;
         }
+
+        const refDate = new Date(data.refreshTime);
+        document.getElementById('update-display').innerText = "Updated at " + refDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
+
+        const trendingList = document.getElementById('trending-list');
+        const everythingList = document.getElementById('everything-list');
+        data.articles.sort((a, b) => b.repeats - a.repeats);
+
+        let hasTrending = false;
+        data.articles.forEach(item => {
+            const card = document.createElement('a');
+            card.className = 'article-card';
+            card.href = item.link; card.target = "_blank";
+            const badge = item.repeats > 1 ? `<span class="badge">${item.repeats} Sources</span>` : '';
+            card.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badge}<span>${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>`;
+
+            if (item.repeats > 1) { trendingList.appendChild(card); hasTrending = true; }
+            else everythingList.appendChild(card);
+        });
+
+        if (!hasTrending) document.getElementById('trending-wrapper').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
     }
+
+    async function markAsDone() {
+        if (!confirm("Clear headlines?")) return;
+        document.getElementById('content').style.display = 'none';
+        await fetch(API_URL, { method: 'POST', mode: 'no-cors' });
+        location.reload();
+    }
+
     fetchNews();
 </script>
 </body>
