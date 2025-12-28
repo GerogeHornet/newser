@@ -29,7 +29,7 @@
         }
         .article-card:last-child { border-bottom: none; }
         .article-card:active { background-color: #d1d1d6; }
-        .article-link { color: var(--ios-text); font-weight: 600; font-size: 22px; line-height: 1.3; }
+        .article-link { color: var(--ios-text); font-weight: 600; font-size: 22px; line-height: 1.3; text-decoration: none; }
         .meta { font-size: 16px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; }
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 13px; text-transform: uppercase; }
         .status-box { text-align: center; padding: 100px 20px; }
@@ -58,7 +58,7 @@
             <div id="trending-list" class="list-group"></div>
         </section>
         <section id="everything-wrapper">
-            <h2>🗞️ Headlines</h2>
+            <h2 id="everything-title">🗞️ Headlines</h2>
             <div id="everything-list" class="list-group"></div>
         </section>
     </div>
@@ -69,7 +69,7 @@
 
     async function fetchNews() {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 12000); // 12 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 12000); 
 
         try {
             const response = await fetch(API_URL, { signal: controller.signal });
@@ -77,19 +77,19 @@
             clearTimeout(timeoutId);
 
             if (!data.articles || data.articles.length === 0) {
-                showError("No articles found for this time window.");
+                showError("No articles found in the spreadsheet.");
                 return;
             }
 
-            // Set times
             const refDate = data.refreshTime ? new Date(data.refreshTime) : new Date();
             document.getElementById('update-display').innerText = "Updated at " + refDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
-            // Sort & Display
             const trendingList = document.getElementById('trending-list');
             const everythingList = document.getElementById('everything-list');
-            data.articles.sort((a, b) => b.repeats - a.repeats);
+            
+            // Sort by repeats first, then by time
+            data.articles.sort((a, b) => b.repeats - a.repeats || new Date(b.timestamp) - new Date(a.timestamp));
 
             let hasTrending = false;
             data.articles.forEach(item => {
@@ -101,17 +101,25 @@
 
                 card.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badge}<span>${timeStr}</span></div>`;
 
-                if (item.repeats > 1) { trendingList.appendChild(card); hasTrending = true; }
-                else { everythingList.appendChild(card); }
+                if (item.repeats > 1) { 
+                    trendingList.appendChild(card); 
+                    hasTrending = true; 
+                } else { 
+                    everythingList.appendChild(card); 
+                }
             });
 
-            if (!hasTrending) document.getElementById('trending-wrapper').style.display = 'none';
+            // If no trending items, hide that section and rename headlines
+            if (!hasTrending) {
+                document.getElementById('trending-wrapper').style.display = 'none';
+                document.getElementById('everything-title').innerText = "🗞️ Today's Headlines";
+            }
 
             document.getElementById('status-area').style.display = 'none';
             document.getElementById('content').style.display = 'block';
 
         } catch (error) {
-            showError("Connection timed out or Script is private.");
+            showError("Connection timed out. Check Spreadsheet data.");
         }
     }
 
