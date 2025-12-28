@@ -102,12 +102,15 @@
     async function fetchNews() {
         const status = document.getElementById('status-area');
         const caughtUp = document.getElementById('caught-up-area');
+        const content = document.getElementById('content');
+        
         try {
             const response = await fetch(API_URL);
             const data = await response.json();
             
             if (!data.articles || data.articles.length === 0) {
                 status.style.display = 'none';
+                content.style.display = 'none';
                 caughtUp.style.display = 'block';
                 if (data.clearedTime) {
                     document.getElementById('last-cleared-text').innerText = "Last cleared: " + new Date(data.clearedTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -137,7 +140,7 @@
                 if (item.repeats === -1) {
                     const card = document.createElement('div'); 
                     card.className = 'article-card';
-                    card.innerHTML = `<div class="article-link" style="color:var(--update-blue)">${item.title}</div><div style="font-size:16px; margin-top:10px; line-height:1.4;">${item.link}</div>`;
+                    card.innerHTML = `<div class="article-link" style="color:var(--update-blue)">${item.title}</div><div style="font-size:16px; margin-top:10px; line-height:1.4; color:var(--ios-secondary);">${item.link}</div>`;
                     updatesList.appendChild(card); hasUpdates = true;
                 } else {
                     const anchor = document.createElement('a'); 
@@ -154,31 +157,38 @@
             
             status.style.display = 'none';
             caughtUp.style.display = 'none';
-            document.getElementById('content').style.display = 'block';
+            content.style.display = 'block';
         } catch (e) {
-            status.innerHTML = "⚠️ Feed Unavailable.<br><small>Refresh to try again.</small>";
-            console.error(e);
+            status.innerHTML = "⚠️ Feed Unavailable.<br><small>Check Script Deployment.</small>";
         }
     }
 
     async function runManualRefresh() {
         const btn = document.getElementById('refresh-trigger');
-        btn.innerText = "Syncing..."; 
-        btn.disabled = true;
+        btn.innerText = "Syncing..."; btn.disabled = true;
         await fetch(API_URL + "?action=refresh", { method: 'POST', mode: 'no-cors' });
-        setTimeout(() => location.reload(), 2000);
+        setTimeout(() => location.reload(), 2500);
     }
 
     async function markAsDone() {
         if (!confirm("Clear news?")) return;
+        const status = document.getElementById('status-area');
+        const content = document.getElementById('content');
+        content.style.display = 'none';
+        status.style.display = 'block';
+        status.innerText = "Archiving stories...";
+        
         await fetch(API_URL + "?action=clear", { method: 'POST', mode: 'no-cors' });
-        location.reload();
+        // Wait 3 seconds for Google Sheets to physically delete rows
+        setTimeout(() => location.reload(), 3000);
     }
 
     async function undoClear() {
-        document.getElementById('caught-up-area').style.display = 'none';
-        document.getElementById('status-area').style.display = 'block';
-        document.getElementById('status-area').innerText = "Restoring...";
+        const status = document.getElementById('status-area');
+        const caughtUp = document.getElementById('caught-up-area');
+        caughtUp.style.display = 'none';
+        status.style.display = 'block';
+        status.innerText = "Restoring...";
         await fetch(API_URL + "?action=undo", { method: 'POST', mode: 'no-cors' });
         setTimeout(() => location.reload(), 1500);
     }
