@@ -2,44 +2,148 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newser | Morning Briefing</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Newser</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #e74c3c; --bg: #f4f7f6; --card: #ffffff; --text: #333; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; }
-        .container { max-width: 700px; margin: 0 auto; }
-        header { text-align: center; padding: 20px 0; border-bottom: 2px solid var(--primary); margin-bottom: 30px; }
-        h1 { margin: 0; font-size: 2.5rem; color: var(--primary); }
-        .update-time { font-size: 0.9rem; color: #666; margin-top: 5px; }
-        h2 { font-size: 1.1rem; text-transform: uppercase; color: var(--accent); border-left: 4px solid var(--accent); padding-left: 10px; margin: 30px 0 15px; }
-        .article-card { background: var(--card); padding: 15px; margin-bottom: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .article-link { text-decoration: none; color: var(--text); font-weight: 600; font-size: 1.1rem; }
-        .meta { font-size: 0.8rem; color: #888; margin-top: 8px; display: flex; align-items: center; }
-        .badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; margin-right: 10px; }
-        .loading { text-align: center; padding: 50px; color: #888; }
+        :root {
+            --ios-bg: #f2f2f7;
+            --ios-card: #ffffff;
+            --ios-text: #000000;
+            --ios-secondary: #8e8e93;
+            --ios-accent: #007aff; /* Standard iOS Blue */
+            --trending: #ff3b30; /* Standard iOS Red */
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--ios-bg);
+            color: var(--ios-text);
+            margin: 0;
+            /* Handles the iPhone notch and bottom home bar */
+            padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom) 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        header {
+            padding: 20px 0 10px 0;
+            text-align: left; /* iOS style title */
+        }
+
+        h1 {
+            font-size: 34px;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .update-time {
+            font-size: 14px;
+            color: var(--ios-secondary);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 25px 0 10px 0;
+            color: var(--ios-text);
+        }
+
+        /* iOS List-Group Style */
+        .article-card {
+            background: var(--ios-card);
+            padding: 14px 16px;
+            margin-bottom: 1px; /* Creates the separator look */
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.2s;
+            text-decoration: none;
+        }
+
+        /* Top and bottom corners for list groups */
+        .list-group div:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+        .list-group div:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+
+        .article-card:active {
+            background-color: #e5e5ea; /* Gray highlight on tap */
+        }
+
+        .article-link {
+            text-decoration: none;
+            color: var(--ios-text);
+            font-weight: 500;
+            font-size: 17px;
+            line-height: 1.3;
+        }
+
+        .meta {
+            font-size: 13px;
+            color: var(--ios-secondary);
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .badge {
+            background: var(--trending);
+            color: white;
+            padding: 1px 6px;
+            border-radius: 5px;
+            font-weight: 700;
+            margin-right: 8px;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px 0;
+            color: var(--ios-secondary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            font-size: 12px;
+            color: var(--ios-secondary);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
+        <div id="date-display" style="font-size: 13px; color: var(--ios-secondary); text-transform: uppercase; font-weight: 600;"></div>
         <h1>Newser</h1>
-        <div id="date-display"></div>
-        <div id="update-display" class="update-time">Loading refresh time...</div>
+        <div id="update-display" class="update-time">Refreshing...</div>
     </header>
 
-    <div id="loader" class="loading">Fetching briefing...</div>
+    <div id="loader" class="loading">
+        <p>Updating Briefing...</p>
+    </div>
 
     <div id="content" style="display:none;">
-        <section id="trending-section">
-            <h2>🔥 The Big Stories</h2>
-            <div id="trending-list"></div>
+        <section>
+            <h2>🔥 Trending</h2>
+            <div id="trending-list" class="list-group"></div>
         </section>
-        <section id="everything-section">
-            <h2>🗞️ Other Headlines</h2>
-            <div id="everything-list"></div>
+
+        <section>
+            <h2>🗞️ Headlines</h2>
+            <div id="everything-list" class="list-group"></div>
         </section>
     </div>
+
+    <footer>
+        Handcrafted for Brian
+    </footer>
 </div>
 
 <script>
@@ -50,25 +154,27 @@
             const response = await fetch(API_URL);
             const data = await response.json();
             
-            // 1. Display Last Updated Time
             const refDate = new Date(data.refreshTime);
-            document.getElementById('update-display').innerText = "Last Refresh: " + refDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + " (" + refDate.toLocaleDateString() + ")";
+            document.getElementById('update-display').innerText = "Updated at " + refDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
             const trendingList = document.getElementById('trending-list');
             const everythingList = document.getElementById('everything-list');
 
-            // 2. Sort and Display Articles
             data.articles.sort((a, b) => b.repeats - a.repeats);
 
             data.articles.forEach(item => {
-                const card = document.createElement('div');
+                const card = document.createElement('a');
                 card.className = 'article-card';
-                const badge = item.repeats > 1 ? `<span class="badge">${item.repeats} SOURCES</span>` : '';
+                card.href = item.link;
+                card.target = "_blank";
                 
+                const badge = item.repeats > 1 ? `<span class="badge">${item.repeats} Sources</span>` : '';
+                const timeStr = new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
                 card.innerHTML = `
-                    <a class="article-link" href="${item.link}" target="_blank">${item.title}</a>
-                    <div class="meta">${badge}<span>${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>
+                    <div class="article-link">${item.title}</div>
+                    <div class="meta">${badge}<span>${timeStr}</span></div>
                 `;
 
                 if (item.repeats > 1) trendingList.appendChild(card);
@@ -79,7 +185,7 @@
             document.getElementById('content').style.display = 'block';
 
         } catch (error) {
-            document.getElementById('loader').innerHTML = "Error loading Newser.";
+            document.getElementById('loader').innerHTML = "Check connection.";
         }
     }
     fetchNews();
