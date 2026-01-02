@@ -2,36 +2,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Newser Lite</title>
     <style>
-        body { font-family: -apple-system, sans-serif; background: #000; color: #fff; padding: 20px; }
-        .stats { display: flex; gap: 10px; margin-bottom: 20px; }
-        .pill { background: #1c1c1e; padding: 10px 20px; border-radius: 20px; font-weight: bold; border: 1px solid #38383a; }
-        .list { background: #1c1c1e; border-radius: 12px; }
-        .item { padding: 15px; border-bottom: 1px solid #38383a; display: block; color: #fff; text-decoration: none; }
+        :root { --ios-bg: #000; --ios-card: #1c1c1e; --ios-text: #fff; --separator: #38383a; --accent: #0a84ff; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); padding: 20px; margin: 0; }
+        .stats { display: flex; gap: 10px; margin: 20px 0; }
+        .pill { background: var(--ios-card); padding: 10px 15px; border-radius: 20px; font-size: 14px; font-weight: 700; border: 1px solid var(--separator); }
+        .list { background: var(--ios-card); border-radius: 12px; overflow: hidden; }
+        .item { padding: 18px; border-bottom: 0.5px solid var(--separator); display: block; color: var(--text); text-decoration: none; }
+        .title { font-size: 18px; font-weight: 600; line-height: 1.3; }
     </style>
 </head>
 <body>
+    <h1>Newser</h1>
     <div class="stats">
-        <div id="axCount" class="pill">Axios: --</div>
-        <div id="memCount" class="pill">Memo: --</div>
+        <div id="ax-count" class="pill">Axios: --</div>
+        <div id="mem-count" class="pill">Memo: --</div>
     </div>
-    <div id="feed" class="list">Loading headlines...</div>
+    <div id="feed" class="list">Loading...</div>
 
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
-        async function getNews() {
+        async function loadNews() {
             const feed = document.getElementById('feed');
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
-                document.getElementById('axCount').innerText = `Axios: ${data.axiosCount}`;
-                document.getElementById('memCount').innerText = `Memo: ${data.memoCount}`;
                 
-                if (data.articles.length === 0) {
-                    feed.innerHTML = '<div style="padding:15px">No new articles found.</div>';
+                // Use || 0 to prevent "undefined" display
+                document.getElementById('ax-count').innerText = `Axios: ${data.axiosCount || 0}`;
+                document.getElementById('mem-count').innerText = `Memo: ${data.memoCount || 0}`;
+                
+                if (!data.articles || data.articles.length === 0) {
+                    feed.innerHTML = '<div style="padding:20px">No articles in sheet.</div>';
                     return;
                 }
 
@@ -41,12 +46,12 @@
                     div.className = 'item';
                     div.href = a.link;
                     div.target = "_blank";
-                    div.innerHTML = `<div>${a.title}</div><small style="color:gray">${new Date(a.timestamp).toLocaleTimeString()}</small>`;
+                    div.innerHTML = `<div class="title">${a.title}</div>`;
                     feed.appendChild(div);
                 });
-            } catch (e) { feed.innerText = "Error loading data."; }
+            } catch (e) { feed.innerText = "Error: " + e.message; }
         }
-        getNews();
+        loadNews();
     </script>
 </body>
 </html>
