@@ -13,10 +13,17 @@
         header { padding: 30px 0 20px 0; border-bottom: 0.5px solid var(--separator); }
         h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
+        
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; flex-direction: column; cursor: pointer; }
+        .article-card:last-child { border-bottom: none; }
         .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; margin-bottom: 8px; }
+        
+        .meta { font-size: 14px; color: var(--ios-secondary); display: flex; align-items: center; }
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 11px; text-transform: uppercase; }
+        .sources-list { margin-top: 15px; padding-top: 10px; border-top: 0.5px solid var(--separator); }
+        .source-item { display: block; color: var(--ios-accent); text-decoration: none; padding: 12px 0; font-size: 17px; border-bottom: 0.5px solid var(--separator); font-weight: 500; }
+        .source-item:last-child { border-bottom: none; }
 
         /* OVERLAY SHEET STYLES */
         #update-overlay { 
@@ -48,7 +55,7 @@
 </div>
 
 <div class="container">
-    <header><h1>Newser</h1><div id="update-display" style="font-size:14px; color:var(--ios-secondary); margin-top: 5px;">Loading...</div></header>
+    <header><h1>Newser</h1><div id="update-display" style="font-size:14px; color:var(--ios-secondary); margin-top: 5px;">Connecting...</div></header>
     <div id="content" style="display:none;">
         <section id="updates-wrapper" style="display:none;"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
         <section id="trending-wrapper" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
@@ -58,6 +65,7 @@
 </div>
 
 <script>
+    // Replace with your actual Deployed Web App URL
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     async function fetchNews() {
@@ -79,15 +87,17 @@
             if (item.repeats === -1) {
                 // UPDATE BOX: Only title, opens overlay on click
                 div.innerHTML = `<div class="article-link" style="color:var(--update-blue)">${item.title}</div><div class="meta"><span>Tap to read more</span></div>`;
-                div.onclick = () => openUpdateSheet(sources[0].title, sources[0].link); // Link column stores the body text here
+                div.onclick = () => openUpdateSheet(sources[0].title, sources[0].body);
                 upList.appendChild(div);
             } else {
                 div.innerHTML = `
                     <div class="article-link">${item.title}</div>
-                    <div class="meta">${isTrending ? `<span class="badge">${item.repeats} Sources</span>` : ''}
-                    <span>${new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${isTrending ? '▼' : ''}</span></div>
-                    <div id="src-${idx}" style="display:none; margin-top:15px; padding-top:10px; border-top:0.5px solid var(--separator);">
-                        ${sources.map(s => `<a href="${s.link}" target="_blank" style="display:block; color:var(--ios-accent); padding:12px 0; text-decoration:none;">• ${s.title}</a>`).join('')}
+                    <div class="meta">
+                        ${isTrending ? `<span class="badge">${item.repeats} Sources</span>` : ''}
+                        <span>${new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${isTrending ? '▼' : ''}</span>
+                    </div>
+                    <div id="src-${idx}" class="sources-list" style="display:none;">
+                        ${sources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}
                     </div>`;
                 div.onclick = (e) => {
                     if (e.target.tagName === 'A') return;
@@ -100,6 +110,7 @@
             }
         });
 
+        // Dynamic Headers
         document.getElementById('updates-wrapper').style.display = upList.children.length > 0 ? 'block' : 'none';
         document.getElementById('trending-wrapper').style.display = trList.children.length > 0 ? 'block' : 'none';
         if (hdList.children.length === 0) {
@@ -112,16 +123,16 @@
         document.getElementById('overlay-title').innerText = title;
         document.getElementById('overlay-body').innerHTML = content;
         document.getElementById('update-overlay').style.display = 'flex';
-        document.body.style.overflow = 'hidden'; // Stop background scrolling
+        document.body.style.overflow = 'hidden'; // Stop background scroll
     }
 
     function closeUpdateSheet() {
         document.getElementById('update-overlay').style.display = 'none';
-        document.body.style.overflow = 'auto'; // Restore scrolling
+        document.body.style.overflow = 'auto'; // Restore scroll
     }
 
     async function markAsDone() {
-        if(!confirm("Clear list?")) return;
+        if(!confirm("Clear current list and reset F1?")) return;
         await fetch(API_URL + "?action=clear", { method: "POST", mode: "no-cors" });
         location.reload();
     }
