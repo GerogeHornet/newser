@@ -39,12 +39,15 @@
         </div>
         <button class="refresh-btn" id="refresh-trigger" onclick="runManualRefresh()">Refresh</button>
     </header>
+
     <div id="status-area" class="status-box">Connecting to feed...</div>
+    
     <div id="caught-up-area" class="status-box" style="display:none;">
         <div style="font-size: 40px; margin-bottom: 10px;">🎉</div>
         <div style="font-size: 24px; font-weight: 700; margin-bottom: 5px;">All Caught Up!</div>
         <div id="undo-wrapper"><button class="undo-btn" onclick="undoClear()">Oops, Undo Done</button></div>
     </div>
+
     <div id="content" style="display:none;">
         <section id="updates-wrapper"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
         <section id="trending-wrapper"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
@@ -52,42 +55,66 @@
         <button class="done-btn" onclick="markAsDone()">Done for Now</button>
     </div>
 </div>
+
 <script>
+    // YOUR API URL - Ensure this matches your latest Web App Deployment URL
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     async function fetchNews() {
         const status = document.getElementById('status-area');
         const caughtUp = document.getElementById('caught-up-area');
+        const content = document.getElementById('content');
+        
         try {
             const response = await fetch(API_URL);
             const data = await response.json();
+            
             if (!data.articles || data.articles.length === 0) {
-                status.style.display = 'none'; caughtUp.style.display = 'block';
+                status.style.display = 'none'; 
+                caughtUp.style.display = 'block';
                 setTimeout(() => { document.getElementById('undo-wrapper').style.display = 'none'; }, 30000);
                 return;
             }
+
             document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
             document.getElementById('update-display').innerText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
             const updatesList = document.getElementById('updates-list');
             const trendingList = document.getElementById('trending-list');
             const everythingList = document.getElementById('everything-list');
+            
             updatesList.innerHTML = ''; trendingList.innerHTML = ''; everythingList.innerHTML = '';
+
             data.articles.forEach(item => {
                 const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "Recently";
+                
                 if (item.repeats === -1) {
-                    const card = document.createElement('div'); card.className = 'article-card';
+                    const card = document.createElement('div'); 
+                    card.className = 'article-card';
                     card.innerHTML = `<div class="article-link" style="color:var(--update-blue)">${item.title}</div><div class="update-body">${item.link}</div>`;
                     updatesList.appendChild(card);
                 } else {
-                    const anchor = document.createElement('a'); anchor.className = 'article-card'; anchor.href = item.link; anchor.target = "_blank";
+                    const anchor = document.createElement('a'); 
+                    anchor.className = 'article-card'; 
+                    anchor.href = item.link; 
+                    anchor.target = "_blank";
                     anchor.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${item.repeats > 1 ? `<span class="badge">${item.repeats} Sources</span>` : ''}<span>${timeStr}</span></div>`;
-                    if (item.repeats > 1) trendingList.appendChild(anchor); else everythingList.appendChild(anchor);
+                    if (item.repeats > 1) trendingList.appendChild(anchor); 
+                    else everythingList.appendChild(anchor);
                 }
             });
+
             document.getElementById('updates-wrapper').style.display = updatesList.children.length > 0 ? 'block' : 'none';
             document.getElementById('trending-wrapper').style.display = trendingList.children.length > 0 ? 'block' : 'none';
-            status.style.display = 'none'; caughtUp.style.display = 'none'; document.getElementById('content').style.display = 'block';
-        } catch (e) { status.innerHTML = "⚠️ Feed Unavailable."; }
+            
+            status.style.display = 'none'; 
+            caughtUp.style.display = 'none'; 
+            content.style.display = 'block';
+
+        } catch (e) { 
+            console.error(e);
+            status.innerHTML = "⚠️ Feed Unavailable.<br><small>Check script authorization or deployment settings.</small>"; 
+        }
     }
 
     async function runManualRefresh() {
@@ -100,21 +127,23 @@
     async function markAsDone() {
         document.getElementById('content').style.display = 'none';
         const status = document.getElementById('status-area');
-        status.style.display = 'block'; status.innerText = "Deleting rows...";
+        status.style.display = 'block'; 
+        status.innerText = "Archiving stories...";
         await fetch(API_URL + "?action=clear", { method: "POST", mode: "no-cors" });
         setTimeout(() => location.reload(), 3000);
     }
 
     async function undoClear() {
         document.getElementById('caught-up-area').style.display = 'none';
-        document.getElementById('status-area').style.display = 'block';
-        document.getElementById('status-area').innerText = "Restoring...";
+        const status = document.getElementById('status-area');
+        status.style.display = 'block';
+        status.innerText = "Restoring...";
         await fetch(API_URL + "?action=undo", { method: "POST", mode: "no-cors" });
         setTimeout(() => location.reload(), 1500);
     }
 
+    // Initialize
     fetchNews();
 </script>
 </body>
 </html>
-
