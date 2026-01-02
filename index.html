@@ -7,72 +7,67 @@
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-font-smoothing: antialiased; }
-        .container { max-width: 600px; margin: 0 auto; }
-        header { padding: 40px 0 20px 0; display: flex; justify-content: space-between; align-items: flex-end; }
+        header { padding: 40px 0 20px 0; }
         h1 { font-size: 48px; font-weight: 800; margin: 0; letter-spacing: -1px; }
-        .refresh-btn { background: var(--ios-card); color: var(--ios-accent); border: 1px solid var(--separator); padding: 12px 20px; border-radius: 25px; font-weight: 700; font-size: 16px; }
+        .stats { display: flex; gap: 10px; margin: 20px 0; }
+        .pill { background: var(--ios-card); padding: 12px 18px; border-radius: 25px; font-size: 16px; font-weight: 700; border: 1px solid var(--separator); }
         .list-group { border-radius: 18px; overflow: hidden; background: var(--ios-card); }
         .article-card { background: var(--ios-card); padding: 28px 22px; border-bottom: 0.5px solid var(--separator); display: block; text-decoration: none; }
         .article-card:last-child { border-bottom: none; }
-        /* INCREASED FONT SIZE HERE */
+        /* ENLARGED HEADLINES */
         .article-link { color: var(--ios-text); font-weight: 700; font-size: 26px; line-height: 1.35; display: block; }
-        .meta { font-size: 18px; color: var(--ios-secondary); margin-top: 12px; font-weight: 500; }
+        .meta { font-size: 18px; color: var(--ios-secondary); margin-top: 12px; }
         .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 24px; border-radius: 20px; font-size: 22px; font-weight: 700; margin-top: 40px; }
-        .status-box { text-align: center; padding: 100px 20px; color: var(--ios-secondary); font-size: 24px; }
     </style>
 </head>
 <body>
-<div class="container">
     <header>
-        <div>
-            <h1>Newser</h1>
-            <div id="update-display" style="color: var(--ios-secondary); font-size: 18px; font-weight: 500;">Connecting...</div>
+        <h1>Newser</h1>
+        <div class="stats">
+            <div id="ax-pill" class="pill">Axios: --</div>
+            <div id="mem-pill" class="pill">Memo: --</div>
         </div>
-        <button class="refresh-btn" onclick="runManualRefresh()">Refresh</button>
     </header>
-    <div id="status-area" class="status-box">Connecting...</div>
-    <div id="content" style="display:none;">
-        <div id="everything-list" class="list-group"></div>
-        <button class="done-btn" onclick="markAsDone()">Done for Now</button>
-    </div>
-</div>
+    <div id="feed" class="list-group">Loading...</div>
+    <button class="done-btn" onclick="markAsDone()">Done for Now</button>
+
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     async function fetchNews() {
-        const status = document.getElementById('status-area');
-        const content = document.getElementById('content');
         try {
-            const response = await fetch(API_URL);
-            const data = await response.json();
-            document.getElementById('update-display').innerText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const res = await fetch(API_URL);
+            const data = await res.json();
             
-            const everythingList = document.getElementById('everything-list');
-            everythingList.innerHTML = '';
+            // Correctly update the count pills
+            document.getElementById('ax-pill').innerText = `Axios: ${data.axiosCount}`;
+            document.getElementById('mem-pill').innerText = `Memo: ${data.memoCount}`;
             
+            const feed = document.getElementById('feed');
+            feed.innerHTML = '';
+            
+            if (data.articles.length === 0) {
+                feed.innerHTML = '<div style="padding:40px; text-align:center; color:gray; font-size:20px;">No new articles.</div>';
+                return;
+            }
+
+            // Show newest at the top
             data.articles.reverse().forEach(item => {
-                const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "Recently";
+                const time = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
                 const anchor = document.createElement('a');
                 anchor.className = 'article-card';
                 anchor.href = item.link;
                 anchor.target = "_blank";
-                anchor.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${timeStr}</div>`;
-                everythingList.appendChild(anchor);
+                anchor.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${time}</div>`;
+                feed.appendChild(anchor);
             });
-            
-            status.style.display = 'none';
-            content.style.display = 'block';
-        } catch (e) { status.innerHTML = "⚠️ Offline"; }
+        } catch (e) { document.getElementById('feed').innerText = "⚠️ Offline"; }
     }
 
-    async function runManualRefresh() { location.reload(); }
-
     async function markAsDone() {
-        document.getElementById('content').style.display = 'none';
-        document.getElementById('status-area').style.display = 'block';
-        document.getElementById('status-area').innerText = "Clearing...";
+        document.body.style.opacity = "0.5";
         await fetch(API_URL + "?action=clear", { method: "POST", mode: "no-cors" });
-        setTimeout(() => location.reload(), 2000);
+        location.reload();
     }
 
     fetchNews();
