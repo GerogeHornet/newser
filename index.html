@@ -2,61 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Newser Simple</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newser Stats</title>
     <style>
-        :root { --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000; --ios-secondary: #636366; --ios-accent: #007aff; --separator: #d1d1d6; }
-        @media (prefers-color-scheme: dark) { :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; } }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: 20px; }
-        header { margin-bottom: 20px; }
-        .stats-bar { display: flex; gap: 10px; margin-bottom: 20px; }
-        .stat-pill { background: var(--ios-card); padding: 8px 15px; border-radius: 20px; font-size: 14px; font-weight: 600; border: 1px solid var(--separator); }
-        .article-list { background: var(--ios-card); border-radius: 12px; overflow: hidden; }
-        .article-item { padding: 15px; border-bottom: 1px solid var(--separator); text-decoration: none; display: block; color: var(--ios-text); }
-        .article-item:last-child { border-bottom: none; }
-        .article-title { font-size: 18px; font-weight: 600; margin-bottom: 5px; }
-        .article-meta { font-size: 14px; color: var(--ios-secondary); }
+        body { font-family: -apple-system, sans-serif; background: #000; color: #fff; padding: 20px; }
+        .stats { display: flex; gap: 10px; margin-bottom: 20px; }
+        .pill { background: #1c1c1e; padding: 10px 20px; border-radius: 20px; font-weight: bold; border: 1px solid #38383a; }
+        .list { background: #1c1c1e; border-radius: 12px; }
+        .item { padding: 15px; border-bottom: 1px solid #38383a; display: block; color: #fff; text-decoration: none; }
+        .item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Newser</h1>
-        <div class="stats-bar">
-            <div id="axios-pill" class="stat-pill">Axios: --</div>
-            <div id="memo-pill" class="stat-pill">Memo: --</div>
-        </div>
-    </header>
-    <div id="content" class="article-list">Loading...</div>
+    <div class="stats">
+        <div id="axCount" class="pill">Axios: --</div>
+        <div id="memCount" class="pill">Memo: --</div>
+    </div>
+    <div id="feed" class="list">Loading...</div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
+        const API_URL = "PASTE_YOUR_NEW_WEB_APP_URL_HERE";
 
-        async function loadNews() {
+        async function getNews() {
             try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                
-                // Update the count pills
-                document.getElementById('axios-pill').innerText = `Axios: ${data.axiosCount}`;
-                document.getElementById('memo-pill').innerText = `Memo: ${data.memoCount}`;
-
-                const list = document.getElementById('content');
-                list.innerHTML = '';
-
-                data.articles.forEach(art => {
-                    const item = document.createElement('a');
-                    item.className = 'article-item';
-                    item.href = art.link;
-                    item.target = "_blank";
-                    item.innerHTML = `
-                        <div class="article-title">${art.title}</div>
-                        <div class="article-meta">${new Date(art.timestamp).toLocaleTimeString()}</div>
-                    `;
-                    list.appendChild(item);
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                document.getElementById('axCount').innerText = `Axios: ${data.axiosCount}`;
+                document.getElementById('memCount').innerText = `Memo: ${data.memoCount}`;
+                const feed = document.getElementById('feed');
+                feed.innerHTML = data.articles.length > 0 ? '' : 'No new articles.';
+                data.articles.forEach(a => {
+                    const div = document.createElement('a');
+                    div.className = 'item';
+                    div.href = a.link;
+                    div.target = "_blank";
+                    div.innerHTML = `<div>${a.title}</div><small style="color:gray">${new Date(a.timestamp).toLocaleTimeString()}</small>`;
+                    feed.appendChild(div);
                 });
-            } catch (e) { document.getElementById('content').innerText = "Error loading news."; }
+            } catch (e) { document.getElementById('feed').innerText = "Error: " + e; }
         }
-        loadNews();
+        getNews();
     </script>
 </body>
 </html>
