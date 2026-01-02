@@ -16,19 +16,21 @@
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; flex-direction: column; text-decoration: none; color: inherit; }
         .article-card:last-child { border-bottom: none; }
-        .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; margin-bottom: 8px; }
+        .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; margin-bottom: 8px; color: var(--ios-text); }
         .meta { font-size: 14px; color: var(--ios-secondary); display: flex; align-items: center; }
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 11px; text-transform: uppercase; }
         .sources-list { margin-top: 15px; padding-top: 10px; border-top: 0.5px solid var(--separator); display: none; }
         .source-item { display: block; color: var(--ios-accent); text-decoration: none; padding: 12px 0; font-size: 17px; border-bottom: 0.5px solid var(--separator); font-weight: 500; }
         .source-item:last-child { border-bottom: none; }
         .status-box { text-align: center; padding: 100px 20px; color: var(--ios-secondary); font-size: 20px; }
+        .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; cursor: pointer; }
     </style>
 </head>
 <body>
 <div class="container">
     <header>
         <div>
+            <div id="date-display" style="font-size: 14px; color: var(--ios-secondary); text-transform: uppercase; font-weight: 700;"></div>
             <h1>Newser</h1>
             <div id="update-display" style="font-size:14px; color:var(--ios-secondary);">Connecting...</div>
         </div>
@@ -41,10 +43,12 @@
         <section id="updates-wrapper"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
         <section id="trending-wrapper"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
         <section id="headlines-wrapper"><h2>🗞️ Headlines</h2><div id="headlines-list" class="list-group"></div></section>
+        <button class="done-btn" onclick="markAsDone()">Done for Now</button>
     </div>
 </div>
 
 <script>
+    // Replace this with your latest Web App URL from the 'Deploy' menu
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     async function fetchNews() {
@@ -52,6 +56,7 @@
             const response = await fetch(API_URL);
             const data = await response.json();
             
+            document.getElementById('date-display').innerText = new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
             document.getElementById('update-display').innerText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
             const upList = document.getElementById('updates-list');
@@ -64,12 +69,13 @@
                 const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "";
                 
                 if (item.repeats === -1) {
+                    // UPDATES SECTION
                     const div = document.createElement('div');
                     div.className = 'article-card';
                     div.innerHTML = `<div class="article-link" style="color:var(--update-blue)">${item.title}</div><div style="font-size:15px; color:var(--ios-secondary)">${item.link}</div>`;
                     upList.appendChild(div);
                 } else if (item.repeats > 1) {
-                    // TRENDING: No href on the card to prevent 404 navigation 
+                    // TRENDING SECTION: Tapping this toggles the source list
                     const sources = JSON.parse(item.link);
                     const div = document.createElement('div');
                     div.className = 'article-card';
@@ -81,13 +87,13 @@
                             ${sources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}
                         </div>`;
                     div.onclick = (e) => {
-                        if (e.target.tagName === 'A') return; // Don't toggle if clicking a specific link
+                        if (e.target.tagName === 'A') return; // Don't toggle if an actual link is clicked
                         const el = document.getElementById(`src-${idx}`);
                         el.style.display = el.style.display === 'block' ? 'none' : 'block';
                     };
                     trList.appendChild(div);
                 } else {
-                    // HEADLINES: Direct link for single-source stories
+                    // HEADLINES SECTION: Single-source direct link
                     const sources = JSON.parse(item.link);
                     const a = document.createElement('a');
                     a.className = 'article-card';
@@ -100,16 +106,29 @@
 
             document.getElementById('updates-wrapper').style.display = upList.children.length ? 'block' : 'none';
             document.getElementById('trending-wrapper').style.display = trList.children.length ? 'block' : 'none';
+            document.getElementById('headlines-wrapper').style.display = hdList.children.length ? 'block' : 'none';
             document.getElementById('status-area').style.display = 'none';
             document.getElementById('content').style.display = 'block';
 
-        } catch (e) { document.getElementById('status-area').innerText = "⚠️ Error loading feed."; }
+        } catch (e) { 
+            console.error(e);
+            document.getElementById('status-area').innerText = "⚠️ Error loading feed. Check script deployment."; 
+        }
     }
 
     async function runManualRefresh() {
-        document.getElementById('refresh-trigger').innerText = "Syncing...";
+        const btn = document.getElementById('refresh-trigger');
+        btn.innerText = "Syncing..."; btn.disabled = true;
         await fetch(API_URL + "?action=refresh", { method: "POST", mode: "no-cors" });
-        setTimeout(() => location.reload(), 2000);
+        setTimeout(() => location.reload(), 2500);
+    }
+
+    async function markAsDone() {
+        document.getElementById('content').style.display = 'none';
+        const status = document.getElementById('status-area');
+        status.style.display = 'block'; status.innerText = "Archiving stories...";
+        await fetch(API_URL + "?action=clear", { method: "POST", mode: "no-cors" });
+        setTimeout(() => location.reload(), 3000);
     }
 
     fetchNews();
