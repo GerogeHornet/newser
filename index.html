@@ -14,7 +14,7 @@
         .refresh-btn { background: var(--ios-card); color: var(--ios-accent); border: 1px solid var(--separator); padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; flex-direction: column; text-decoration: none; color: inherit; position: relative; }
+        .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; flex-direction: column; text-decoration: none; color: inherit; }
         .article-card:last-child { border-bottom: none; }
         .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; margin-bottom: 8px; }
         .meta { font-size: 14px; color: var(--ios-secondary); display: flex; align-items: center; }
@@ -48,7 +48,11 @@
         try {
             const response = await fetch(API_URL);
             const data = await response.json();
-            document.getElementById('update-display').innerText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            // Show raw counts at top [cite: 72]
+            document.getElementById('update-display').innerHTML = 
+                `Checked: ${new Date(data.refreshTime).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}<br><small>${data.rawStats || ""}</small>`;
+            
             const upList = document.getElementById('updates-list');
             const trList = document.getElementById('trending-list');
             const hdList = document.getElementById('headlines-list');
@@ -56,7 +60,6 @@
 
             data.articles.forEach((item, idx) => {
                 const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "";
-                
                 if (item.repeats === -1) {
                     const div = document.createElement('div');
                     div.className = 'article-card';
@@ -68,22 +71,17 @@
                     const div = document.createElement('div');
                     div.className = 'article-card';
                     div.style.cursor = 'pointer';
-                    
                     div.innerHTML = `
                         <div class="article-link">${item.title}</div>
                         <div class="meta">${isTrending ? `<span class="badge">${item.repeats} Sources</span>` : ''}<span>${timeStr} ${isTrending ? '▼' : ''}</span></div>
                         <div id="src-${idx}" class="sources-list">
                             ${sources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}
                         </div>`;
-                    
                     div.onclick = (e) => {
-                        if (e.target.tagName === 'A') return; // Don't toggle if individual link clicked
+                        if (e.target.tagName === 'A') return;
                         const el = document.getElementById(`src-${idx}`);
-                        if (isTrending) {
-                            el.style.display = el.style.display === 'block' ? 'none' : 'block';
-                        } else {
-                            window.open(sources[0].link, '_blank'); [cite_start]// Single headlines go direct [cite: 84]
-                        }
+                        if (isTrending) el.style.display = el.style.display === 'block' ? 'none' : 'block';
+                        else window.open(sources[0].link, '_blank');
                     };
                     if (isTrending) trList.appendChild(div); else hdList.appendChild(div);
                 }
