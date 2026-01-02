@@ -10,7 +10,6 @@
         .pill { background: #1c1c1e; padding: 10px 20px; border-radius: 20px; font-weight: bold; border: 1px solid #38383a; }
         .list { background: #1c1c1e; border-radius: 12px; }
         .item { padding: 15px; border-bottom: 1px solid #38383a; display: block; color: #fff; text-decoration: none; }
-        .item:last-child { border-bottom: none; }
     </style>
 </head>
 <body>
@@ -21,25 +20,38 @@
     <div id="feed" class="list">Loading...</div>
 
     <script>
+        // CRITICAL: Ensure this is the "/exec" URL from your New Deployment
         const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
         async function getNews() {
+            const feedElement = document.getElementById('feed');
             try {
                 const res = await fetch(API_URL);
-                const data = await res.json();
+                
+                // If the script sent back an error page, this will fail gracefully
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch(e) {
+                    throw new Error("Script returned invalid data. Check permissions.");
+                }
+
                 document.getElementById('axCount').innerText = `Axios: ${data.axiosCount}`;
                 document.getElementById('memCount').innerText = `Memo: ${data.memoCount}`;
-                const feed = document.getElementById('feed');
-                feed.innerHTML = data.articles.length > 0 ? '' : 'No new articles.';
+                
+                feedElement.innerHTML = data.articles.length > 0 ? '' : 'No new articles in sheet.';
                 data.articles.forEach(a => {
                     const div = document.createElement('a');
                     div.className = 'item';
                     div.href = a.link;
                     div.target = "_blank";
                     div.innerHTML = `<div>${a.title}</div><small style="color:gray">${new Date(a.timestamp).toLocaleTimeString()}</small>`;
-                    feed.appendChild(div);
+                    feedElement.appendChild(div);
                 });
-            } catch (e) { document.getElementById('feed').innerText = "Error: " + e; }
+            } catch (e) { 
+                feedElement.innerText = "Error: " + e.message; 
+            }
         }
         getNews();
     </script>
