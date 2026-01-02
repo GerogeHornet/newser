@@ -1,116 +1,122 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Newser</title>
-    <style>
-        :root { --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000; --ios-secondary: #636366; --ios-accent: #007aff; --trending: #ff3b30; --separator: #d1d1d6; --update-blue: #5856d6; }
-        @media (prefers-color-scheme: dark) { :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --trending: #ff453a; --separator: #38383a; } }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-font-smoothing: antialiased; }
-        .container { max-width: 600px; margin: 0 auto; }
-        header { padding: 30px 0 10px 0; display: flex; justify-content: space-between; align-items: flex-end; }
-        h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
-        .refresh-btn { background: var(--ios-card); color: var(--ios-accent); border: 1px solid var(--separator); padding: 8px 16px; border-radius: 20px; font-weight: 600; cursor: pointer; }
-        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
-        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; flex-direction: column; text-decoration: none; color: inherit; }
-        .article-card:last-child { border-bottom: none; }
-        .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; margin-bottom: 8px; }
-        .meta { font-size: 14px; color: var(--ios-secondary); display: flex; align-items: center; }
-        .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 11px; text-transform: uppercase; }
-        .sources-list { margin-top: 15px; padding-top: 10px; border-top: 0.5px solid var(--separator); display: none; }
-        .source-item { display: block; color: var(--ios-accent); text-decoration: none; padding: 8px 0; font-size: 16px; border-bottom: 0.5px solid var(--separator); }
-        .source-item:last-child { border-bottom: none; }
-        .status-box { text-align: center; padding: 100px 20px; color: var(--ios-secondary); font-size: 20px; }
-    </style>
-</head>
-<body>
-<div class="container">
-    <header>
-        <div>
-            <h1>Newser</h1>
-            <div id="update-display" style="font-size:14px; color:var(--ios-secondary);">Connecting...</div>
-        </div>
-        <button class="refresh-btn" id="refresh-trigger" onclick="runManualRefresh()">Refresh</button>
-    </header>
+const FEEDS = [
+  "https://www.memeorandum.com/feed.xml",
+  "https://www.axios.com/feeds/feed.rss"
+];
 
-    <div id="status-area" class="status-box">Loading...</div>
+const TIMED_UPDATES_URL = "https://script.google.com/macros/s/AKfycbyjpdbqmhp_LPC-m_ItmuMEWJRIfyLWdZXKnnCOI9tmT87C6WO-3UjZKaHHUlM9etac/exec";
 
-    <div id="content" style="display:none;">
-        <section id="updates-wrapper"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
-        <section id="trending-wrapper"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
-        <section id="headlines-wrapper"><h2>🗞️ Headlines</h2><div id="headlines-list" class="list-group"></div></section>
-    </div>
-</div>
+function onOpen() {
+  SpreadsheetApp.getActiveSpreadsheet().addMenu('Newser App', [{name: 'Manual Refresh', functionName: 'fetchDailyHighlights'}]);
+}
 
-<script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
+function fetchDailyHighlights() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Data");
+  let lastFetchTime = sheet.getRange("F1").getValue();
 
-    async function fetchNews() {
-        try {
-            const response = await fetch(API_URL);
-            const data = await response.json();
-            
-            document.getElementById('update-display').innerText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            const upList = document.getElementById('updates-list');
-            const trList = document.getElementById('trending-list');
-            const hdList = document.getElementById('headlines-list');
-            
-            upList.innerHTML = ''; trList.innerHTML = ''; hdList.innerHTML = '';
+  if (!lastFetchTime || isNaN(new Date(lastFetchTime).getTime())) {
+    lastFetchTime = new Date("2024-01-01T00:00:00");
+  } else { 
+    lastFetchTime = new Date(lastFetchTime); 
+  }
+  
+  const now = new Date();
+  if (sheet.getLastRow() > 1) { sheet.deleteRows(2, sheet.getLastRow() - 1); }
 
-            data.articles.forEach((item, idx) => {
-                const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "";
-                
-                if (item.repeats === -1) {
-                    const div = document.createElement('div');
-                    div.className = 'article-card';
-                    div.innerHTML = `<div class="article-link" style="color:var(--update-blue)">${item.title}</div><div style="font-size:15px; color:var(--ios-secondary)">${item.link}</div>`;
-                    upList.appendChild(div);
-                } else if (item.repeats > 1) {
-                    const sources = JSON.parse(item.link);
-                    const div = document.createElement('div');
-                    div.className = 'article-card';
-                    div.style.cursor = 'pointer';
-                    div.innerHTML = `
-                        <div class="article-link">${item.title}</div>
-                        <div class="meta"><span class="badge">${item.repeats} Sources</span><span>${timeStr} ▼</span></div>
-                        <div id="src-${idx}" class="sources-list">
-                            ${sources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}
-                        </div>`;
-                    div.onclick = (e) => {
-                        if (e.target.tagName === 'A') return;
-                        const el = document.getElementById(`src-${idx}`);
-                        el.style.display = el.style.display === 'block' ? 'none' : 'block';
-                    };
-                    trList.appendChild(div);
-                } else {
-                    const sources = JSON.parse(item.link);
-                    const a = document.createElement('a');
-                    a.className = 'article-card';
-                    a.href = sources[0].link;
-                    a.target = "_blank";
-                    a.innerHTML = `<div class="article-link">${item.title}</div><div class="meta"><span>${timeStr}</span></div>`;
-                    hdList.appendChild(a);
-                }
-            });
+  processNews(lastFetchTime, now);
+  fetchTimedUpdates(lastFetchTime, now);
+  sheet.getRange("F1").setValue(now);
+}
 
-            document.getElementById('updates-wrapper').style.display = upList.children.length ? 'block' : 'none';
-            document.getElementById('trending-wrapper').style.display = trList.children.length ? 'block' : 'none';
-            document.getElementById('status-area').style.display = 'none';
-            document.getElementById('content').style.display = 'block';
+function processNews(start, end) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Data");
+  let rawArticles = [];
 
-        } catch (e) { document.getElementById('status-area').innerText = "⚠️ Error loading feed."; }
+  FEEDS.forEach(url => {
+    try {
+      const xml = UrlFetchApp.fetch(url).getContentText();
+      const document = XmlService.parse(xml);
+      const items = document.getRootElement().getChild("channel").getChildren("item");
+      items.forEach(item => {
+        let title = item.getChildText("title");
+        let link = item.getChildText("link").split('?')[0].split('#')[0];
+        const pubDate = new Date(item.getChildText("pubDate"));
+        if (pubDate >= start) {
+          if (url.toLowerCase().includes("axios.com")) { title = title + " (Axios)"; }
+          rawArticles.push({ title, link, pubDate });
+        }
+      });
+    } catch(e) { console.log("RSS Error: " + e); }
+  });
+
+  let grouped = [];
+  rawArticles.forEach(newArt => {
+    let match = grouped.find(ex => isSimilar(newArt.title, ex.title));
+    if (match) {
+      match.count++;
+      match.sources.push({ title: newArt.title, link: newArt.link });
+      if (newArt.pubDate > match.pubDate) {
+        match.pubDate = newArt.pubDate;
+        match.title = newArt.title; 
+      }
+    } else {
+      grouped.push({
+        pubDate: newArt.pubDate,
+        count: 1,
+        title: newArt.title,
+        sources: [{ title: newArt.title, link: newArt.link }]
+      });
     }
+  });
 
-    async function runManualRefresh() {
-        document.getElementById('refresh-trigger').innerText = "Syncing...";
-        await fetch(API_URL + "?action=refresh", { method: "POST", mode: "no-cors" });
-        setTimeout(() => location.reload(), 2000);
-    }
+  grouped.sort((a, b) => b.count - a.count || b.pubDate - a.pubDate);
+  const output = grouped.map(a => [a.pubDate, a.count, a.title, JSON.stringify(a.sources)]);
 
-    fetchNews();
-</script>
-</body>
-</html>
+  if (output.length > 0) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, output.length, 4).setValues(output);
+  }
+}
+
+function isSimilar(s1, s2) {
+  const normalize = s => s.toLowerCase().replace(/[^\w\s]/g, "").split(" ").filter(w => w.length > 3);
+  const w1 = normalize(s1), w2 = normalize(s2);
+  // Matches if 3 or more significant words are shared [cite: 199]
+  return w1.filter(word => w2.includes(word)).length >= 3;
+}
+
+function fetchTimedUpdates(start, end) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Data");
+  try {
+    const response = UrlFetchApp.fetch(TIMED_UPDATES_URL);
+    const items = XmlService.parse(response.getContentText()).getRootElement().getChild("channel").getChildren("item");
+    let updates = [];
+    items.forEach(item => {
+      const pubDate = new Date(item.getChildText("pubDate"));
+      if (pubDate >= start) {
+        updates.push([pubDate, -1, item.getChildText("title"), item.getChildText("description")]);
+      }
+    });
+    if (updates.length > 0) sheet.getRange(sheet.getLastRow() + 1, 1, updates.length, 4).setValues(updates);
+  } catch (e) { console.log("Update Error: " + e); }
+}
+
+function doGet() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Data");
+  let articles = [];
+  if (sheet.getLastRow() > 1) {
+    articles = sheet.getRange(2, 1, sheet.getLastRow() - 1, 4).getValues().map(row => ({
+      timestamp: row[0], repeats: row[1], title: row[2], link: row[3]
+    }));
+  }
+  return ContentService.createTextOutput(JSON.stringify({
+    refreshTime: sheet.getRange("F1").getValue(),
+    articles: articles
+  })).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  if (e.parameter.action === "refresh") fetchDailyHighlights();
+  return ContentService.createTextOutput("Success");
+}
