@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Newser</title>
+    <title>Newser Lite</title>
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-font-smoothing: antialiased; }
@@ -32,6 +32,7 @@
     <button class="done-btn" onclick="markAsDone()">Done for Now</button>
 
 <script>
+    // PASTE YOUR NEW DEPLOYMENT URL HERE 
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     async function fetchNews() {
@@ -39,7 +40,7 @@
             const res = await fetch(API_URL);
             const data = await res.json();
             
-            // Correctly update the count pills
+            // 7. Update the count pills [cite: 342]
             document.getElementById('ax-pill').innerText = `Axios: ${data.axiosCount}`;
             document.getElementById('mem-pill').innerText = `Memo: ${data.memoCount}`;
             
@@ -51,7 +52,7 @@
                 return;
             }
 
-            // Show newest at the top
+            // 8. Show newest at the top [cite: 319]
             data.articles.reverse().forEach(item => {
                 const time = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
                 const anchor = document.createElement('a');
