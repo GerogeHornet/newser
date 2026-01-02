@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Newser Stats</title>
+    <title>Newser Lite</title>
     <style>
         body { font-family: -apple-system, sans-serif; background: #000; color: #fff; padding: 20px; }
         .stats { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -17,41 +17,34 @@
         <div id="axCount" class="pill">Axios: --</div>
         <div id="memCount" class="pill">Memo: --</div>
     </div>
-    <div id="feed" class="list">Loading...</div>
+    <div id="feed" class="list">Loading headlines...</div>
 
     <script>
-        // CRITICAL: Ensure this is the "/exec" URL from your New Deployment
         const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
         async function getNews() {
-            const feedElement = document.getElementById('feed');
+            const feed = document.getElementById('feed');
             try {
                 const res = await fetch(API_URL);
-                
-                // If the script sent back an error page, this will fail gracefully
-                const text = await res.text();
-                let data;
-                try {
-                    data = JSON.parse(text);
-                } catch(e) {
-                    throw new Error("Script returned invalid data. Check permissions.");
-                }
-
+                const data = await res.json();
                 document.getElementById('axCount').innerText = `Axios: ${data.axiosCount}`;
                 document.getElementById('memCount').innerText = `Memo: ${data.memoCount}`;
                 
-                feedElement.innerHTML = data.articles.length > 0 ? '' : 'No new articles in sheet.';
+                if (data.articles.length === 0) {
+                    feed.innerHTML = '<div style="padding:15px">No new articles found.</div>';
+                    return;
+                }
+
+                feed.innerHTML = '';
                 data.articles.forEach(a => {
                     const div = document.createElement('a');
                     div.className = 'item';
                     div.href = a.link;
                     div.target = "_blank";
                     div.innerHTML = `<div>${a.title}</div><small style="color:gray">${new Date(a.timestamp).toLocaleTimeString()}</small>`;
-                    feedElement.appendChild(div);
+                    feed.appendChild(div);
                 });
-            } catch (e) { 
-                feedElement.innerText = "Error: " + e.message; 
-            }
+            } catch (e) { feed.innerText = "Error loading data."; }
         }
         getNews();
     </script>
