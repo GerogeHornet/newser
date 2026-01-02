@@ -5,73 +5,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Newser Lite</title>
     <style>
-        :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-font-smoothing: antialiased; }
-        header { padding: 40px 0 20px 0; }
-        h1 { font-size: 48px; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        :root { --ios-bg: #000; --ios-card: #1c1c1e; --ios-text: #fff; --separator: #38383a; --accent: #0a84ff; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); padding: 20px; margin: 0; }
         .stats { display: flex; gap: 10px; margin: 20px 0; }
         .pill { background: var(--ios-card); padding: 12px 18px; border-radius: 25px; font-size: 16px; font-weight: 700; border: 1px solid var(--separator); }
-        .list-group { border-radius: 18px; overflow: hidden; background: var(--ios-card); }
-        .article-card { background: var(--ios-card); padding: 28px 22px; border-bottom: 0.5px solid var(--separator); display: block; text-decoration: none; }
-        .article-card:last-child { border-bottom: none; }
-        /* ENLARGED HEADLINES */
-        .article-link { color: var(--ios-text); font-weight: 700; font-size: 26px; line-height: 1.35; display: block; }
-        .meta { font-size: 18px; color: var(--ios-secondary); margin-top: 12px; }
-        .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 24px; border-radius: 20px; font-size: 22px; font-weight: 700; margin-top: 40px; }
+        .list { background: var(--ios-card); border-radius: 12px; overflow: hidden; }
+        .item { padding: 28px 22px; border-bottom: 0.5px solid var(--separator); display: block; color: var(--ios-text); text-decoration: none; }
+        .item:last-child { border-bottom: none; }
+        /* LARGE HEADLINES */
+        .title { font-size: 26px; font-weight: 700; line-height: 1.35; margin-bottom: 8px; }
+        .time { font-size: 16px; color: #8e8e93; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>Newser</h1>
-        <div class="stats">
-            <div id="ax-pill" class="pill">Axios: --</div>
-            <div id="mem-pill" class="pill">Memo: --</div>
-        </div>
-    </header>
-    <div id="feed" class="list-group">Loading...</div>
-    <button class="done-btn" onclick="markAsDone()">Done for Now</button>
+    <h1>Newser</h1>
+    <div class="stats">
+        <div id="ax-pill" class="pill">Axios: 0</div>
+        <div id="mem-pill" class="pill">Memo: 0</div>
+    </div>
+    <div id="feed" class="list">Loading...</div>
 
-<script>
-    // PASTE YOUR NEW DEPLOYMENT URL HERE 
-    const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
-    async function fetchNews() {
-        try {
-            const res = await fetch(API_URL);
-            const data = await res.json();
-            
-            // 7. Update the count pills [cite: 342]
-            document.getElementById('ax-pill').innerText = `Axios: ${data.axiosCount}`;
-            document.getElementById('mem-pill').innerText = `Memo: ${data.memoCount}`;
-            
+        async function loadNews() {
             const feed = document.getElementById('feed');
-            feed.innerHTML = '';
-            
-            if (data.articles.length === 0) {
-                feed.innerHTML = '<div style="padding:40px; text-align:center; color:gray; font-size:20px;">No new articles.</div>';
-                return;
-            }
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                
+                document.getElementById('ax-pill').innerText = `Axios: ${data.axiosCount || 0}`;
+                document.getElementById('mem-pill').innerText = `Memo: ${data.memoCount || 0}`;
+                
+                if (!data.articles || data.articles.length === 0) {
+                    feed.innerHTML = '<div style="padding:40px; text-align:center;">No new articles.</div>';
+                    return;
+                }
 
-            // 8. Show newest at the top [cite: 319]
-            data.articles.reverse().forEach(item => {
-                const time = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
-                const anchor = document.createElement('a');
-                anchor.className = 'article-card';
-                anchor.href = item.link;
-                anchor.target = "_blank";
-                anchor.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${time}</div>`;
-                feed.appendChild(anchor);
-            });
-        } catch (e) { document.getElementById('feed').innerText = "⚠️ Offline"; }
-    }
-
-    async function markAsDone() {
-        document.body.style.opacity = "0.5";
-        await fetch(API_URL + "?action=clear", { method: "POST", mode: "no-cors" });
-        location.reload();
-    }
-
-    fetchNews();
-</script>
+                feed.innerHTML = '';
+                data.articles.reverse().forEach(a => {
+                    const div = document.createElement('a');
+                    div.className = 'item';
+                    div.href = a.link;
+                    div.target = "_blank";
+                    const time = new Date(a.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    div.innerHTML = `<div class="title">${a.title}</div><div class="time">${time}</div>`;
+                    feed.appendChild(div);
+                });
+            } catch (e) { feed.innerText = "Error loading data."; }
+        }
+        loadNews();
+    </script>
 </body>
 </html>
