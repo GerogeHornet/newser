@@ -5,29 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Newser</title>
     <style>
-        :root { --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000; --ios-secondary: #636366; --ios-accent: #007aff; --trending: #ff3b30; --separator: #d1d1d6; }
-        @media (prefers-color-scheme: dark) { :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --trending: #ff453a; --separator: #38383a; } }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-font-smoothing: antialiased; }
+        :root { 
+            --ios-bg: #f2f2f7; 
+            --ios-card: #ffffff; 
+            --ios-text: #000000; 
+            --ios-secondary: #636366; 
+            --ios-accent: #007aff; 
+            --trending: #ff3b30; 
+            --separator: #d1d1d6; 
+        }
+        @media (prefers-color-scheme: dark) { 
+            :root { 
+                --ios-bg: #000000; 
+                --ios-card: #1c1c1e; 
+                --ios-text: #ffffff; 
+                --ios-secondary: #8e8e93; 
+                --ios-accent: #0a84ff; 
+                --trending: #ff453a; 
+                --separator: #38383a; 
+            } 
+        }
+        body { 
+            font-family: -apple-system, sans-serif; 
+            background: var(--ios-bg); 
+            color: var(--ios-text); 
+            margin: 0; 
+            padding: env(safe-area-inset-top) 16px 100px 16px; 
+            -webkit-font-smoothing: antialiased; 
+        }
         .container { max-width: 600px; margin: 0 auto; }
-        .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); cursor: pointer; }
+        header { padding: 30px 0 20px 0; border-bottom: 0.5px solid var(--separator); }
+        h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
+        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
         
-        /* DEATH TRACKER STYLE */
-        .death-alert-card { background: #e06666 !important; border-left: 6px solid #990000 !important; }
-        .death-alert-card .article-link { color: #ffffff !important; }
-        .death-alert-card .meta { color: #ffeaea !important; }
+        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); cursor: pointer; display: flex; flex-direction: column; }
+        .article-card:last-child { border-bottom: none; }
+        
+        .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; color: var(--ios-text); }
+        .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 5px; }
 
-        .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; margin-bottom: 8px; color: var(--ios-text); }
-        .meta { font-size: 14px; color: var(--ios-secondary); display: flex; align-items: center; }
-        .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; cursor: pointer; }
+        /* DEATH TRACKER STYLE [#e06666] */
+        .death-alert-card { 
+            background: #e06666 !important; 
+            border-left: 6px solid #990000 !important; 
+            margin-bottom: 10px;
+        }
+        .death-alert-card .article-link { color: #ffffff !important; font-weight: 700; }
+
+        .footer-btns { display: flex; gap: 10px; margin-top: 40px; }
+        .undo-btn { 
+            background: var(--ios-secondary); 
+            color: white; 
+            border: none; 
+            padding: 20px; 
+            border-radius: 16px; 
+            font-size: 20px; 
+            font-weight: 700; 
+            flex: 1; 
+            cursor: pointer; 
+            display: none; 
+        }
+        .done-btn { 
+            background: var(--ios-accent); 
+            color: white; 
+            border: none; 
+            padding: 20px; 
+            border-radius: 16px; 
+            font-size: 20px; 
+            font-weight: 700; 
+            flex: 2; 
+            cursor: pointer; 
+            display: none; 
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <header><h1>Newser</h1><div id="update-display">Connecting...</div></header>
+    <header>
+        <h1>Newser</h1>
+        <div id="update-display" style="font-size:14px; color:var(--ios-secondary); margin-top:5px;">Connecting...</div>
+    </header>
+
     <div id="content" style="display:none;">
-        <section id="death-tracker-wrapper" style="display:none;"><h2>💀 Death Tracker</h2><div id="death-tracker-list" class="list-group"></div></section>
-        <section id="headlines-wrapper"><h2>🗞️ Headlines</h2><div id="headlines-list" class="list-group"></div></section>
-        <button class="done-btn" onclick="markAsDone()">Done for Now</button>
+        <section id="death-tracker-wrapper" style="display:none;">
+            <h2>💀 Death Tracker</h2>
+            <div id="death-tracker-list" class="list-group"></div>
+        </section>
+
+        <section id="headlines-wrapper">
+            <h2>🗞️ Headlines</h2>
+            <div id="headlines-list" class="list-group"></div>
+        </section>
+        
+        <div class="footer-btns">
+            <button id="undo-btn" class="undo-btn" onclick="undoClear()">Undo</button>
+            <button id="done-btn" class="done-btn" onclick="markAsDone()">Done for Now</button>
+        </div>
     </div>
 </div>
 
@@ -38,22 +112,36 @@
         try {
             const response = await fetch(API_URL + "?t=" + new Date().getTime());
             const data = await response.json();
+            
+            // Toggle buttons based on data state
+            document.getElementById('undo-btn').style.display = data.showUndo ? 'block' : 'none';
+            document.getElementById('done-btn').style.display = data.articles.length > 0 ? 'block' : 'none';
+            
             document.getElementById('update-display').innerText = "Last catch-up: " + new Date(data.refreshTime).toLocaleString();
             
-            const dtList = document.getElementById('death-tracker-list'), hdList = document.getElementById('headlines-list');
-            dtList.innerHTML = ''; hdList.innerHTML = '';
+            const dtList = document.getElementById('death-tracker-list'),
+                  hdList = document.getElementById('headlines-list');
+            
+            dtList.innerHTML = ''; 
+            hdList.innerHTML = '';
 
             data.articles.forEach((item) => {
-                const allSources = JSON.parse(item.link), div = document.createElement('div');
+                const allSources = JSON.parse(item.link);
+                const div = document.createElement('div');
                 div.className = 'article-card';
 
                 if (item.repeats === -3) {
+                    // Death Alert Styling [#e06666]
                     div.classList.add('death-alert-card');
-                    div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">TAP TO VERIFY VIA GOOGLE</div>`;
+                    div.innerHTML = `<div class="article-link">${item.title}</div>`; 
                     div.onclick = () => window.open(allSources[0].link, '_blank');
                     dtList.appendChild(div);
                 } else {
-                    div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta"><span>${new Date(item.timestamp).toLocaleTimeString()}</span></div>`;
+                    // Standard Headline
+                    div.innerHTML = `
+                        <div class="article-link">${item.title}</div>
+                        <div class="meta"><span>${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>
+                    `;
                     div.onclick = () => window.open(allSources[0].link, '_blank');
                     hdList.appendChild(div);
                 }
@@ -61,16 +149,23 @@
 
             document.getElementById('death-tracker-wrapper').style.display = dtList.children.length > 0 ? 'block' : 'none';
             document.getElementById('content').style.display = 'block';
-        } catch (e) { document.getElementById('update-display').innerText = "Connection Error"; }
+        } catch (e) { 
+            document.getElementById('update-display').innerText = "Connection Error"; 
+        }
     }
 
     async function markAsDone() { 
         if(confirm("Clear list?")) { 
-            // This tells the script to clear the temporary Data sheet
             await fetch(API_URL + "?action=clear"); 
             location.reload(); 
         } 
     }
+
+    async function undoClear() { 
+        await fetch(API_URL + "?action=undo"); 
+        location.reload(); 
+    }
+
     fetchNews();
 </script>
 </body>
