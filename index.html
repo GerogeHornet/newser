@@ -19,7 +19,6 @@
         .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; margin-bottom: 8px; color: var(--ios-text); }
         .meta { font-size: 14px; color: var(--ios-secondary); display: flex; align-items: center; }
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 11px; text-transform: uppercase; }
-        /* Restored Link Styling */
         .sources-list { margin-top: 15px; padding-top: 10px; border-top: 0.5px solid var(--separator); display: flex; flex-direction: column; }
         .source-item { display: block; color: var(--ios-accent); text-decoration: none; padding: 10px 0; font-size: 17px; border-bottom: 0.5px solid var(--separator); font-weight: 500; }
         .source-item:last-child { border-bottom: none; }
@@ -47,6 +46,21 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec"; 
 
+    // Helper to format date/time based on "today"
+    function formatTimestamp(isoString) {
+        const date = new Date(isoString);
+        const today = new Date();
+        const isToday = date.getDate() === today.getDate() && 
+                        date.getMonth() === today.getMonth() && 
+                        date.getFullYear() === today.getFullYear();
+        
+        const timeStr = date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        if (isToday) return timeStr;
+        
+        const dateStr = (date.getMonth() + 1) + '/' + date.getDate();
+        return `${dateStr} ${timeStr}`;
+    }
+
     async function fetchNews() {
         try {
             const response = await fetch(API_URL + "?t=" + new Date().getTime());
@@ -56,12 +70,9 @@
             alList.innerHTML = ''; upList.innerHTML = ''; trList.innerHTML = ''; hdList.innerHTML = '';
             
             data.articles.forEach((item, idx) => {
-                const allSources = JSON.parse(item.link);
-                const secondarySources = allSources.filter(s => s.title !== item.title);
+                const allSources = JSON.parse(item.link), secondarySources = allSources.filter(s => s.title !== item.title);
                 const isGrouped = item.repeats > 1 || item.repeats === -2;
-                const div = document.createElement('div');
-                div.className = 'article-card';
-
+                const div = document.createElement('div'); div.className = 'article-card';
                 if (item.repeats === -1) {
                     div.innerHTML = `<div class="article-link">${item.title}</div>`;
                     div.onclick = () => openUpdateSheet(allSources[0].title, allSources[0].body);
@@ -69,22 +80,13 @@
                 } else {
                     div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">
                         ${isGrouped && allSources.length > 1 ? `<span class="badge" style="${item.repeats === -2 ? 'background:var(--ios-accent)' : ''}">${allSources.length} Sources</span>` : ''}
-                        <span>${new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${isGrouped && allSources.length > 1 ? '▼' : ''}</span>
+                        <span>${formatTimestamp(item.timestamp)} ${isGrouped && allSources.length > 1 ? '▼' : ''}</span>
                     </div><div id="src-${idx}" class="sources-list" style="display:none;">${secondarySources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}</div>`;
                     
-                    div.onclick = (e) => { 
-                        if (e.target.tagName === 'A') return; 
-                        if (isGrouped && allSources.length > 1) { 
-                            const el = document.getElementById(`src-${idx}`); 
-                            el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; 
-                        } else { window.open(allSources[0].link, '_blank'); } 
-                    };
-                    if (item.repeats === -2) alList.appendChild(div);
-                    else if (item.repeats > 1) trList.appendChild(div);
-                    else hdList.appendChild(div);
+                    div.onclick = (e) => { if (e.target.tagName === 'A') return; if (isGrouped && allSources.length > 1) { const el = document.getElementById(`src-${idx}`); el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; } else { window.open(allSources[0].link, '_blank'); } };
+                    if (item.repeats === -2) alList.appendChild(div); else if (item.repeats > 1) trList.appendChild(div); else hdList.appendChild(div);
                 }
             });
-
             const hdCount = hdList.children.length;
             const hdBadge = document.getElementById('headlines-badge');
             if (hdCount > 0) { hdBadge.innerText = hdCount; hdBadge.style.display = 'inline-flex'; } else { hdBadge.style.display = 'none'; }
