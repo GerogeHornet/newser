@@ -48,7 +48,7 @@
             <div id="headlines-list" class="list-group"></div>
         </section>
         <div class="footer-btns">
-            <button id="done-btn" class="btn done" onclick="if(confirm('Clear current news and backup?')) api('clear')">Done for Now</button>
+            <button id="done-btn" class="btn done" onclick="if(confirm('Clear?')) api('clear')">Done for Now</button>
         </div>
     </div>
 </div>
@@ -69,12 +69,10 @@
         const data = await res.json();
         const arts = data.articles;
         
-        // Status Bar
         const lastCheck = new Date(data.refreshTime);
         const dateOpt = { weekday: 'long', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         document.getElementById('update-display').innerText = "Last checked: " + lastCheck.toLocaleString([], dateOpt);
 
-        // View Toggling Logic
         if (arts.length === 0) {
             document.getElementById('empty-box').style.display = 'block';
             document.getElementById('content').style.display = 'none';
