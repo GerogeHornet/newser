@@ -23,16 +23,21 @@
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 11px; text-transform: uppercase; }
         .sources-list { margin-top: 15px; padding-top: 10px; border-top: 0.5px solid var(--separator); }
         .source-item { display: block; color: var(--ios-accent); text-decoration: none; padding: 12px 0; font-size: 17px; border-bottom: 0.5px solid var(--separator); font-weight: 500; }
+        .source-item:last-child { border-bottom: none; }
 
         /* OVERLAY SHEET */
         #update-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--ios-bg); z-index: 2000; display: none; flex-direction: column; }
         #overlay-header { padding: 20px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; background: var(--ios-bg); position: sticky; top: 0; }
         #overlay-title { font-weight: 800; font-size: 28px; margin: 0; flex: 1; line-height: 1.1; }
         #close-overlay { font-size: 32px; cursor: pointer; color: var(--ios-accent); }
+        
         #overlay-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 22px; line-height: 1.5; font-weight: 400; }
         
-        #overlay-body h3, #overlay-body h2, #overlay-body b, #overlay-body strong { display: block; font-weight: 700 !important; font-size: 26px; margin-top: 0px; margin-bottom: 10px; }
+        /* Force normal weight for everything in overlay except section-headings */
         #overlay-body * { font-weight: 400 !important; }
+        #overlay-body h1, #overlay-body h2, #overlay-body h3, #overlay-body .section-heading { 
+            display: block; font-weight: 700 !important; font-size: 26px; margin-top: 0px !important; margin-bottom: 10px; 
+        }
 
         .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; cursor: pointer; }
         .empty-msg { font-size: 32px; font-weight: 800; color: var(--ios-secondary); text-align: center; padding: 60px 0; opacity: 0.2; }
@@ -70,21 +75,24 @@
 
         data.articles.forEach((item, idx) => {
             const allSources = JSON.parse(item.link);
+            // Removes the lead headline from the sub-list so it doesn't appear twice
             const secondarySources = allSources.filter(s => s.title !== item.title);
             const isGrouped = item.repeats > 1 || item.repeats === -2;
             const div = document.createElement('div');
             div.className = 'article-card';
 
             if (item.repeats === -1) {
+                // UPDATE Section
                 div.innerHTML = `<div class="article-link">${item.title}</div>`;
                 div.onclick = () => openUpdateSheet(allSources[0].title, allSources[0].body);
                 upList.appendChild(div);
             } else {
+                // Alerts (-2), Trending (>1), Headlines (1)
                 div.innerHTML = `
                     <div class="article-link">${item.title}</div>
                     <div class="meta">
-                        ${isGrouped ? `<span class="badge" style="${item.repeats === -2 ? 'background:var(--ios-accent)' : ''}">${allSources.length} Sources</span>` : ''}
-                        <span>${new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${isGrouped ? '▼' : ''}</span>
+                        ${isGrouped && allSources.length > 1 ? `<span class="badge" style="${item.repeats === -2 ? 'background:var(--ios-accent)' : ''}">${allSources.length} Sources</span>` : ''}
+                        <span>${new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${isGrouped && allSources.length > 1 ? '▼' : ''}</span>
                     </div>
                     <div id="src-${idx}" class="sources-list" style="display:none;">
                         ${secondarySources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}
@@ -92,7 +100,7 @@
                 
                 div.onclick = (e) => { 
                     if (e.target.tagName === 'A') return; 
-                    if (isGrouped) { 
+                    if (isGrouped && allSources.length > 1) { 
                         const el = document.getElementById(`src-${idx}`); 
                         el.style.display = el.style.display === 'block' ? 'none' : 'block'; 
                     } else { window.open(allSources[0].link, '_blank'); } 
@@ -114,9 +122,15 @@
     function openUpdateSheet(title, content) {
         document.getElementById('overlay-title').innerText = title;
         const bodyEl = document.getElementById('overlay-body');
-        bodyEl.innerHTML = content.replace(/\[\d+\]/g, ''); 
+        
+        // Remove citations [1], [2], etc.
+        let cleanContent = content.replace(/\[\d+\]/g, ''); 
+        bodyEl.innerHTML = cleanContent;
+
+        // Force headers to be bold and body text to be regular weight
         bodyEl.querySelectorAll('h1, h2, h3, b, strong').forEach(h => { 
             if (h.innerText.split(' ').length < 6) {
+                h.className = 'section-heading';
                 h.style.fontWeight = "700"; 
                 h.style.marginTop = "0px"; 
                 if(!['B','STRONG'].includes(h.tagName)) h.style.fontSize = "26px";
@@ -124,6 +138,7 @@
                 h.style.fontWeight = "400";
             }
         });
+
         document.getElementById('update-overlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
