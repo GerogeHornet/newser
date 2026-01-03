@@ -9,69 +9,30 @@
         @media (prefers-color-scheme: dark) { :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --trending: #ff453a; --separator: #38383a; } }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-font-smoothing: antialiased; }
         .container { max-width: 600px; margin: 0 auto; }
-        header { padding: 30px 0 20px 0; border-bottom: 0.5px solid var(--separator); }
-        h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
-        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
-        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; flex-direction: column; cursor: pointer; }
-        .article-card:last-child { border-bottom: none; }
-        .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; margin-bottom: 8px; color: var(--ios-text); }
-        .meta { font-size: 14px; color: var(--ios-secondary); display: flex; align-items: center; }
+        .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); cursor: pointer; }
         
         /* DEATH TRACKER STYLE */
-        .death-alert-card { background: #4a0e0e !important; border-left: 6px solid #db150b !important; }
-        .death-alert-card .article-link { color: #ffffff !important; text-transform: uppercase; letter-spacing: 0.5px; }
-        .death-alert-card .meta { color: #ffcccc !important; }
+        .death-alert-card { background: #e06666 !important; border-left: 6px solid #990000 !important; }
+        .death-alert-card .article-link { color: #ffffff !important; }
+        .death-alert-card .meta { color: #ffeaea !important; }
 
-        .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 11px; text-transform: uppercase; }
-        .sources-list { margin-top: 15px; padding-top: 10px; border-top: 0.5px solid var(--separator); display: flex; flex-direction: column; }
-        .source-item { display: block; color: var(--ios-accent); text-decoration: none; padding: 10px 0; font-size: 17px; border-bottom: 0.5px solid var(--separator); font-weight: 500; }
-        .source-item:last-child { border-bottom: none; }
-        
-        #update-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--ios-bg); z-index: 2000; display: none; flex-direction: column; }
-        #overlay-header { padding: 20px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; background: var(--ios-bg); position: sticky; top: 0; }
-        #overlay-title { font-weight: 800; font-size: 28px; margin: 0; flex: 1; line-height: 1.1; }
-        #close-overlay { font-size: 32px; cursor: pointer; color: var(--ios-accent); }
-        #overlay-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 22px; line-height: 1.5; font-weight: 400; }
-        .section-heading { display: block; font-weight: 700 !important; font-size: 26px; margin-top: 15px !important; margin-bottom: 10px; }
+        .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; margin-bottom: 8px; color: var(--ios-text); }
+        .meta { font-size: 14px; color: var(--ios-secondary); display: flex; align-items: center; }
         .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; cursor: pointer; }
     </style>
 </head>
 <body>
-<div id="update-overlay"><div id="overlay-header"><div id="overlay-title"></div><div id="close-overlay" onclick="closeUpdateSheet()">✕</div></div><div id="overlay-body"></div></div>
 <div class="container">
-    <header><h1>Newser</h1><div id="update-display" style="font-size:14px; color:var(--ios-secondary); margin-top: 5px;">Connecting...</div></header>
+    <header><h1>Newser</h1><div id="update-display">Connecting...</div></header>
     <div id="content" style="display:none;">
-        <section id="death-tracker-wrapper" style="display:none;">
-            <h2>💀 Death Tracker</h2>
-            <div id="death-tracker-list" class="list-group"></div>
-        </section>
-
-        <section id="alerts-wrapper" style="display:none;"><h2>🚨 Alerts</h2><div id="alerts-list" class="list-group"></div></section>
-        <section id="updates-wrapper" style="display:none;"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
-        <section id="trending-wrapper" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
+        <section id="death-tracker-wrapper" style="display:none;"><h2>💀 Death Tracker</h2><div id="death-tracker-list" class="list-group"></div></section>
         <section id="headlines-wrapper"><h2>🗞️ Headlines</h2><div id="headlines-list" class="list-group"></div></section>
-        
         <button class="done-btn" onclick="markAsDone()">Done for Now</button>
     </div>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec"; 
-
-    function formatTimestamp(isoString) {
-        const date = new Date(isoString);
-        const today = new Date();
-        const isToday = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
-        
-        const timeStr = date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-        if (isToday) return timeStr;
-        
-        // Formats as "Friday 1/2 11:10 PM"
-        const dayStr = date.toLocaleDateString([], {weekday: 'long'});
-        const dateStr = (date.getMonth() + 1) + '/' + date.getDate();
-        return `${dayStr} ${dateStr} ${timeStr}`;
-    }
+    const API_URL = "PASTE_YOUR_DEPLOYMENT_URL_HERE"; 
 
     async function fetchNews() {
         try {
@@ -79,75 +40,37 @@
             const data = await response.json();
             document.getElementById('update-display').innerText = "Last catch-up: " + new Date(data.refreshTime).toLocaleString();
             
-            const dtList = document.getElementById('death-tracker-list'),
-                  alList = document.getElementById('alerts-list'), 
-                  upList = document.getElementById('updates-list'), 
-                  trList = document.getElementById('trending-list'), 
-                  hdList = document.getElementById('headlines-list');
-            
-            [dtList, alList, upList, trList, hdList].forEach(l => l.innerHTML = '');
+            const dtList = document.getElementById('death-tracker-list'), hdList = document.getElementById('headlines-list');
+            dtList.innerHTML = ''; hdList.innerHTML = '';
 
-            data.articles.forEach((item, idx) => {
-                const allSources = JSON.parse(item.link);
-                const div = document.createElement('div');
+            data.articles.forEach((item) => {
+                const allSources = JSON.parse(item.link), div = document.createElement('div');
                 div.className = 'article-card';
 
                 if (item.repeats === -3) {
-                    // Death Tracker styling
                     div.classList.add('death-alert-card');
-                    div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">Verified Death Notification</div>`;
+                    div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">TAP TO VERIFY VIA GOOGLE</div>`;
                     div.onclick = () => window.open(allSources[0].link, '_blank');
                     dtList.appendChild(div);
-                } else if (item.repeats === -1) {
-                    div.innerHTML = `<div class="article-link">${item.title}</div>`;
-                    div.onclick = () => openUpdateSheet(allSources[0].title, allSources[0].body);
-                    upList.appendChild(div);
                 } else {
-                    const secondary = allSources.filter(s => s.title !== item.title);
-                    const isGrouped = item.repeats > 1 || item.repeats === -2;
-                    div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">
-                        ${isGrouped ? `<span class="badge">${allSources.length} Sources</span>` : ''}
-                        <span>${formatTimestamp(item.timestamp)} ${isGrouped && secondary.length > 0 ? '▼' : ''}</span>
-                    </div><div id="src-${idx}" class="sources-list" style="display:none;">${secondary.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}</div>`;
-                    
-                    div.onclick = (e) => { 
-                        if (e.target.tagName === 'A') return; 
-                        if (isGrouped && secondary.length > 0) { 
-                            const el = document.getElementById(`src-${idx}`); 
-                            el.style.display = el.style.display === 'flex' ? 'none' : 'flex'; 
-                        } else { window.open(allSources[0].link, '_blank'); } 
-                    };
-                    if (item.repeats === -2) alList.appendChild(div);
-                    else if (item.repeats > 1) trList.appendChild(div);
-                    else hdList.appendChild(div);
+                    div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta"><span>${new Date(item.timestamp).toLocaleTimeString()}</span></div>`;
+                    div.onclick = () => window.open(allSources[0].link, '_blank');
+                    hdList.appendChild(div);
                 }
             });
 
             document.getElementById('death-tracker-wrapper').style.display = dtList.children.length > 0 ? 'block' : 'none';
-            document.getElementById('alerts-wrapper').style.display = alList.children.length > 0 ? 'block' : 'none';
-            document.getElementById('updates-wrapper').style.display = upList.children.length > 0 ? 'block' : 'none';
-            document.getElementById('trending-wrapper').style.display = trList.children.length > 0 ? 'block' : 'none';
             document.getElementById('content').style.display = 'block';
         } catch (e) { document.getElementById('update-display').innerText = "Connection Error"; }
     }
 
-    function openUpdateSheet(title, content) {
-        document.getElementById('overlay-title').innerText = title;
-        const bodyEl = document.getElementById('overlay-body');
-        let cleanText = content.replace(/<[^>]*>?/gm, '').replace(/[\*_]/g, '').replace(/\[\d+\]/g, '');
-        const paragraphs = cleanText.split(/\n\s*\n/);
-        bodyEl.innerHTML = paragraphs.map(p => {
-            const trimmed = p.trim();
-            if (!trimmed) return "";
-            if (trimmed.split(/\s+/).length <= 5) return `<div class="section-heading">${trimmed}</div>`;
-            return `<p style="font-weight: 400 !important; margin-bottom: 22px;">${trimmed}</p>`;
-        }).join("");
-        document.getElementById('update-overlay').style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+    async function markAsDone() { 
+        if(confirm("Clear list?")) { 
+            // This tells the script to clear the temporary Data sheet
+            await fetch(API_URL + "?action=clear"); 
+            location.reload(); 
+        } 
     }
-
-    function closeUpdateSheet() { document.getElementById('update-overlay').style.display = 'none'; document.body.style.overflow = 'auto'; }
-    async function markAsDone() { if(!confirm("Clear list?")) return; await fetch(API_URL + "?action=clear"); location.reload(); }
     fetchNews();
 </script>
 </body>
