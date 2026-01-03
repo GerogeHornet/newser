@@ -9,14 +9,17 @@
         @media (prefers-color-scheme: dark) { :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; } }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
-        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); cursor: pointer; }
-        .red-alert { background: #e06666 !important; border-left: 6px solid #990000 !important; color: white !important; margin-bottom: 10px; border-radius: 12px; }
+        .red-alert { background: #e06666 !important; border-left: 6px solid #990000 !important; color: white !important; }
         .red-alert .article-link { color: white !important; font-weight: 700; }
         .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; }
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 5px; }
         .red-alert .meta { color: #ffeaea !important; }
+        
+        /* EMPTY STATE STYLE */
         .empty-state { background: #d1d1d6; color: #636366; text-align: center; padding: 60px; border-radius: 14px; font-size: 22px; font-weight: 700; margin-top: 20px; }
+        
         .footer-btns { display: flex; gap: 10px; margin-top: 40px; }
         .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; }
         .undo { background: var(--ios-secondary); color: white; flex: 1; display: none; }
@@ -27,14 +30,16 @@
 
 <div class="container">
     <h1>Newser</h1>
-    <div id="update-display" style="font-size:12px; opacity:0.6;">Connecting...</div>
+    <div id="update-display" style="font-size:12px; opacity:0.6; margin-bottom:10px;">Connecting...</div>
+    
     <div id="empty-box" class="empty-state" style="display:none;">Empty</div>
 
     <div id="content">
-        <section id="alerts-sec" style="display:none;">
-            <h2 id="alert-header">🚨 Alerts</h2>
-            <div id="alerts-list" class="list-group"></div>
-        </section>
+        <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list" class="list-group"></div></section>
+        <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list" class="list-group"></div></section>
+        <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
+        <section id="alerts-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alerts-list" class="list-group"></div></section>
+        <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
         <section id="headlines-sec">
             <h2 id="headline-header">🗞️ Headlines</h2>
             <div id="headlines-list" class="list-group"></div>
@@ -53,7 +58,8 @@
         const d = new Date(ts), now = new Date();
         const time = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
         if (d.toDateString() === now.toDateString()) return time;
-        return `${d.toLocaleDateString([], {weekday:'long', month:'numeric', day:'numeric'})} ${time}`;
+        const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        return `${days[d.getDay()]} ${d.getMonth()+1}/${d.getDate()} ${time}`;
     }
 
     async function load() {
@@ -61,32 +67,39 @@
         const data = await res.json();
         const arts = data.articles;
         
+        // Update "Last checked" display
+        const lastCheck = new Date(data.refreshTime);
+        const dateOpt = { weekday: 'long', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        document.getElementById('update-display').innerText = "Last checked: " + lastCheck.toLocaleString([], dateOpt);
+
         document.getElementById('undo-btn').style.display = data.showUndo ? 'block' : 'none';
         document.getElementById('empty-box').style.display = arts.length === 0 ? 'block' : 'none';
         document.getElementById('content').style.display = arts.length === 0 ? 'none' : 'block';
 
-        const aL = document.getElementById('alerts-list'), hL = document.getElementById('headlines-list');
-        aL.innerHTML = ''; hL.innerHTML = '';
-
-        const alerts = arts.filter(a => a.repeats === -5);
-        const heads = arts.filter(a => a.repeats > 0).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-        document.getElementById('alert-header').innerText = `🚨 Alerts (${alerts.length})`;
-        document.getElementById('headline-header').innerText = `🗞️ Headlines (${heads.length})`;
-
-        const render = (item, container, red) => {
-            const div = document.createElement('div');
-            const links = JSON.parse(item.link);
-            div.className = 'article-card' + (red ? ' red-alert' : '');
-            div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${formatTime(item.timestamp)}</div>`;
-            div.onclick = () => window.open(links[0].link, '_blank');
-            container.appendChild(div);
+        const sections = {
+            death: { list: document.getElementById('death-list'), sec: document.getElementById('death-sec'), data: arts.filter(a => a.repeats === -3) },
+            notif: { list: document.getElementById('notif-list'), sec: document.getElementById('notif-sec'), data: arts.filter(a => a.repeats === -4) },
+            updates: { list: document.getElementById('updates-list'), sec: document.getElementById('updates-sec'), data: arts.filter(a => a.repeats === -5) },
+            alerts: { list: document.getElementById('alerts-list'), sec: document.getElementById('alerts-sec'), data: arts.filter(a => a.repeats === -99) },
+            trending: { list: document.getElementById('trending-list'), sec: document.getElementById('trending-sec'), data: arts.filter(a => a.repeats >= 2).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)) },
+            headlines: { list: document.getElementById('headlines-list'), sec: document.getElementById('headlines-sec'), data: arts.filter(a => a.repeats === 1).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp)) }
         };
 
-        alerts.forEach(i => render(i, aL, true));
-        heads.forEach(i => render(i, hL, false));
+        document.getElementById('headline-header').innerText = `🗞️ Headlines (${sections.headlines.data.length})`;
 
-        document.getElementById('alerts-sec').style.display = alerts.length ? 'block' : 'none';
+        Object.keys(sections).forEach(key => {
+            const s = sections[key];
+            s.list.innerHTML = '';
+            s.sec.style.display = s.data.length ? 'block' : 'none';
+            s.data.forEach(item => {
+                const div = document.createElement('div');
+                const links = JSON.parse(item.link);
+                div.className = 'article-card' + ([ -3, -4, -5, -99 ].includes(item.repeats) ? ' red-alert' : '');
+                div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${formatTime(item.timestamp)}</div>`;
+                div.onclick = () => window.open(links[0].link, '_blank');
+                s.list.appendChild(div);
+            });
+        });
     }
 
     async function api(a) { await fetch(API_URL+"?action="+a); location.reload(); }
