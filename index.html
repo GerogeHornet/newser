@@ -24,6 +24,7 @@
         #overlay-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 22px; line-height: 1.5; font-weight: 400; }
         .section-heading { display: block; font-weight: 700 !important; font-size: 26px; margin-top: 15px !important; margin-bottom: 10px; }
         .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; cursor: pointer; }
+        .empty-msg { font-size: 32px; font-weight: 800; color: var(--ios-secondary); text-align: center; padding: 60px 0; opacity: 0.2; }
     </style>
 </head>
 <body>
@@ -39,37 +40,67 @@
     </div>
 </div>
 <script>
-    const API_URL = "YOUR_WEB_APP_URL_HERE"; 
+    // REPLACE THIS WITH YOUR NEW DEPLOYMENT URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
+
     async function fetchNews() {
-        const response = await fetch(API_URL);
-        const data = await response.json();
-        document.getElementById('update-display').innerText = "Last catch-up: " + new Date(data.refreshTime).toLocaleString();
-        const alList = document.getElementById('alerts-list'), upList = document.getElementById('updates-list'), trList = document.getElementById('trending-list'), hdList = document.getElementById('headlines-list');
-        alList.innerHTML = ''; upList.innerHTML = ''; trList.innerHTML = ''; hdList.innerHTML = '';
-        data.articles.forEach((item, idx) => {
-            const allSources = JSON.parse(item.link), secondarySources = allSources.filter(s => s.title !== item.title);
-            const isGrouped = item.repeats > 1 || item.repeats === -2;
-            const div = document.createElement('div'); div.className = 'article-card';
-            if (item.repeats === -1) {
-                div.innerHTML = `<div class="article-link">${item.title}</div>`;
-                div.onclick = () => openUpdateSheet(allSources[0].title, allSources[0].body);
-                upList.appendChild(div);
-            } else {
-                div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">
-                    ${isGrouped && allSources.length > 1 ? `<span class="badge" style="${item.repeats === -2 ? 'background:var(--ios-accent)' : ''}">${allSources.length} Sources</span>` : ''}
-                    <span>${new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${isGrouped && allSources.length > 1 ? '▼' : ''}</span>
-                </div><div id="src-${idx}" class="sources-list" style="display:none;">${secondarySources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}</div>`;
-                div.onclick = (e) => { if (e.target.tagName === 'A') return; if (isGrouped && allSources.length > 1) { const el = document.getElementById(`src-${idx}`); el.style.display = el.style.display === 'block' ? 'none' : 'block'; } else { window.open(allSources[0].link, '_blank'); } };
-                if (item.repeats === -2) alList.appendChild(div); else if (item.repeats > 1) trList.appendChild(div); else hdList.appendChild(div);
-            }
-        });
-        const hdCount = hdList.children.length;
-        const hdBadge = document.getElementById('headlines-badge');
-        if (hdCount > 0) { hdBadge.innerText = hdCount; hdBadge.style.display = 'inline-flex'; } else { hdBadge.style.display = 'none'; }
-        document.getElementById('alerts-wrapper').style.display = alList.children.length > 0 ? 'block' : 'none';
-        document.getElementById('updates-wrapper').style.display = upList.children.length > 0 ? 'block' : 'none';
-        document.getElementById('trending-wrapper').style.display = trList.children.length > 0 ? 'block' : 'none';
-        document.getElementById('content').style.display = 'block';
+        try {
+            // Added cache-busting timestamp to the URL
+            const response = await fetch(API_URL + "?t=" + new Date().getTime());
+            const data = await response.json();
+            
+            document.getElementById('update-display').innerText = "Last catch-up: " + new Date(data.refreshTime).toLocaleString();
+            
+            const alList = document.getElementById('alerts-list'), 
+                  upList = document.getElementById('updates-list'), 
+                  trList = document.getElementById('trending-list'), 
+                  hdList = document.getElementById('headlines-list');
+                  
+            alList.innerHTML = ''; upList.innerHTML = ''; trList.innerHTML = ''; hdList.innerHTML = '';
+
+            data.articles.forEach((item, idx) => {
+                const allSources = JSON.parse(item.link);
+                const secondarySources = allSources.filter(s => s.title !== item.title);
+                const isGrouped = item.repeats > 1 || item.repeats === -2;
+                const div = document.createElement('div');
+                div.className = 'article-card';
+
+                if (item.repeats === -1) {
+                    div.innerHTML = `<div class="article-link">${item.title}</div>`;
+                    div.onclick = () => openUpdateSheet(allSources[0].title, allSources[0].body);
+                    upList.appendChild(div);
+                } else {
+                    div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">
+                        ${isGrouped && allSources.length > 1 ? `<span class="badge" style="${item.repeats === -2 ? 'background:var(--ios-accent)' : ''}">${allSources.length} Sources</span>` : ''}
+                        <span>${new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${isGrouped && allSources.length > 1 ? '▼' : ''}</span>
+                    </div><div id="src-${idx}" class="sources-list" style="display:none;">${secondarySources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}</div>`;
+                    
+                    div.onclick = (e) => { 
+                        if (e.target.tagName === 'A') return; 
+                        if (isGrouped && allSources.length > 1) { 
+                            const el = document.getElementById(`src-${idx}`); 
+                            el.style.display = el.style.display === 'block' ? 'none' : 'block'; 
+                        } else { window.open(allSources[0].link, '_blank'); } 
+                    };
+                    if (item.repeats === -2) alList.appendChild(div);
+                    else if (item.repeats > 1) trList.appendChild(div);
+                    else hdList.appendChild(div);
+                }
+            });
+
+            const hdCount = hdList.children.length;
+            const hdBadge = document.getElementById('headlines-badge');
+            if (hdCount > 0) { hdBadge.innerText = hdCount; hdBadge.style.display = 'inline-flex'; } else { hdBadge.style.display = 'none'; }
+
+            document.getElementById('alerts-wrapper').style.display = alList.children.length > 0 ? 'block' : 'none';
+            document.getElementById('updates-wrapper').style.display = upList.children.length > 0 ? 'block' : 'none';
+            document.getElementById('trending-wrapper').style.display = trList.children.length > 0 ? 'block' : 'none';
+            if (hdList.children.length === 0) hdList.innerHTML = '<div class="empty-msg">EMPTY</div>';
+            document.getElementById('content').style.display = 'block';
+        } catch (error) {
+            document.getElementById('update-display').innerText = "Connection Error. Please check permissions.";
+            console.error(error);
+        }
     }
 
     function openUpdateSheet(title, content) {
@@ -91,7 +122,16 @@
     }
 
     function closeUpdateSheet() { document.getElementById('update-overlay').style.display = 'none'; document.body.style.overflow = 'auto'; }
-    async function markAsDone() { if(!confirm("Clear list?")) return; await fetch(API_URL + "?action=clear", { method: "POST", mode: "no-cors" }); location.reload(); }
+    
+    // Switch to GET to fix the "Connecting" loop
+    async function markAsDone() { 
+        if(!confirm("Clear list?")) return; 
+        document.getElementById('content').style.display = 'none';
+        document.getElementById('update-display').innerText = "Clearing...";
+        await fetch(API_URL + "?action=clear", { mode: "no-cors" }); 
+        setTimeout(() => location.reload(), 1000); 
+    }
+    
     fetchNews();
 </script>
 </body>
