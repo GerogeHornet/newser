@@ -29,10 +29,14 @@
         #overlay-header { padding: 20px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; background: var(--ios-bg); position: sticky; top: 0; }
         #overlay-title { font-weight: 800; font-size: 28px; margin: 0; flex: 1; line-height: 1.1; }
         #close-overlay { font-size: 32px; cursor: pointer; color: var(--ios-accent); }
+        
         #overlay-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 22px; line-height: 1.5; font-weight: 400; }
         
-        #overlay-body h3, #overlay-body h2, #overlay-body b, #overlay-body strong { display: block; font-weight: 700; font-size: 26px; margin-top: 0px; margin-bottom: 10px; }
-        #overlay-body * { font-weight: 400; }
+        /* Explicitly force all child text to normal weight except headings */
+        #overlay-body * { font-weight: 400 !important; }
+        #overlay-body h1, #overlay-body h2, #overlay-body h3, #overlay-body .section-heading { 
+            display: block; font-weight: 700 !important; font-size: 26px; margin-top: 0px; margin-bottom: 10px; 
+        }
 
         .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; }
         .empty-msg { font-size: 32px; font-weight: 800; color: var(--ios-secondary); text-align: center; padding: 60px 0; opacity: 0.2; }
@@ -81,8 +85,22 @@
     function openUpdateSheet(title, content) {
         document.getElementById('overlay-title').innerText = title;
         const bodyEl = document.getElementById('overlay-body');
-        bodyEl.innerHTML = content.replace(/\[\d+\]/g, ''); 
-        bodyEl.querySelectorAll('h1, h2, h3, b, strong').forEach(h => { h.style.fontWeight = "700"; h.style.marginTop = "0px"; if(!['B','STRONG'].includes(h.tagName)) h.style.fontSize = "26px"; });
+        
+        // 1. Remove citations [1], [2], etc.
+        let cleanContent = content.replace(/\[\d+\]/g, ''); 
+        bodyEl.innerHTML = cleanContent;
+
+        // 2. Identify headers and tag them for bolding
+        bodyEl.querySelectorAll('h1, h2, h3, b, strong').forEach(h => {
+             // If it has very few words, it's likely a heading we want bold
+             if (h.innerText.split(' ').length < 6) {
+                 h.className = 'section-heading';
+             } else {
+                 // Otherwise, it's bolded body text; strip the bolding
+                 h.style.fontWeight = '400';
+             }
+        });
+
         document.getElementById('update-overlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
