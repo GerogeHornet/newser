@@ -23,22 +23,20 @@
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 11px; text-transform: uppercase; }
         .sources-list { margin-top: 15px; padding-top: 10px; border-top: 0.5px solid var(--separator); }
         .source-item { display: block; color: var(--ios-accent); text-decoration: none; padding: 12px 0; font-size: 17px; border-bottom: 0.5px solid var(--separator); font-weight: 500; }
+        .source-item:last-child { border-bottom: none; }
 
         /* OVERLAY SHEET */
         #update-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--ios-bg); z-index: 2000; display: none; flex-direction: column; }
         #overlay-header { padding: 20px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; background: var(--ios-bg); position: sticky; top: 0; }
         #overlay-title { font-weight: 800; font-size: 28px; margin: 0; flex: 1; line-height: 1.1; }
         #close-overlay { font-size: 32px; cursor: pointer; color: var(--ios-accent); }
-        
         #overlay-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 22px; line-height: 1.5; font-weight: 400; }
         
-        /* Explicitly force all child text to normal weight except headings */
+        /* Strict bolding for Overlay: only section headers */
+        #overlay-body h3, #overlay-body h2, #overlay-body b, #overlay-body strong { display: block; font-weight: 700 !important; font-size: 26px; margin-top: 0px; margin-bottom: 10px; }
         #overlay-body * { font-weight: 400 !important; }
-        #overlay-body h1, #overlay-body h2, #overlay-body h3, #overlay-body .section-heading { 
-            display: block; font-weight: 700 !important; font-size: 26px; margin-top: 0px; margin-bottom: 10px; 
-        }
 
-        .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; }
+        .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; cursor: pointer; }
         .empty-msg { font-size: 32px; font-weight: 800; color: var(--ios-secondary); text-align: center; padding: 60px 0; opacity: 0.2; }
     </style>
 </head>
@@ -50,6 +48,7 @@
 <div class="container">
     <header><h1>Newser</h1><div id="update-display" style="font-size:14px; color:var(--ios-secondary); margin-top: 5px;">Connecting...</div></header>
     <div id="content" style="display:none;">
+        <section id="alerts-wrapper" style="display:none;"><h2>🚨 Alerts</h2><div id="alerts-list" class="list-group"></div></section>
         <section id="updates-wrapper" style="display:none;"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
         <section id="trending-wrapper" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
         <section id="headlines-wrapper"><h2>🗞️ Headlines</h2><div id="headlines-list" class="list-group"></div></section>
@@ -58,52 +57,84 @@
 </div>
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
+
     async function fetchNews() {
         const response = await fetch(API_URL);
         const data = await response.json();
         document.getElementById('update-display').innerText = "Last catch-up: " + new Date(data.refreshTime).toLocaleString();
-        const upList = document.getElementById('updates-list'), trList = document.getElementById('trending-list'), hdList = document.getElementById('headlines-list');
-        upList.innerHTML = ''; trList.innerHTML = ''; hdList.innerHTML = '';
+        
+        const alList = document.getElementById('alerts-list'), 
+              upList = document.getElementById('updates-list'), 
+              trList = document.getElementById('trending-list'), 
+              hdList = document.getElementById('headlines-list');
+              
+        alList.innerHTML = ''; upList.innerHTML = ''; trList.innerHTML = ''; hdList.innerHTML = '';
+
         data.articles.forEach((item, idx) => {
-            const sources = JSON.parse(item.link), isTrending = item.repeats > 1, div = document.createElement('div');
+            const allSources = JSON.parse(item.link);
+            // Logic to hide the lead headline from the source list
+            const secondarySources = allSources.filter(s => s.title !== item.title);
+            const isGrouped = item.repeats > 1 || item.repeats === -2;
+            const div = document.createElement('div');
             div.className = 'article-card';
+
             if (item.repeats === -1) {
+                // UPDATE Section
                 div.innerHTML = `<div class="article-link">${item.title}</div>`;
-                div.onclick = () => openUpdateSheet(sources[0].title, sources[0].body);
+                div.onclick = () => openUpdateSheet(allSources[0].title, allSources[0].body);
                 upList.appendChild(div);
             } else {
-                div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${isTrending ? `<span class="badge">${item.repeats} Sources</span>` : ''}<span>${new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${isTrending ? '▼' : ''}</span></div><div id="src-${idx}" class="sources-list" style="display:none;">${sources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}</div>`;
-                div.onclick = (e) => { if (e.target.tagName === 'A') return; if (isTrending) { const el = document.getElementById(`src-${idx}`); el.style.display = el.style.display === 'block' ? 'none' : 'block'; } else { window.open(sources[0].link, '_blank'); } };
-                if (isTrending) trList.appendChild(div); else hdList.appendChild(div);
+                // Alerts, Trending, Headlines
+                div.innerHTML = `
+                    <div class="article-link">${item.title}</div>
+                    <div class="meta">
+                        ${isGrouped ? `<span class="badge" style="${item.repeats === -2 ? 'background:var(--ios-accent)' : ''}">${allSources.length} Sources</span>` : ''}
+                        <span>${new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} ${isGrouped ? '▼' : ''}</span>
+                    </div>
+                    <div id="src-${idx}" class="sources-list" style="display:none;">
+                        ${secondarySources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}
+                    </div>`;
+                
+                div.onclick = (e) => { 
+                    if (e.target.tagName === 'A') return; 
+                    if (isGrouped) { 
+                        const el = document.getElementById(`src-${idx}`); 
+                        el.style.display = el.style.display === 'block' ? 'none' : 'block'; 
+                    } else { window.open(allSources[0].link, '_blank'); } 
+                };
+
+                if (item.repeats === -2) alList.appendChild(div);
+                else if (item.repeats > 1) trList.appendChild(div);
+                else hdList.appendChild(div);
             }
         });
+
+        document.getElementById('alerts-wrapper').style.display = alList.children.length > 0 ? 'block' : 'none';
         document.getElementById('updates-wrapper').style.display = upList.children.length > 0 ? 'block' : 'none';
         document.getElementById('trending-wrapper').style.display = trList.children.length > 0 ? 'block' : 'none';
         if (hdList.children.length === 0) hdList.innerHTML = '<div class="empty-msg">EMPTY</div>';
         document.getElementById('content').style.display = 'block';
     }
+
     function openUpdateSheet(title, content) {
         document.getElementById('overlay-title').innerText = title;
         const bodyEl = document.getElementById('overlay-body');
-        
-        // 1. Remove citations [1], [2], etc.
-        let cleanContent = content.replace(/\[\d+\]/g, ''); 
-        bodyEl.innerHTML = cleanContent;
-
-        // 2. Identify headers and tag them for bolding
-        bodyEl.querySelectorAll('h1, h2, h3, b, strong').forEach(h => {
-             // If it has very few words, it's likely a heading we want bold
-             if (h.innerText.split(' ').length < 6) {
-                 h.className = 'section-heading';
-             } else {
-                 // Otherwise, it's bolded body text; strip the bolding
-                 h.style.fontWeight = '400';
-             }
+        // Clean citations [1], [2]
+        bodyEl.innerHTML = content.replace(/\[\d+\]/g, ''); 
+        // Strict bolding for section headings only
+        bodyEl.querySelectorAll('h1, h2, h3, b, strong').forEach(h => { 
+            if (h.innerText.split(' ').length < 6) {
+                h.style.fontWeight = "700"; 
+                h.style.marginTop = "0px"; 
+                if(!['B','STRONG'].includes(h.tagName)) h.style.fontSize = "26px";
+            } else {
+                h.style.fontWeight = "400";
+            }
         });
-
         document.getElementById('update-overlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
+
     function closeUpdateSheet() { document.getElementById('update-overlay').style.display = 'none'; document.body.style.overflow = 'auto'; }
     async function markAsDone() { if(!confirm("Clear list?")) return; await fetch(API_URL + "?action=clear", { method: "POST", mode: "no-cors" }); location.reload(); }
     fetchNews();
