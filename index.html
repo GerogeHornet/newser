@@ -95,6 +95,26 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec"; 
 
+    function formatArticleDate(timestamp) {
+        const articleDate = new Date(timestamp);
+        const now = new Date();
+        
+        const isToday = articleDate.getDate() === now.getDate() &&
+                        articleDate.getMonth() === now.getMonth() &&
+                        articleDate.getFullYear() === now.getFullYear();
+
+        const timeStr = articleDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        if (isToday) {
+            return timeStr;
+        } else {
+            // Format: Friday Jan 2 11:10 AM
+            const options = { weekday: 'long', month: 'short', day: 'numeric' };
+            const datePart = articleDate.toLocaleDateString([], options);
+            return `${datePart} ${timeStr}`;
+        }
+    }
+
     async function fetchNews() {
         try {
             const response = await fetch(API_URL + "?t=" + new Date().getTime());
@@ -110,37 +130,46 @@
             alList.innerHTML = ''; 
             hdList.innerHTML = '';
 
-            data.articles.forEach((item) => {
+            // Separate and Sort Headlines: Oldest to Youngest
+            const alerts = data.articles.filter(a => a.repeats === -3 || a.repeats === -4);
+            const headlines = data.articles.filter(a => a.repeats !== -3 && a.repeats !== -4)
+                                           .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+            // Render Alerts
+            alerts.forEach((item) => {
+                const allSources = JSON.parse(item.link);
+                const div = document.createElement('div');
+                div.className = 'article-card red-alert-card';
+                
+                const displayDate = formatArticleDate(item.timestamp);
+                
+                div.innerHTML = `
+                    <div class="article-link">${item.title}</div>
+                    <div class="meta"><span>${displayDate}</span></div>
+                `; 
+                
+                if (item.repeats === -4 || allSources[0].body) {
+                    div.onclick = () => openOverlay(item.title, allSources[0].body);
+                } else {
+                    div.onclick = () => window.open(allSources[0].link, '_blank');
+                }
+                alList.appendChild(div);
+            });
+
+            // Render Headlines (Oldest to Youngest)
+            headlines.forEach((item) => {
                 const allSources = JSON.parse(item.link);
                 const div = document.createElement('div');
                 div.className = 'article-card';
+                
+                const displayDate = formatArticleDate(item.timestamp);
 
-                // Formatting the Date and Time strings
-                const dateObj = new Date(item.timestamp);
-                const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                const dateStr = dateObj.toLocaleDateString([], {month: 'short', day: 'numeric'});
-
-                if (item.repeats === -3 || item.repeats === -4) {
-                    div.classList.add('red-alert-card');
-                    div.innerHTML = `
-                        <div class="article-link">${item.title}</div>
-                        <div class="meta"><span>${dateStr} at ${timeStr}</span></div>
-                    `; 
-                    
-                    if (item.repeats === -4 || allSources[0].body) {
-                        div.onclick = () => openOverlay(item.title, allSources[0].body);
-                    } else {
-                        div.onclick = () => window.open(allSources[0].link, '_blank');
-                    }
-                    alList.appendChild(div);
-                } else {
-                    div.innerHTML = `
-                        <div class="article-link">${item.title}</div>
-                        <div class="meta"><span>${dateStr} • ${timeStr}</span></div>
-                    `;
-                    div.onclick = () => window.open(allSources[0].link, '_blank');
-                    hdList.appendChild(div);
-                }
+                div.innerHTML = `
+                    <div class="article-link">${item.title}</div>
+                    <div class="meta"><span>${displayDate}</span></div>
+                `;
+                div.onclick = () => window.open(allSources[0].link, '_blank');
+                hdList.appendChild(div);
             });
 
             document.getElementById('alerts-wrapper').style.display = alList.children.length > 0 ? 'block' : 'none';
