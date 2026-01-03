@@ -25,7 +25,7 @@
         .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; color: var(--ios-text); }
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 5px; }
 
-        /* RED ALERT STYLE [#e06666] */
+        /* RED STYLE FOR BOTH SECTIONS [#e06666] */
         .red-alert-card { background: #e06666 !important; border-left: 6px solid #990000 !important; margin-bottom: 10px; border-radius: 12px; }
         .red-alert-card .article-link { color: #ffffff !important; font-weight: 700; }
         .red-alert-card .meta { color: #ffeaea !important; }
@@ -61,9 +61,9 @@
             <div id="deaths-list" class="list-group"></div>
         </section>
 
-        <section id="tk-wrapper" style="display:none;">
+        <section id="alerts-wrapper" style="display:none;">
             <h2>🚨 Alerts</h2>
-            <div id="tk-list" class="list-group"></div>
+            <div id="alerts-list" class="list-group"></div>
         </section>
 
         <section id="headlines-wrapper">
@@ -100,12 +100,12 @@
             document.getElementById('update-display').innerText = "Last catch-up: " + new Date(data.refreshTime).toLocaleString();
             
             const deathsList = document.getElementById('deaths-list'),
-                  tkList = document.getElementById('tk-list'),
+                  alList = document.getElementById('alerts-list'),
                   hdList = document.getElementById('headlines-list');
             
-            deathsList.innerHTML = ''; tkList.innerHTML = ''; hdList.innerHTML = '';
+            deathsList.innerHTML = ''; alList.innerHTML = ''; hdList.innerHTML = '';
 
-            // Split and Sort
+            // Split Data
             const deaths = data.articles.filter(a => a.repeats === -3);
             const alerts = data.articles.filter(a => a.repeats === -4);
             const headlines = data.articles.filter(a => a.repeats !== -3 && a.repeats !== -4)
@@ -118,20 +118,24 @@
                 if (isRed) div.classList.add('red-alert-card');
                 div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta"><span>${formatArticleDate(item.timestamp)}</span></div>`;
                 
-                if (item.repeats === -4 || allSources[0].body) {
+                // If priority -4, open the research overlay
+                if (item.repeats === -4) {
                     div.onclick = () => openOverlay(item.title, allSources[0].body);
                 } else {
+                    // Otherwise (Headlines or Death -3), open the link
                     div.onclick = () => window.open(allSources[0].link, '_blank');
                 }
                 container.appendChild(div);
             };
 
+            // Populate the three lists
             deaths.forEach(i => renderItem(i, deathsList, true));
-            alerts.forEach(i => renderItem(i, tkList, true));
+            alerts.forEach(i => renderItem(i, alList, true));
             headlines.forEach(i => renderItem(i, hdList, false));
 
+            // Toggle visibility of wrappers
             document.getElementById('deaths-wrapper').style.display = deaths.length > 0 ? 'block' : 'none';
-            document.getElementById('tk-wrapper').style.display = alerts.length > 0 ? 'block' : 'none';
+            document.getElementById('alerts-wrapper').style.display = alerts.length > 0 ? 'block' : 'none';
             document.getElementById('content').style.display = 'block';
         } catch (e) { document.getElementById('update-display').innerText = "Connection Error"; }
     }
