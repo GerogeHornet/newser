@@ -14,19 +14,18 @@
         h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
         
-        /* Red Rectangle Badge */
         .headline-count-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             background-color: var(--trending);
             color: white;
-            font-size: 24px; /* Matches H2 font size */
+            font-size: 24px;
             font-weight: 800;
-            min-width: 44px; /* Wider to accommodate 3 digits */
+            min-width: 44px;
             height: 36px;
-            padding: 0 8px; /* Extra side padding for rectangular look */
-            border-radius: 8px; /* Rounded rectangle */
+            padding: 0 8px;
+            border-radius: 8px;
             margin-left: 12px;
             vertical-align: middle;
         }
@@ -38,7 +37,6 @@
         
         .meta { font-size: 14px; color: var(--ios-secondary); display: flex; align-items: center; }
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 11px; text-transform: uppercase; }
-        .sources-list { margin-top: 15px; padding-top: 10px; border-top: 0.5px solid var(--separator); }
         .source-item { display: block; color: var(--ios-accent); text-decoration: none; padding: 12px 0; font-size: 17px; border-bottom: 0.5px solid var(--separator); font-weight: 500; }
 
         /* OVERLAY SHEET */
@@ -47,11 +45,11 @@
         #overlay-title { font-weight: 800; font-size: 28px; margin: 0; flex: 1; line-height: 1.1; }
         #close-overlay { font-size: 32px; cursor: pointer; color: var(--ios-accent); }
         #overlay-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 22px; line-height: 1.5; font-weight: 400; }
-        #overlay-body h3, #overlay-body h2, #overlay-body b, #overlay-body strong { display: block; font-weight: 700 !important; font-size: 26px; margin-top: 0px !important; margin-bottom: 10px; }
-        #overlay-body * { font-weight: 400 !important; }
-
+        
+        /* Heading styling for overlay */
+        .section-heading { display: block; font-weight: 700 !important; font-size: 26px; margin-top: 0px !important; margin-bottom: 10px; }
+        
         .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; cursor: pointer; }
-        .empty-msg { font-size: 32px; font-weight: 800; color: var(--ios-secondary); text-align: center; padding: 60px 0; opacity: 0.2; }
     </style>
 </head>
 <body>
@@ -108,7 +106,6 @@
                     <div id="src-${idx}" class="sources-list" style="display:none;">
                         ${secondarySources.map(s => `<a class="source-item" href="${s.link}" target="_blank">• ${s.title}</a>`).join('')}
                     </div>`;
-                
                 div.onclick = (e) => { 
                     if (e.target.tagName === 'A') return; 
                     if (isGrouped && allSources.length > 1) { 
@@ -116,14 +113,12 @@
                         el.style.display = el.style.display === 'block' ? 'none' : 'block'; 
                     } else { window.open(allSources[0].link, '_blank'); } 
                 };
-
                 if (item.repeats === -2) alList.appendChild(div);
                 else if (item.repeats > 1) trList.appendChild(div);
                 else hdList.appendChild(div);
             }
         });
 
-        // Update Headline Badge Count
         const hdCount = hdList.children.length;
         const hdBadge = document.getElementById('headlines-badge');
         if (hdCount > 0) {
@@ -134,21 +129,33 @@
         document.getElementById('alerts-wrapper').style.display = alList.children.length > 0 ? 'block' : 'none';
         document.getElementById('updates-wrapper').style.display = upList.children.length > 0 ? 'block' : 'none';
         document.getElementById('trending-wrapper').style.display = trList.children.length > 0 ? 'block' : 'none';
-        if (hdList.children.length === 0) hdList.innerHTML = '<div class="empty-msg">EMPTY</div>';
         document.getElementById('content').style.display = 'block';
     }
 
     function openUpdateSheet(title, content) {
         document.getElementById('overlay-title').innerText = title;
         const bodyEl = document.getElementById('overlay-body');
-        bodyEl.innerHTML = content.replace(/\[\d+\]/g, ''); 
+        
+        // 1. CLEANING: Remove Markdown asterisks/underscores and citation brackets
+        let cleanText = content.replace(/[\*_]/g, '').replace(/\[\d+\]/g, '');
+        bodyEl.innerHTML = cleanText;
+
+        // 2. STYLING: Enforce strict font-weights
+        // We find all elements and force them to weight 400 first
+        const allChildren = bodyEl.querySelectorAll('*');
+        allChildren.forEach(child => child.style.fontWeight = "400");
+
+        // 3. IDENTIFY HEADERS: Short phrases with line breaks should be headers
+        // We check H tags and bold tags. If they are short (<6 words), they get bolded.
         bodyEl.querySelectorAll('h1, h2, h3, b, strong').forEach(h => { 
-            if (h.innerText.split(' ').length < 6) {
+            if (h.innerText.trim().split(' ').length < 6) {
+                h.classList.add('section-heading');
                 h.style.fontWeight = "700"; 
-                h.style.marginTop = "0px"; 
-                if(!['B','STRONG'].includes(h.tagName)) h.style.fontSize = "26px";
-            } else { h.style.fontWeight = "400"; }
+            } else {
+                h.style.fontWeight = "400"; // Strip bold if it's long text
+            }
         });
+
         document.getElementById('update-overlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
