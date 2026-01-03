@@ -7,7 +7,7 @@
     <style>
         :root { --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000; --ios-secondary: #636366; --ios-accent: #007aff; --trending: #ff3b30; --separator: #d1d1d6; }
         @media (prefers-color-scheme: dark) { :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --trending: #ff453a; --separator: #38383a; } }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-font-smoothing: antialiased; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 150px 16px; -webkit-font-smoothing: antialiased; }
         .container { max-width: 600px; margin: 0 auto; }
         header { padding: 30px 0 20px 0; border-bottom: 0.5px solid var(--separator); }
         h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
@@ -25,9 +25,13 @@
         .section-heading { display: block; font-weight: 700 !important; font-size: 26px; margin-top: 15px !important; margin-bottom: 10px; }
         .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; cursor: pointer; }
         .empty-msg { font-size: 32px; font-weight: 800; color: var(--ios-secondary); text-align: center; padding: 60px 0; opacity: 0.2; }
+        
+        /* Debug Console */
+        #debug-console { position: fixed; bottom: 0; left: 0; width: 100%; background: #000; color: #0f0; font-family: monospace; font-size: 10px; padding: 10px; height: 100px; overflow-y: auto; z-index: 3000; border-top: 2px solid #333; }
     </style>
 </head>
 <body>
+<div id="debug-console">--- NEWSER DEBUG LOG ---<br></div>
 <div id="update-overlay"><div id="overlay-header"><div id="overlay-title"></div><div id="close-overlay" onclick="closeUpdateSheet()">✕</div></div><div id="overlay-body"></div></div>
 <div class="container">
     <header><h1>Newser</h1><div id="update-display" style="font-size:14px; color:var(--ios-secondary); margin-top: 5px;">Connecting...</div></header>
@@ -40,15 +44,29 @@
     </div>
 </div>
 <script>
-    // REPLACE THIS WITH YOUR NEW DEPLOYMENT URL
-    const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
+    const API_URL = "PASTE_YOUR_NEW_DEPLOYMENT_URL_HERE";
+
+    function log(msg) {
+        const console = document.getElementById('debug-console');
+        console.innerHTML += `> ${msg}<br>`;
+        console.scrollTop = console.scrollHeight;
+    }
 
     async function fetchNews() {
+        log("Starting fetch process...");
         try {
-            // Added cache-busting timestamp to the URL
+            log("Sending request to Google script...");
             const response = await fetch(API_URL + "?t=" + new Date().getTime());
+            log("Response received. Parsing JSON...");
             const data = await response.json();
             
+            if (data.error) {
+                log("SCRIPT ERROR: " + data.error);
+                document.getElementById('update-display').innerText = "Sheet Error: Check Google Script logs.";
+                return;
+            }
+
+            log(`Data parsed. Found ${data.articles.length} articles.`);
             document.getElementById('update-display').innerText = "Last catch-up: " + new Date(data.refreshTime).toLocaleString();
             
             const alList = document.getElementById('alerts-list'), 
@@ -88,6 +106,7 @@
                 }
             });
 
+            log("Articles rendered. Updating badges...");
             const hdCount = hdList.children.length;
             const hdBadge = document.getElementById('headlines-badge');
             if (hdCount > 0) { hdBadge.innerText = hdCount; hdBadge.style.display = 'inline-flex'; } else { hdBadge.style.display = 'none'; }
@@ -96,10 +115,12 @@
             document.getElementById('updates-wrapper').style.display = upList.children.length > 0 ? 'block' : 'none';
             document.getElementById('trending-wrapper').style.display = trList.children.length > 0 ? 'block' : 'none';
             if (hdList.children.length === 0) hdList.innerHTML = '<div class="empty-msg">EMPTY</div>';
+            
+            log("Fetch process complete. Displaying UI.");
             document.getElementById('content').style.display = 'block';
         } catch (error) {
-            document.getElementById('update-display').innerText = "Connection Error. Please check permissions.";
-            console.error(error);
+            log("CRITICAL ERROR: " + error.message);
+            document.getElementById('update-display').innerText = "Connection Failed.";
         }
     }
 
@@ -123,12 +144,13 @@
 
     function closeUpdateSheet() { document.getElementById('update-overlay').style.display = 'none'; document.body.style.overflow = 'auto'; }
     
-    // Switch to GET to fix the "Connecting" loop
     async function markAsDone() { 
         if(!confirm("Clear list?")) return; 
+        log("Clearing data...");
         document.getElementById('content').style.display = 'none';
         document.getElementById('update-display').innerText = "Clearing...";
         await fetch(API_URL + "?action=clear", { mode: "no-cors" }); 
+        log("Data cleared. Refreshing...");
         setTimeout(() => location.reload(), 1000); 
     }
     
