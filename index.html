@@ -14,18 +14,19 @@
         h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
         
-        /* Larger Red Circle Badge */
+        /* Red Rectangle Badge */
         .headline-count-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             background-color: var(--trending);
             color: white;
-            font-size: 20px; /* Increased from 16px */
+            font-size: 24px; /* Matches H2 font size */
             font-weight: 800;
-            width: 36px; /* Increased from 28px */
-            height: 36px; /* Increased from 28px */
-            border-radius: 50%;
+            min-width: 44px; /* Wider to accommodate 3 digits */
+            height: 36px;
+            padding: 0 8px; /* Extra side padding for rectangular look */
+            border-radius: 8px; /* Rounded rectangle */
             margin-left: 12px;
             vertical-align: middle;
         }
