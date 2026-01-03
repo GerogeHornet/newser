@@ -12,8 +12,24 @@
         .container { max-width: 600px; margin: 0 auto; }
         header { padding: 30px 0 20px 0; border-bottom: 0.5px solid var(--separator); }
         h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
-        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
+        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
         
+        /* Red Circle Badge Style */
+        .headline-count-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--trending);
+            color: white;
+            font-size: 16px;
+            font-weight: 800;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            margin-left: 12px;
+            vertical-align: middle;
+        }
+
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; flex-direction: column; cursor: pointer; }
         .article-card:last-child { border-bottom: none; }
@@ -23,21 +39,15 @@
         .badge { background: var(--trending); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; margin-right: 12px; font-size: 11px; text-transform: uppercase; }
         .sources-list { margin-top: 15px; padding-top: 10px; border-top: 0.5px solid var(--separator); }
         .source-item { display: block; color: var(--ios-accent); text-decoration: none; padding: 12px 0; font-size: 17px; border-bottom: 0.5px solid var(--separator); font-weight: 500; }
-        .source-item:last-child { border-bottom: none; }
 
         /* OVERLAY SHEET */
         #update-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--ios-bg); z-index: 2000; display: none; flex-direction: column; }
         #overlay-header { padding: 20px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; background: var(--ios-bg); position: sticky; top: 0; }
         #overlay-title { font-weight: 800; font-size: 28px; margin: 0; flex: 1; line-height: 1.1; }
         #close-overlay { font-size: 32px; cursor: pointer; color: var(--ios-accent); }
-        
         #overlay-body { padding: 20px; overflow-y: auto; flex: 1; font-size: 22px; line-height: 1.5; font-weight: 400; }
-        
-        /* Force normal weight for everything in overlay except section-headings */
+        #overlay-body h3, #overlay-body h2, #overlay-body b, #overlay-body strong { display: block; font-weight: 700 !important; font-size: 26px; margin-top: 0px !important; margin-bottom: 10px; }
         #overlay-body * { font-weight: 400 !important; }
-        #overlay-body h1, #overlay-body h2, #overlay-body h3, #overlay-body .section-heading { 
-            display: block; font-weight: 700 !important; font-size: 26px; margin-top: 0px !important; margin-bottom: 10px; 
-        }
 
         .done-btn { background: var(--ios-accent); color: white; border: none; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; margin-top: 40px; cursor: pointer; }
         .empty-msg { font-size: 32px; font-weight: 800; color: var(--ios-secondary); text-align: center; padding: 60px 0; opacity: 0.2; }
@@ -54,7 +64,10 @@
         <section id="alerts-wrapper" style="display:none;"><h2>🚨 Alerts</h2><div id="alerts-list" class="list-group"></div></section>
         <section id="updates-wrapper" style="display:none;"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
         <section id="trending-wrapper" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
-        <section id="headlines-wrapper"><h2>🗞️ Headlines</h2><div id="headlines-list" class="list-group"></div></section>
+        <section id="headlines-wrapper">
+            <h2>🗞️ Headlines <span id="headlines-badge" class="headline-count-badge" style="display:none;">0</span></h2>
+            <div id="headlines-list" class="list-group"></div>
+        </section>
         <button class="done-btn" onclick="markAsDone()">Done for Now</button>
     </div>
 </div>
@@ -75,19 +88,16 @@
 
         data.articles.forEach((item, idx) => {
             const allSources = JSON.parse(item.link);
-            // Removes the lead headline from the sub-list so it doesn't appear twice
             const secondarySources = allSources.filter(s => s.title !== item.title);
             const isGrouped = item.repeats > 1 || item.repeats === -2;
             const div = document.createElement('div');
             div.className = 'article-card';
 
             if (item.repeats === -1) {
-                // UPDATE Section
                 div.innerHTML = `<div class="article-link">${item.title}</div>`;
                 div.onclick = () => openUpdateSheet(allSources[0].title, allSources[0].body);
                 upList.appendChild(div);
             } else {
-                // Alerts (-2), Trending (>1), Headlines (1)
                 div.innerHTML = `
                     <div class="article-link">${item.title}</div>
                     <div class="meta">
@@ -112,6 +122,14 @@
             }
         });
 
+        // Update Headline Badge Count
+        const hdCount = hdList.children.length;
+        const hdBadge = document.getElementById('headlines-badge');
+        if (hdCount > 0) {
+            hdBadge.innerText = hdCount;
+            hdBadge.style.display = 'inline-flex';
+        } else { hdBadge.style.display = 'none'; }
+
         document.getElementById('alerts-wrapper').style.display = alList.children.length > 0 ? 'block' : 'none';
         document.getElementById('updates-wrapper').style.display = upList.children.length > 0 ? 'block' : 'none';
         document.getElementById('trending-wrapper').style.display = trList.children.length > 0 ? 'block' : 'none';
@@ -122,23 +140,14 @@
     function openUpdateSheet(title, content) {
         document.getElementById('overlay-title').innerText = title;
         const bodyEl = document.getElementById('overlay-body');
-        
-        // Remove citations [1], [2], etc.
-        let cleanContent = content.replace(/\[\d+\]/g, ''); 
-        bodyEl.innerHTML = cleanContent;
-
-        // Force headers to be bold and body text to be regular weight
+        bodyEl.innerHTML = content.replace(/\[\d+\]/g, ''); 
         bodyEl.querySelectorAll('h1, h2, h3, b, strong').forEach(h => { 
             if (h.innerText.split(' ').length < 6) {
-                h.className = 'section-heading';
                 h.style.fontWeight = "700"; 
                 h.style.marginTop = "0px"; 
                 if(!['B','STRONG'].includes(h.tagName)) h.style.fontSize = "26px";
-            } else {
-                h.style.fontWeight = "400";
-            }
+            } else { h.style.fontWeight = "400"; }
         });
-
         document.getElementById('update-overlay').style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
