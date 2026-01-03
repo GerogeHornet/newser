@@ -5,150 +5,92 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Newser</title>
     <style>
-        :root { 
-            --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000; 
-            --ios-secondary: #636366; --ios-accent: #007aff; --separator: #d1d1d6; 
-        }
-        @media (prefers-color-scheme: dark) { 
-            :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; } 
-        }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-font-smoothing: antialiased; }
-        .container { max-width: 600px; margin: 0 auto; }
-        header { padding: 30px 0 20px 0; border-bottom: 0.5px solid var(--separator); }
-        h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
-        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
-        
+        :root { --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000; --ios-secondary: #636366; --ios-accent: #007aff; --separator: #d1d1d6; }
+        @media (prefers-color-scheme: dark) { :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; } }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; }
+        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); cursor: pointer; display: flex; flex-direction: column; }
-        .article-card:last-child { border-bottom: none; }
-        
-        .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; color: var(--ios-text); }
+        .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); cursor: pointer; }
+        .red-alert { background: #e06666 !important; border-left: 6px solid #990000 !important; color: white !important; margin-bottom: 10px; border-radius: 12px; }
+        .red-alert .article-link { color: white !important; font-weight: 700; }
+        .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; }
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 5px; }
-
-        /* RED STYLE FOR BOTH SECTIONS [#e06666] */
-        .red-alert-card { background: #e06666 !important; border-left: 6px solid #990000 !important; margin-bottom: 10px; border-radius: 12px; }
-        .red-alert-card .article-link { color: #ffffff !important; font-weight: 700; }
-        .red-alert-card .meta { color: #ffeaea !important; }
-
-        #response-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--ios-bg); z-index: 9999; display: none; flex-direction: column; }
-        #overlay-header { padding: 20px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; }
-        #overlay-body { padding: 20px; overflow-y: auto; font-size: 19px; line-height: 1.6; }
-
+        .red-alert .meta { color: #ffeaea !important; }
+        .empty-state { background: #d1d1d6; color: #636366; text-align: center; padding: 60px; border-radius: 14px; font-size: 22px; font-weight: 700; margin-top: 20px; }
         .footer-btns { display: flex; gap: 10px; margin-top: 40px; }
-        .undo-btn { background: var(--ios-secondary); color: white; border: none; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; flex: 1; cursor: pointer; display: none; }
-        .done-btn { background: var(--ios-accent); color: white; border: none; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; flex: 2; cursor: pointer; }
+        .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; }
+        .undo { background: var(--ios-secondary); color: white; flex: 1; display: none; }
+        .done { background: var(--ios-accent); color: white; flex: 2; }
     </style>
 </head>
 <body>
 
-<div id="response-overlay">
-    <div id="overlay-header">
-        <h2 id="overlay-title" style="margin:0;">Research Alert</h2>
-        <button onclick="closeOverlay()" style="background:none; border:none; color:var(--ios-accent); font-size:20px; font-weight:700;">Done</button>
-    </div>
-    <div id="overlay-body"></div>
-</div>
-
 <div class="container">
-    <header>
-        <h1>Newser</h1>
-        <div id="update-display" style="font-size:14px; color:var(--ios-secondary); margin-top:5px;">Connecting...</div>
-    </header>
+    <h1>Newser</h1>
+    <div id="update-display" style="font-size:12px; opacity:0.6;">Connecting...</div>
+    <div id="empty-box" class="empty-state" style="display:none;">Empty</div>
 
-    <div id="content" style="display:none;">
-        <section id="deaths-wrapper" style="display:none;">
-            <h2>💀 Deaths</h2>
-            <div id="deaths-list" class="list-group"></div>
-        </section>
-
-        <section id="alerts-wrapper" style="display:none;">
-            <h2>🚨 Alerts</h2>
+    <div id="content">
+        <section id="alerts-sec" style="display:none;">
+            <h2 id="alert-header">🚨 Alerts</h2>
             <div id="alerts-list" class="list-group"></div>
         </section>
-
-        <section id="headlines-wrapper">
-            <h2>🗞️ Headlines</h2>
+        <section id="headlines-sec">
+            <h2 id="headline-header">🗞️ Headlines</h2>
             <div id="headlines-list" class="list-group"></div>
         </section>
-        
         <div class="footer-btns">
-            <button id="undo-btn" class="undo-btn" onclick="undoClear()">Undo</button>
-            <button id="done-btn" class="done-btn" onclick="markAsDone()">Done for Now</button>
+            <button id="undo-btn" class="btn undo" onclick="api('undo')">Undo</button>
+            <button id="done-btn" class="btn done" onclick="if(confirm('Clear?')) api('clear')">Done for Now</button>
         </div>
     </div>
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec"; 
+    const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
-    function formatArticleDate(timestamp) {
-        const articleDate = new Date(timestamp);
-        const now = new Date();
-        const isToday = articleDate.toDateString() === now.toDateString();
-        const timeStr = articleDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-        if (isToday) return timeStr;
-        const options = { weekday: 'long', month: 'short', day: 'numeric' };
-        return `${articleDate.toLocaleDateString([], options)} ${timeStr}`;
+    function formatTime(ts) {
+        const d = new Date(ts), now = new Date();
+        const time = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        if (d.toDateString() === now.toDateString()) return time;
+        return `${d.toLocaleDateString([], {weekday:'long', month:'numeric', day:'numeric'})} ${time}`;
     }
 
-    async function fetchNews() {
-        try {
-            const response = await fetch(API_URL + "?t=" + new Date().getTime());
-            const data = await response.json();
-            
-            document.getElementById('undo-btn').style.display = data.showUndo ? 'block' : 'none';
-            document.getElementById('update-display').innerText = "Last catch-up: " + new Date(data.refreshTime).toLocaleString();
-            
-            const deathsList = document.getElementById('deaths-list'),
-                  alList = document.getElementById('alerts-list'),
-                  hdList = document.getElementById('headlines-list');
-            
-            deathsList.innerHTML = ''; alList.innerHTML = ''; hdList.innerHTML = '';
+    async function load() {
+        const res = await fetch(API_URL + "?t=" + Date.now());
+        const data = await res.json();
+        const arts = data.articles;
+        
+        document.getElementById('undo-btn').style.display = data.showUndo ? 'block' : 'none';
+        document.getElementById('empty-box').style.display = arts.length === 0 ? 'block' : 'none';
+        document.getElementById('content').style.display = arts.length === 0 ? 'none' : 'block';
 
-            // Split Data
-            const deaths = data.articles.filter(a => a.repeats === -3);
-            const alerts = data.articles.filter(a => a.repeats === -4);
-            const headlines = data.articles.filter(a => a.repeats !== -3 && a.repeats !== -4)
-                                           .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        const aL = document.getElementById('alerts-list'), hL = document.getElementById('headlines-list');
+        aL.innerHTML = ''; hL.innerHTML = '';
 
-            const renderItem = (item, container, isRed) => {
-                const allSources = JSON.parse(item.link);
-                const div = document.createElement('div');
-                div.className = 'article-card';
-                if (isRed) div.classList.add('red-alert-card');
-                div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta"><span>${formatArticleDate(item.timestamp)}</span></div>`;
-                
-                // If priority -4, open the research overlay
-                if (item.repeats === -4) {
-                    div.onclick = () => openOverlay(item.title, allSources[0].body);
-                } else {
-                    // Otherwise (Headlines or Death -3), open the link
-                    div.onclick = () => window.open(allSources[0].link, '_blank');
-                }
-                container.appendChild(div);
-            };
+        const alerts = arts.filter(a => a.repeats === -5);
+        const heads = arts.filter(a => a.repeats > 0).sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
 
-            // Populate the three lists
-            deaths.forEach(i => renderItem(i, deathsList, true));
-            alerts.forEach(i => renderItem(i, alList, true));
-            headlines.forEach(i => renderItem(i, hdList, false));
+        document.getElementById('alert-header').innerText = `🚨 Alerts (${alerts.length})`;
+        document.getElementById('headline-header').innerText = `🗞️ Headlines (${heads.length})`;
 
-            // Toggle visibility of wrappers
-            document.getElementById('deaths-wrapper').style.display = deaths.length > 0 ? 'block' : 'none';
-            document.getElementById('alerts-wrapper').style.display = alerts.length > 0 ? 'block' : 'none';
-            document.getElementById('content').style.display = 'block';
-        } catch (e) { document.getElementById('update-display').innerText = "Connection Error"; }
+        const render = (item, container, red) => {
+            const div = document.createElement('div');
+            const links = JSON.parse(item.link);
+            div.className = 'article-card' + (red ? ' red-alert' : '');
+            div.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${formatTime(item.timestamp)}</div>`;
+            div.onclick = () => window.open(links[0].link, '_blank');
+            container.appendChild(div);
+        };
+
+        alerts.forEach(i => render(i, aL, true));
+        heads.forEach(i => render(i, hL, false));
+
+        document.getElementById('alerts-sec').style.display = alerts.length ? 'block' : 'none';
     }
 
-    function openOverlay(title, body) {
-        document.getElementById('overlay-title').innerText = title;
-        document.getElementById('overlay-body').innerHTML = body.replace(/\n/g, '<br>');
-        document.getElementById('response-overlay').style.display = 'flex';
-    }
-    function closeOverlay() { document.getElementById('response-overlay').style.display = 'none'; }
-    async function markAsDone() { if(confirm("Clear list?")) { await fetch(API_URL + "?action=clear"); location.reload(); } }
-    async function undoClear() { await fetch(API_URL + "?action=undo"); location.reload(); }
-    fetchNews();
+    async function api(a) { await fetch(API_URL+"?action="+a); location.reload(); }
+    load();
 </script>
 </body>
 </html>
