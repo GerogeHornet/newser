@@ -46,19 +46,18 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec"; 
 
-    // Helper to format date/time based on "today"
     function formatTimestamp(isoString) {
         const date = new Date(isoString);
         const today = new Date();
-        const isToday = date.getDate() === today.getDate() && 
-                        date.getMonth() === today.getMonth() && 
-                        date.getFullYear() === today.getFullYear();
+        const isToday = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
         
         const timeStr = date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
         if (isToday) return timeStr;
         
+        // Formats as Day Month/Date Time
+        const dayStr = date.toLocaleDateString([], {weekday: 'long'});
         const dateStr = (date.getMonth() + 1) + '/' + date.getDate();
-        return `${dateStr} ${timeStr}`;
+        return `${dayStr} ${dateStr} ${timeStr}`;
     }
 
     async function fetchNews() {
