@@ -8,6 +8,7 @@
         :root { --ios-bg: #f2f2f7; --ios-card: #ffffff; --ios-text: #000000; --ios-secondary: #636366; --ios-accent: #007aff; --separator: #d1d1d6; }
         @media (prefers-color-scheme: dark) { :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; } }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; }
+        h1 { margin-bottom: 5px; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px; }
         .article-card { background: var(--ios-card); padding: 22px 18px; border-bottom: 0.5px solid var(--separator); cursor: pointer; }
@@ -16,14 +17,11 @@
         .article-link { font-weight: 600; font-size: 21px; line-height: 1.3; }
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 5px; }
         .red-alert .meta { color: #ffeaea !important; }
-        
-        /* EMPTY STATE STYLE */
         .empty-state { background: #d1d1d6; color: #636366; text-align: center; padding: 60px; border-radius: 14px; font-size: 22px; font-weight: 700; margin-top: 20px; }
-        
-        .footer-btns { display: flex; gap: 10px; margin-top: 40px; }
-        .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; }
-        .undo { background: var(--ios-secondary); color: white; flex: 1; display: none; }
-        .done { background: var(--ios-accent); color: white; flex: 2; }
+        .footer-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; }
+        .undo { background: var(--ios-secondary); color: white; }
+        .done { background: var(--ios-accent); color: white; }
     </style>
 </head>
 <body>
@@ -32,9 +30,14 @@
     <h1>Newser</h1>
     <div id="update-display" style="font-size:12px; opacity:0.6; margin-bottom:10px;">Connecting...</div>
     
-    <div id="empty-box" class="empty-state" style="display:none;">Empty</div>
+    <div id="empty-box" style="display:none;">
+        <div class="empty-state">Empty</div>
+        <div class="footer-btns" id="empty-undo-container" style="display:none;">
+            <button class="btn undo" onclick="api('undo')">Undo</button>
+        </div>
+    </div>
 
-    <div id="content">
+    <div id="content" style="display:none;">
         <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list" class="list-group"></div></section>
         <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list" class="list-group"></div></section>
         <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
@@ -45,8 +48,7 @@
             <div id="headlines-list" class="list-group"></div>
         </section>
         <div class="footer-btns">
-            <button id="undo-btn" class="btn undo" onclick="api('undo')">Undo</button>
-            <button id="done-btn" class="btn done" onclick="if(confirm('Clear?')) api('clear')">Done for Now</button>
+            <button id="done-btn" class="btn done" onclick="if(confirm('Clear current news and backup?')) api('clear')">Done for Now</button>
         </div>
     </div>
 </div>
@@ -67,14 +69,20 @@
         const data = await res.json();
         const arts = data.articles;
         
-        // Update "Last checked" display
+        // Status Bar
         const lastCheck = new Date(data.refreshTime);
         const dateOpt = { weekday: 'long', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         document.getElementById('update-display').innerText = "Last checked: " + lastCheck.toLocaleString([], dateOpt);
 
-        document.getElementById('undo-btn').style.display = data.showUndo ? 'block' : 'none';
-        document.getElementById('empty-box').style.display = arts.length === 0 ? 'block' : 'none';
-        document.getElementById('content').style.display = arts.length === 0 ? 'none' : 'block';
+        // View Toggling Logic
+        if (arts.length === 0) {
+            document.getElementById('empty-box').style.display = 'block';
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('empty-undo-container').style.display = data.backupExists ? 'flex' : 'none';
+        } else {
+            document.getElementById('empty-box').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+        }
 
         const sections = {
             death: { list: document.getElementById('death-list'), sec: document.getElementById('death-sec'), data: arts.filter(a => a.repeats === -3) },
