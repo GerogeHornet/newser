@@ -54,7 +54,6 @@
         const timeStr = date.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
         if (isToday) return timeStr;
         
-        // Formats as Day Month/Date Time
         const dayStr = date.toLocaleDateString([], {weekday: 'long'});
         const dateStr = (date.getMonth() + 1) + '/' + date.getDate();
         return `${dayStr} ${dateStr} ${timeStr}`;
