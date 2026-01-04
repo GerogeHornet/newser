@@ -9,22 +9,21 @@
         @media (prefers-color-scheme: dark) { :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; } }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; }
         
-        /* HEADERS */
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
 
-        /* THE RED BADGE - UPDATED TO MATCH H2 FONT */
+        /* THE RED BADGE - MATCHES H2 FORMAT */
         .count-badge {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             background-color: #ff3b30;
             color: white;
-            font-size: 24px; /* Matches h2 size */
-            font-weight: 700; /* Matches h2 weight */
-            min-width: 42px; /* Adjusted for larger font */
-            height: 42px;    /* Adjusted for larger font */
+            font-size: 24px;
+            font-weight: 700;
+            min-width: 42px;
+            height: 42px;
             padding: 0 10px;
-            border-radius: 21px; /* Half of height for circle effect */
+            border-radius: 21px;
             margin-left: 12px;
             line-height: 1;
             box-sizing: border-box;
