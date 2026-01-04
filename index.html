@@ -7,14 +7,13 @@
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; }
         
-        /* STANDARD FONT SIZES (Back to normal) */
+        /* RESTORED STANDARD SIZES */
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; font-size: 17px; }
         body.lock-scroll { overflow: hidden; position: fixed; width: 100%; }
         
         h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; }
         #update-display { font-size: 16px; opacity: 0.8; margin-bottom: 20px; font-weight: 400; }
         
-        /* SECTION TITLES */
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
         
         .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 22px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; box-sizing: border-box; }
@@ -23,7 +22,9 @@
         .list-group > div + div { border-top: 1px solid rgba(255, 255, 255, 0.05); }
 
         .article-card { padding: 22px 18px; }
-        .main-headline { font-size: 20px; font-weight: 400; line-height: 1.3; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
+        
+        /* BOLD HEADLINES RESTORED */
+        .main-headline { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
         
         .source-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .source-badge { background: #ff3b30; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
@@ -35,22 +36,21 @@
         .source-item { display: block; padding: 10px 0; color: var(--ios-accent); text-decoration: none; font-size: 18px; line-height: 1.4; }
         .source-item::before { content: "• "; color: var(--ios-secondary); }
 
+        /* BOLD WHITE TEXT RESTORED FOR ALERTS */
         .green-notif { background: #93c47d !important; border-left: 6px solid #6aa84f !important; padding: 22px 18px; color: #ffffff !important; border-radius: 14px; margin-bottom: 12px; }
-        .green-notif .article-link { color: #ffffff !important; font-size: 19px; font-weight: 400; }
+        .green-notif .article-link { color: #ffffff !important; font-size: 19px; font-weight: 700; }
         
         .blue-update { background: #6d9eeb !important; border-left: 6px solid #3c78d8 !important; padding: 22px 18px; color: #ffffff !important; cursor: pointer; border-radius: 14px; margin-bottom: 12px; }
-        .blue-update .article-link { color: #ffffff !important; font-size: 19px; font-weight: 400; }
+        .blue-update .article-link { color: #ffffff !important; font-size: 19px; font-weight: 700; }
 
         .death-alert { background: #e06666 !important; border-left: 6px solid #990000 !important; color: white !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; }
-        .death-alert .article-link { color: white !important; font-weight: 400; font-size: 19px; }
+        .death-alert .article-link { color: white !important; font-weight: 700; font-size: 19px; }
         
         .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; background: var(--ios-accent); color: white; margin-top: 20px; }
 
-        /* FULL SCREEN MODAL: BIGGER TEXT HERE ONLY */
+        /* BIGGER TEXT FOR UPDATE SHEET ONLY */
         #sheet { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ios-card); z-index:2000; overflow-y:auto; box-sizing: border-box; }
         .sheet-header { position: sticky; top: 0; background: var(--ios-card); padding: 25px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: flex-start; z-index: 2001; }
-        
-        /* Content is BIGGER (24px) */
         .sheet-content { padding: 25px; font-size: 24px; line-height: 1.6; white-space: pre-wrap; color: #ffffff; }
         .close-sheet { color: var(--ios-accent); font-size: 22px; font-weight: 700; cursor: pointer; }
     </style>
