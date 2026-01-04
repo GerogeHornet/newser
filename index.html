@@ -6,47 +6,63 @@
     <title>Newser</title>
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 20px 100px 20px; font-size: 20px; }
         body.lock-scroll { overflow: hidden; position: fixed; width: 100%; }
-        h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; }
-        #update-display { font-size: 18px; opacity: 0.8; margin-bottom: 15px; font-weight: 400; }
-        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
-        .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 24px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; box-sizing: border-box; }
-        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
-        .list-group > div + div { border-top: 1px solid rgba(0, 0, 0, 0.3); }
-        .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); }
-        .main-headline { font-size: 22px; font-weight: 400; line-height: 1.25; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
-        .source-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0px; cursor: pointer; }
-        .has-extra-sources .source-row { margin-bottom: 15px; }
-        .source-badge { background: #ff3b30; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
-        .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; display: flex; align-items: center; }
-        .chevron { margin-left: 5px; font-size: 12px; transition: transform 0.2s; }
+        
+        h1 { margin-bottom: 8px; font-size: 40px; font-weight: 800; }
+        #update-display { font-size: 20px; opacity: 0.8; margin-bottom: 25px; font-weight: 400; }
+        
+        /* BOLD Section Headings */
+        h2 { font-size: 30px; font-weight: 700; margin: 40px 0 20px 0; display: flex; align-items: center; }
+        
+        .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 28px; font-weight: 700; min-width: 50px; height: 50px; padding: 0 12px; border-radius: 25px; margin-left: 15px; line-height: 1; box-sizing: border-box; }
+        
+        .list-group { border-radius: 18px; overflow: hidden; background: var(--ios-card); margin-bottom: 30px; }
+        .list-group > div + div { border-top: 1px solid rgba(255, 255, 255, 0.1); }
+
+        .article-card { padding: 26px 22px; }
+        
+        /* Article Headlines: Bigger, non-bold */
+        .main-headline { font-size: 26px; font-weight: 400; line-height: 1.35; margin-bottom: 12px; color: var(--ios-text); cursor: pointer; }
+        
+        .source-row { display: flex; align-items: center; gap: 12px; margin-bottom: 0px; cursor: pointer; }
+        .source-badge { background: #ff3b30; color: white; font-size: 14px; font-weight: 800; padding: 5px 10px; border-radius: 8px; text-transform: uppercase; }
+        .time-meta { font-size: 18px; color: var(--ios-secondary); font-weight: 500; display: flex; align-items: center; }
+        
+        .chevron { margin-left: 8px; font-size: 14px; transition: transform 0.2s; }
         .chevron.open { transform: rotate(90deg); }
-        .nested-sources { display: none; border-top: 0.5px solid var(--separator); padding-top: 10px; }
-        .source-item { display: block; padding: 10px 0; color: var(--ios-accent); text-decoration: none; font-size: 18px; line-height: 1.4; }
+        .nested-sources { display: none; border-top: 0.5px solid var(--separator); padding-top: 15px; margin-top: 15px; }
+        .source-item { display: block; padding: 12px 0; color: var(--ios-accent); text-decoration: none; font-size: 22px; line-height: 1.4; }
         .source-item::before { content: "• "; color: var(--ios-secondary); }
-        .green-notif { background: #93c47d !important; border-left: 6px solid #6aa84f !important; padding: 22px 18px; color: #ffffff !important; }
-        .green-notif .article-link { color: #ffffff !important; font-size: 21px; font-weight: 400; }
-        .blue-update { background: #6d9eeb !important; border-left: 6px solid #3c78d8 !important; padding: 22px 18px; color: #ffffff !important; cursor: pointer; }
-        .blue-update .article-link { color: #ffffff !important; font-size: 21px; font-weight: 400; }
-        .death-alert { background: #e06666 !important; border-left: 6px solid #990000 !important; color: white !important; padding: 22px 18px; }
-        .death-alert .article-link { color: white !important; font-weight: 400; font-size: 21px; }
-        .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; background: var(--ios-accent); color: white; margin-top: 20px; }
+
+        /* NOTIFICATION: Matching Bold White on Green, bigger text */
+        .green-notif { background: #93c47d !important; border-left: 8px solid #6aa84f !important; padding: 26px 22px; color: #ffffff !important; margin-bottom: 15px; border-radius: 18px; }
+        .green-notif .article-link { color: #ffffff !important; font-size: 24px; font-weight: 400; }
+        
+        .blue-update { background: #6d9eeb !important; border-left: 8px solid #3c78d8 !important; padding: 26px 22px; color: #ffffff !important; cursor: pointer; margin-bottom: 15px; border-radius: 18px; }
+        .blue-update .article-link { color: #ffffff !important; font-size: 24px; font-weight: 400; }
+
+        .death-alert { background: #e06666 !important; border-left: 8px solid #990000 !important; color: white !important; padding: 26px 22px; margin-bottom: 15px; border-radius: 18px; }
+        .death-alert .article-link { color: white !important; font-weight: 400; font-size: 24px; }
+        
+        .btn { padding: 24px; border-radius: 20px; font-size: 24px; font-weight: 700; border: none; cursor: pointer; width: 100%; background: var(--ios-accent); color: white; margin-top: 30px; }
+
+        /* FULL SCREEN MODAL Header */
         #sheet { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ios-card); z-index:2000; overflow-y:auto; box-sizing: border-box; }
-        .sheet-header { position: sticky; top: 0; background: var(--ios-card); padding: 25px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: flex-start; z-index: 2001; }
-        .sheet-content { padding: 25px; font-size: 19px; line-height: 1.5; white-space: pre-wrap; }
-        .close-sheet { color: var(--ios-accent); font-size: 22px; font-weight: 600; cursor: pointer; }
+        .sheet-header { position: sticky; top: 0; background: var(--ios-card); padding: 30px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: flex-start; z-index: 2001; }
+        .sheet-content { padding: 30px; font-size: 24px; line-height: 1.6; white-space: pre-wrap; }
+        .close-sheet { color: var(--ios-accent); font-size: 24px; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 <div id="sheet">
-    <div class="sheet-header"><h2 id="sheet-title" style="margin:0; font-size:24px;"></h2><span class="close-sheet" onclick="closeSheet()">Done</span></div>
+    <div class="sheet-header"><h2 id="sheet-title" style="margin:0; font-size:28px; font-weight:700;"></h2><span class="close-sheet" onclick="closeSheet()">Done</span></div>
     <div id="sheet-body" class="sheet-content"></div>
 </div>
 <div class="container">
     <h1>Newser</h1>
     <div id="update-display">Connecting...</div>
-    <div id="empty-box" style="display:none;"><div style="background:#d1d1d6;color:#636366;text-align:center;padding:60px;border-radius:14px;font-size:22px;font-weight:700;">Empty</div><div id="empty-undo-container" style="display:none; margin-top:20px;"><button class="btn" style="background:var(--ios-secondary)" onclick="api('undo')">Undo</button></div></div>
+    <div id="empty-box" style="display:none;"><div style="background:#d1d1d6;color:#636366;text-align:center;padding:80px;border-radius:18px;font-size:26px;font-weight:700;">Empty</div><div id="empty-undo-container" style="display:none; margin-top:30px;"><button class="btn" style="background:var(--ios-secondary)" onclick="api('undo')">Undo</button></div></div>
     <div id="content" style="display:none;">
         <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list" class="list-group"></div></section>
         <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list" class="list-group"></div></section>
@@ -79,15 +95,17 @@
                     const div = document.createElement('div');
                     if (item.repeats === -4) { div.className = 'green-notif'; div.innerHTML = `<div class="article-link">${item.title}</div>`; }
                     else if (item.repeats === -3) { div.className = 'death-alert'; div.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${item.title}</div>`; }
-                    else if (item.repeats === -5) { div.className = 'blue-update'; div.onclick = () => { try { const j = JSON.parse(item.link); document.getElementById('sheet-title').innerText = item.title; document.getElementById('sheet-body').innerText = j.body; document.getElementById('sheet').style.display = 'block'; document.body.classList.add('lock-scroll'); } catch(e) { window.open(item.link, '_blank'); } }; div.innerHTML = `<div class="article-link">${item.title}</div>`; }
-                    else {
+                    else if (item.repeats === -5) {
+                        div.className = 'blue-update';
+                        div.onclick = () => { try { const j = JSON.parse(item.link); document.getElementById('sheet-title').innerText = item.title; document.getElementById('sheet-body').innerText = j.body; document.getElementById('sheet').style.display = 'block'; document.body.classList.add('lock-scroll'); } catch(e) { window.open(item.link, '_blank'); } };
+                        div.innerHTML = `<div class="article-link">${item.title}</div>`;
+                    } else {
                         div.className = 'article-card';
                         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{source: "Source", title: item.title, link: item.link}]; }
                         let count = item.repeats >= 2 ? item.repeats : (item.repeats <= -100 ? Math.abs(item.repeats + 98) : 1);
-                        const hasExtra = links.length > 1; if (hasExtra) div.classList.add('has-extra-sources');
-                        const trayId = `tray-${key}-${idx}`; const chevId = `chev-${key}-${idx}`;
+                        const hasExtra = links.length > 1; const trayId = `tray-${key}-${idx}`; const chevId = `chev-${key}-${idx}`;
                         let html = `<div class="main-headline" onclick="window.open('${links[links.length-1].link}', '_blank')">${item.title}</div><div class="source-row" ${hasExtra ? `onclick="toggleTray('${trayId}', '${chevId}')"` : ''}>${count > 1 ? `<div class="source-badge">${count} SOURCES</div>` : ""}<div class="time-meta">${formatTime(item.timestamp)} ${hasExtra ? `<span id="${chevId}" class="chevron">▶</span>` : ""}</div></div>`;
-                        if (hasExtra) { html += `<div id="${trayId}" class="nested-sources">${links.slice(0, -1).map(l => { const displayTitle = cleanTitle(l.title || "Related Coverage"); return `<a href="${l.link}" target="_blank" class="source-item">${displayTitle}</a>`; }).join('')}</div>`; }
+                        if (hasExtra) { html += `<div id="${trayId}" class="nested-sources">${links.slice(0, -1).map(l => { return `<a href="${l.link}" target="_blank" class="source-item">${cleanTitle(l.title || "Related Coverage")}</a>`; }).join('')}</div>`; }
                         div.innerHTML = html;
                     }
                     s.list.appendChild(div);
