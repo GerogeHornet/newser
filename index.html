@@ -14,7 +14,9 @@
         .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); }
         .main-headline { font-size: 22px; font-weight: 700; line-height: 1.25; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
         
-        .source-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer; }
+        .source-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0px; cursor: pointer; }
+        .has-extra-sources .source-row { margin-bottom: 15px; } /* Only add margin if there's a tray below */
+
         .source-badge { background: #ff3b30; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; display: flex; align-items: center; }
         .chevron { margin-left: 5px; font-size: 12px; transition: transform 0.2s; }
@@ -59,9 +61,10 @@
     function toggleTray(id, chevronId) {
         const tray = document.getElementById(id);
         const chevron = document.getElementById(chevronId);
+        if (!tray) return;
         const isOpen = tray.style.display === 'block';
         tray.style.display = isOpen ? 'none' : 'block';
-        chevron.classList.toggle('open', !isOpen);
+        if (chevron) chevron.classList.toggle('open', !isOpen);
     }
 
     function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.getElementById('sheet-overlay').style.display = 'none'; }
@@ -120,26 +123,34 @@
                         }
                         
                         let count = item.repeats >= 2 ? item.repeats : (item.repeats <= -100 ? Math.abs(item.repeats + 98) : 1);
+                        const hasExtra = links.length > 1;
+                        if (hasExtra) div.classList.add('has-extra-sources');
+
                         const trayId = `tray-${key}-${idx}`;
                         const chevId = `chev-${key}-${idx}`;
                         
-                        // We link the main headline to the MOST RECENT link in the stack
-                        div.innerHTML = `
+                        let html = `
                             <div class="main-headline" onclick="window.open('${links[0].link}', '_blank')">${item.title}</div>
-                            <div class="source-row" onclick="toggleTray('${trayId}', '${chevId}')">
+                            <div class="source-row" ${hasExtra ? `onclick="toggleTray('${trayId}', '${chevId}')"` : ''}>
                                 ${count > 1 ? `<div class="source-badge">${count} SOURCES</div>` : ""}
                                 <div class="time-meta">
                                     ${formatTime(item.timestamp)} 
-                                    ${count > 1 ? `<span id="${chevId}" class="chevron">▶</span>` : ""}
+                                    ${hasExtra ? `<span id="${chevId}" class="chevron">▶</span>` : ""}
                                 </div>
-                            </div>
-                            <div id="${trayId}" class="nested-sources">
-                                ${links.length > 1 ? links.slice(1).map(l => {
-                                    // Fallback for undefined titles
-                                    const displayTitle = (l.title && l.title !== 1) ? l.title : "Related Coverage";
-                                    return `<a href="${l.link}" target="_blank" class="source-item">${displayTitle} (${l.source})</a>`;
-                                }).join('') : ""}
                             </div>`;
+                        
+                        // Only add the hidden tray HTML if there are actual sub-links to show
+                        if (hasExtra) {
+                            html += `
+                                <div id="${trayId}" class="nested-sources">
+                                    ${links.slice(1).map(l => {
+                                        const displayTitle = (l.title && l.title !== 1) ? l.title : "Related Coverage";
+                                        return `<a href="${l.link}" target="_blank" class="source-item">${displayTitle} (${l.source})</a>`;
+                                    }).join('')}
+                                </div>`;
+                        }
+                        
+                        div.innerHTML = html;
                     }
                     s.list.appendChild(div);
                 });
