@@ -7,7 +7,7 @@
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; }
-        body.lock-scroll { overflow: hidden; position: fixed; width: 100%; } /* Stops background swiping */
+        body.lock-scroll { overflow: hidden; position: fixed; width: 100%; }
         
         h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; }
         #update-display { font-size: 18px; opacity: 0.8; margin-bottom: 15px; font-weight: 400; }
@@ -15,9 +15,12 @@
         
         .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 24px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; box-sizing: border-box; }
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
+        
+        /* Divider line between cards in a section using darker accent color */
         .list-group > div + div { border-top: 1px solid rgba(0, 0, 0, 0.3); }
+
         .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); }
-        .main-headline { font-size: 22px; font-weight: 700; line-height: 1.25; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
+        .main-headline { font-size: 22px; font-weight: 400; line-height: 1.25; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
         
         .source-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0px; cursor: pointer; }
         .has-extra-sources .source-row { margin-bottom: 15px; }
@@ -31,51 +34,25 @@
         .source-item::before { content: "• "; color: var(--ios-secondary); }
 
         .green-notif { background: #93c47d !important; border-left: 6px solid #6aa84f !important; padding: 22px 18px; color: #ffffff !important; }
-        .green-notif .article-link { color: #ffffff !important; font-size: 21px; font-weight: 700; }
+        .green-notif .article-link { color: #ffffff !important; font-size: 21px; font-weight: 400; }
         
         .blue-update { background: #6d9eeb !important; border-left: 6px solid #3c78d8 !important; padding: 22px 18px; color: #ffffff !important; cursor: pointer; }
-        .blue-update .article-link { color: #ffffff !important; font-size: 21px; font-weight: 700; }
+        .blue-update .article-link { color: #ffffff !important; font-size: 21px; font-weight: 400; }
 
         .death-alert { background: #e06666 !important; border-left: 6px solid #990000 !important; color: white !important; padding: 22px 18px; }
-        .death-alert .article-link { color: white !important; font-weight: 700; font-size: 21px; }
+        .death-alert .article-link { color: white !important; font-weight: 400; font-size: 21px; }
         
         .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; background: var(--ios-accent); color: white; margin-top: 20px; }
 
-        /* FULL SCREEN SHEET LOGIC */
-        #sheet { 
-            display:none; 
-            position:fixed; 
-            top:0; left:0; 
-            width:100%; height:100%; 
-            background:var(--ios-card); 
-            z-index:2000; 
-            overflow-y:auto; 
-            box-sizing: border-box; 
-        }
-        
-        /* Sticky Header for Sheet */
-        .sheet-header {
-            position: sticky;
-            top: 0;
-            background: var(--ios-card);
-            padding: 25px 25px 15px 25px;
-            border-bottom: 0.5px solid var(--separator);
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            z-index: 2001;
-        }
-
+        #sheet { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ios-card); z-index:2000; overflow-y:auto; box-sizing: border-box; }
+        .sheet-header { position: sticky; top: 0; background: var(--ios-card); padding: 25px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: flex-start; z-index: 2001; }
         .sheet-content { padding: 25px; font-size: 19px; line-height: 1.5; white-space: pre-wrap; }
         .close-sheet { color: var(--ios-accent); font-size: 22px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
 <div id="sheet">
-    <div class="sheet-header">
-        <h2 id="sheet-title" style="margin:0; padding-right:20px; font-size:24px;"></h2>
-        <span class="close-sheet" onclick="closeSheet()">Done</span>
-    </div>
+    <div class="sheet-header"><h2 id="sheet-title" style="margin:0; font-size:24px;"></h2><span class="close-sheet" onclick="closeSheet()">Done</span></div>
     <div id="sheet-body" class="sheet-content"></div>
 </div>
 
@@ -100,11 +77,7 @@
     function formatTime(ts) { return new Date(ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }
     function cleanTitle(text) { if (!text) return ""; if (text.includes("(Axios)")) return text; return text.replace(/\s*\(Memeorandum\)$/, "").trim(); }
     function toggleTray(id, chevronId) { const tray = document.getElementById(id); const chevron = document.getElementById(chevronId); if (!tray) return; const isOpen = tray.style.display === 'block'; tray.style.display = isOpen ? 'none' : 'block'; if (chevron) chevron.classList.toggle('open', !isOpen); }
-    
-    function closeSheet() { 
-        document.getElementById('sheet').style.display = 'none'; 
-        document.body.classList.remove('lock-scroll'); 
-    }
+    function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.body.classList.remove('lock-scroll'); }
 
     async function load() {
         try {
@@ -122,14 +95,13 @@
                 document.getElementById('content').style.display = 'block';
             }
 
-            const sortedArts = [...arts]; // Sorting is already handled by backend
             const sections = {
-                death: { list: document.getElementById('death-list'), data: sortedArts.filter(a => a.repeats === -3) },
-                notif: { list: document.getElementById('notif-list'), data: sortedArts.filter(a => a.repeats === -4) },
-                updates: { list: document.getElementById('updates-list'), data: sortedArts.filter(a => a.repeats === -5) },
-                alerts: { list: document.getElementById('alerts-list'), data: sortedArts.filter(a => a.repeats <= -99) },
-                trending: { list: document.getElementById('trending-list'), data: sortedArts.filter(a => a.repeats >= 2) },
-                headlines: { list: document.getElementById('headlines-list'), data: sortedArts.filter(a => a.repeats === 1) }
+                death: { list: document.getElementById('death-list'), data: arts.filter(a => a.repeats === -3) },
+                notif: { list: document.getElementById('notif-list'), data: arts.filter(a => a.repeats === -4) },
+                updates: { list: document.getElementById('updates-list'), data: arts.filter(a => a.repeats === -5) },
+                alerts: { list: document.getElementById('alerts-list'), data: arts.filter(a => a.repeats <= -99) },
+                trending: { list: document.getElementById('trending-list'), data: arts.filter(a => a.repeats >= 2) },
+                headlines: { list: document.getElementById('headlines-list'), data: arts.filter(a => a.repeats === 1) }
             };
             document.getElementById('headline-badge').innerText = sections.headlines.data.length;
 
@@ -137,34 +109,19 @@
                 const s = sections[key]; const container = document.getElementById(key + '-sec'); s.list.innerHTML = ''; container.style.display = s.data.length ? 'block' : 'none';
                 s.data.forEach((item, idx) => {
                     const div = document.createElement('div');
-                    const cleanedMainTitle = cleanTitle(item.title);
-                    if (item.repeats === -4) { 
-                        div.className = 'green-notif'; 
-                        div.innerHTML = `<div class="article-link">${item.title}</div>`; 
-                    }
-                    else if (item.repeats === -3) { 
-                        div.className = 'death-alert'; 
-                        div.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${cleanedMainTitle}</div>`; 
-                    }
+                    if (item.repeats === -4) { div.className = 'green-notif'; div.innerHTML = `<div class="article-link">${item.title}</div>`; }
+                    else if (item.repeats === -3) { div.className = 'death-alert'; div.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${item.title}</div>`; }
                     else if (item.repeats === -5) {
                         div.className = 'blue-update';
-                        div.onclick = () => { 
-                            try { 
-                                const j = JSON.parse(item.link); 
-                                document.getElementById('sheet-title').innerText = cleanedMainTitle; 
-                                document.getElementById('sheet-body').innerText = j.body; 
-                                document.getElementById('sheet').style.display = 'block'; 
-                                document.body.classList.add('lock-scroll'); // Locks background
-                            } catch(e) { window.open(item.link, '_blank'); } 
-                        };
-                        div.innerHTML = `<div class="article-link">${cleanedMainTitle}</div>`;
+                        div.onclick = () => { try { const j = JSON.parse(item.link); document.getElementById('sheet-title').innerText = item.title; document.getElementById('sheet-body').innerText = j.body; document.getElementById('sheet').style.display = 'block'; document.body.classList.add('lock-scroll'); } catch(e) { window.open(item.link, '_blank'); } };
+                        div.innerHTML = `<div class="article-link">${item.title}</div>`;
                     } else {
                         div.className = 'article-card';
                         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{source: "Source", title: item.title, link: item.link}]; }
                         let count = item.repeats >= 2 ? item.repeats : (item.repeats <= -100 ? Math.abs(item.repeats + 98) : 1);
                         const hasExtra = links.length > 1; if (hasExtra) div.classList.add('has-extra-sources');
                         const trayId = `tray-${key}-${idx}`; const chevId = `chev-${key}-${idx}`;
-                        let html = `<div class="main-headline" onclick="window.open('${links[links.length-1].link}', '_blank')">${cleanedMainTitle}</div><div class="source-row" ${hasExtra ? `onclick="toggleTray('${trayId}', '${chevId}')"` : ''}>${count > 1 ? `<div class="source-badge">${count} SOURCES</div>` : ""}<div class="time-meta">${formatTime(item.timestamp)} ${hasExtra ? `<span id="${chevId}" class="chevron">▶</span>` : ""}</div></div>`;
+                        let html = `<div class="main-headline" onclick="window.open('${links[links.length-1].link}', '_blank')">${item.title}</div><div class="source-row" ${hasExtra ? `onclick="toggleTray('${trayId}', '${chevId}')"` : ''}>${count > 1 ? `<div class="source-badge">${count} SOURCES</div>` : ""}<div class="time-meta">${formatTime(item.timestamp)} ${hasExtra ? `<span id="${chevId}" class="chevron">▶</span>` : ""}</div></div>`;
                         if (hasExtra) { html += `<div id="${trayId}" class="nested-sources">${links.slice(0, -1).map(l => { const displayTitle = cleanTitle(l.title || "Related Coverage"); return `<a href="${l.link}" target="_blank" class="source-item">${displayTitle}</a>`; }).join('')}</div>`; }
                         div.innerHTML = html;
                     }
