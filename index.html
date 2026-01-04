@@ -12,12 +12,14 @@
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); }
-        .main-headline { font-size: 22px; font-weight: 700; line-height: 1.25; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
+        .main-headline { font-size: 22px; font-weight: 700; line-height: 1.25; margin-bottom: 10px; color: var(--ios-text); }
+        .source-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; cursor: pointer; }
         
-        .source-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        /* RESTORED: Red Badge per Screenshot */
-        .source-badge { background: #ff3b30; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; cursor: pointer; }
-        .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; cursor: pointer; }
+        /* RESTORED: Red Badge per Screenshot [cite: 1] */
+        .source-badge { background: #ff3b30; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
+        .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; display: flex; align-items: center; }
+        .chevron { margin-left: 5px; font-size: 12px; transition: transform 0.2s; }
+        .chevron.open { transform: rotate(90deg); }
 
         .nested-sources { display: none; border-top: 0.5px solid var(--separator); padding-top: 10px; }
         .source-item { display: block; padding: 10px 0; color: var(--ios-accent); text-decoration: none; font-size: 18px; line-height: 1.4; }
@@ -44,7 +46,14 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
     function formatTime(ts) { return new Date(ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }
-    function toggleTray(id) { const t = document.getElementById(id); t.style.display = t.style.display === 'block' ? 'none' : 'block'; }
+    
+    function toggleTray(id, chevronId) {
+        const tray = document.getElementById(id);
+        const chevron = document.getElementById(chevronId);
+        const isOpen = tray.style.display === 'block';
+        tray.style.display = isOpen ? 'none' : 'block';
+        chevron.classList.toggle('open', !isOpen);
+    }
 
     async function load() {
         try {
@@ -53,7 +62,7 @@
             document.getElementById('update-display').innerText = "Last checked: " + new Date(data.refreshTime).toLocaleString([], { weekday: 'long', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
             document.getElementById('content').style.display = 'block';
             
-            // SORTING: Oldest First
+            // SORTING: Oldest First [cite: 3]
             const arts = data.articles.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
 
             const sections = {
@@ -75,17 +84,18 @@
                         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{source: "Source", title: item.title, link: item.link}]; }
                         let count = item.repeats >= 2 ? item.repeats : (item.repeats <= -100 ? Math.abs(item.repeats + 98) : 1);
                         const trayId = `tray-${key}-${idx}`;
+                        const chevId = `chev-${key}-${idx}`;
                         
                         div.innerHTML = `
                             <div class="main-headline" onclick="window.open('${links[links.length-1].link}', '_blank')">${item.title}</div>
-                            <div class="source-row" onclick="toggleTray('${trayId}')">
+                            <div class="source-row" onclick="toggleTray('${trayId}', '${chevId}')">
                                 ${count > 1 ? `<div class="source-badge">${count} SOURCES</div>` : ""}
-                                <div class="time-meta">${formatTime(item.timestamp)} ▼</div>
+                                <div class="time-meta">${formatTime(item.timestamp)} <span id="${chevId}" class="chevron">▶</span></div>
                             </div>
                             <div id="${trayId}" class="nested-sources">
-                                ${count > 1 ? links.map(l => `<a href="${l.link}" target="_blank" class="source-item">${l.title} (${l.source})</a>`).join('') : ""}
+                                ${links.map(l => `<a href="${l.link}" target="_blank" class="source-item">${l.title} (${l.source})</a>`).join('')}
                             </div>`;
-                        // Fixed: Only show nested links if there's more than 1 source
+                        // Hidden duplicate blue link for single sources [cite: 3]
                     }
                     s.list.appendChild(div);
                 });
