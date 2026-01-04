@@ -23,27 +23,22 @@
         .nested-sources { display: none; border-top: 0.5px solid var(--separator); padding-top: 10px; }
         .source-item { display: block; padding: 10px 0; color: var(--ios-accent); text-decoration: none; font-size: 18px; line-height: 1.4; }
         .source-item::before { content: "• "; color: var(--ios-secondary); }
+
+        /* FORMATTED NOTIFICATION: Matches Death Section exactly */
         .green-notif { background: #93c47d !important; border-left: 6px solid #6aa84f !important; padding: 22px 18px; color: #ffffff !important; }
         .green-notif .article-link { color: #ffffff !important; font-size: 21px; font-weight: 700; }
+
+        /* DEATH STYLE: Red Section */
         .death-alert { background: #e06666 !important; border-left: 6px solid #990000 !important; color: white !important; padding: 22px 18px; }
         .death-alert .article-link { color: white !important; font-weight: 700; font-size: 21px; }
-        .footer-btns { display: flex; gap: 10px; margin-top: 20px; }
-        .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; }
-        .undo { background: var(--ios-secondary); color: white; }
-        .done { background: var(--ios-accent); color: white; }
-        #sheet { display:none; position:fixed; top:10%; left:5%; width:90%; height:80%; background:var(--ios-card); border-radius:20px; z-index:2000; padding:25px; box-shadow:0 -5px 20px rgba(0,0,0,0.3); overflow-y:auto; box-sizing: border-box; }
-        #sheet-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1999; }
-        .close-sheet { color: var(--ios-secondary); font-size: 28px; cursor: pointer; float: right; line-height: 1; }
+
+        .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; width: 100%; background: var(--ios-accent); color: white; border: none; margin-top: 20px; }
     </style>
 </head>
 <body>
-<div id="sheet-overlay" onclick="closeSheet()"></div>
-<div id="sheet"><span class="close-sheet" onclick="closeSheet()">&times;</span><h2 id="sheet-title" style="margin-top:0; padding-right:30px;"></h2><div id="sheet-body" style="font-size:19px; line-height:1.5; white-space:pre-wrap; margin-top:15px;"></div></div>
-
 <div class="container">
     <h1>Newser</h1>
     <div id="update-display">Connecting...</div>
-    <div id="empty-box" style="display:none;"><div class="list-group" style="background:#d1d1d6;color:#636366;text-align:center;padding:60px;border-radius:14px;font-size:22px;font-weight:700;">Empty</div><div id="empty-undo-container" class="footer-btns" style="display:none;"><button class="btn undo" onclick="api('undo')">Undo</button></div></div>
     <div id="content" style="display:none;">
         <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list" class="list-group"></div></section>
         <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list" class="list-group"></div></section>
@@ -51,45 +46,29 @@
         <section id="alerts-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alerts-list" class="list-group"></div></section>
         <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
         <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-badge" class="count-badge"></span></h2><div id="headlines-list" class="list-group"></div></section>
-        <div class="footer-btns"><button id="done-btn" class="btn done" onclick="if(confirm('Clear?')) api('clear')">Done for Now</button></div>
+        <button class="btn" onclick="if(confirm('Clear?')) api('clear')">Done for Now</button>
     </div>
 </div>
-
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
-
     function formatTime(ts) { return new Date(ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }
     function cleanTitle(text) { if (!text) return ""; if (text.includes("(Axios)")) return text; return text.replace(/\s*\(Memeorandum\)$/, "").trim(); }
     function toggleTray(id, chevronId) { const tray = document.getElementById(id); const chevron = document.getElementById(chevronId); if (!tray) return; const isOpen = tray.style.display === 'block'; tray.style.display = isOpen ? 'none' : 'block'; if (chevron) chevron.classList.toggle('open', !isOpen); }
-    function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.getElementById('sheet-overlay').style.display = 'none'; }
 
     async function load() {
         try {
             const res = await fetch(API_URL + "?t=" + Date.now());
             const data = await res.json();
             document.getElementById('update-display').innerText = "Last checked: " + new Date(data.refreshTime).toLocaleString([], { weekday: 'long', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-            
-            const arts = data.articles;
-            // DYNAMIC BUTTON LOGIC
-            if (arts.length === 0) {
-                document.getElementById('empty-box').style.display = 'block';
-                document.getElementById('content').style.display = 'none';
-                document.getElementById('empty-undo-container').style.display = data.backupExists ? 'flex' : 'none';
-            } else {
-                document.getElementById('empty-box').style.display = 'none';
-                document.getElementById('content').style.display = 'block';
-                // Hide undo button if content exists anywhere in the list
-                document.getElementById('done-btn').style.display = 'block';
-            }
-
-            const sortedArts = [...arts].sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+            document.getElementById('content').style.display = 'block';
+            const arts = data.articles.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
             const sections = {
-                death: { list: document.getElementById('death-list'), data: sortedArts.filter(a => a.repeats === -3) },
-                notif: { list: document.getElementById('notif-list'), data: sortedArts.filter(a => a.repeats === -4) },
-                updates: { list: document.getElementById('updates-list'), data: sortedArts.filter(a => a.repeats === -5) },
-                alerts: { list: document.getElementById('alerts-list'), data: sortedArts.filter(a => a.repeats <= -99) },
-                trending: { list: document.getElementById('trending-list'), data: sortedArts.filter(a => a.repeats >= 2) },
-                headlines: { list: document.getElementById('headlines-list'), data: sortedArts.filter(a => a.repeats === 1) }
+                death: { list: document.getElementById('death-list'), data: arts.filter(a => a.repeats === -3) },
+                notif: { list: document.getElementById('notif-list'), data: arts.filter(a => a.repeats === -4) },
+                updates: { list: document.getElementById('updates-list'), data: arts.filter(a => a.repeats === -5) },
+                alerts: { list: document.getElementById('alerts-list'), data: arts.filter(a => a.repeats <= -99) },
+                trending: { list: document.getElementById('trending-list'), data: arts.filter(a => a.repeats >= 2) },
+                headlines: { list: document.getElementById('headlines-list'), data: arts.filter(a => a.repeats === 1) }
             };
             document.getElementById('headline-badge').innerText = sections.headlines.data.length;
 
@@ -98,13 +77,15 @@
                 s.data.forEach((item, idx) => {
                     const div = document.createElement('div');
                     const cleanedMainTitle = cleanTitle(item.title);
-                    if (item.repeats === -4) { div.className = 'green-notif'; div.innerHTML = `<div class="article-link">${item.title}</div>`; }
-                    else if (item.repeats === -3) { div.className = 'death-alert'; div.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${cleanedMainTitle}</div>`; }
-                    else if (item.repeats === -5) {
-                        div.className = 'article-card';
-                        div.onclick = () => { try { const j = JSON.parse(item.link); document.getElementById('sheet-title').innerText = cleanedMainTitle; document.getElementById('sheet-body').innerText = j.body; document.getElementById('sheet').style.display = 'block'; document.getElementById('sheet-overlay').style.display = 'block'; } catch(e) { window.open(item.link, '_blank'); } };
-                        div.innerHTML = `<div class="main-headline" style="color:var(--ios-accent)">${cleanedMainTitle}</div><div class="time-meta">${formatTime(item.timestamp)}</div>`;
-                    } else {
+                    if (item.repeats === -4) { 
+                        div.className = 'green-notif'; 
+                        div.innerHTML = `<div class="article-link">${item.title}</div>`; 
+                    }
+                    else if (item.repeats === -3) { 
+                        div.className = 'death-alert'; 
+                        div.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${cleanedMainTitle}</div>`; 
+                    }
+                    else {
                         div.className = 'article-card';
                         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{source: "Source", title: item.title, link: item.link}]; }
                         let count = item.repeats >= 2 ? item.repeats : (item.repeats <= -100 ? Math.abs(item.repeats + 98) : 1);
