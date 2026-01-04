@@ -52,9 +52,7 @@
     
     function cleanTitle(text) {
         if (!text) return "";
-        // If it specifically says (Axios), keep it.
         if (text.includes("(Axios)")) return text;
-        // Otherwise, remove (Memeorandum) if it exists at the end.
         return text.replace(/\s*\(Memeorandum\)$/, "").trim();
     }
 
@@ -90,19 +88,7 @@
                     const cleanedMainTitle = cleanTitle(item.title);
                     if (item.repeats === -4) { div.className = 'green-notif'; div.innerHTML = `<div style="font-size:21px;">${cleanedMainTitle}</div>`; }
                     else if (item.repeats === -3) { div.className = 'death-alert'; div.innerHTML = `<div style="font-size:21px;font-weight:700" onclick="window.open('${item.link}', '_blank')">${cleanedMainTitle}</div>`; }
-                    else if (item.repeats === -5) {
-                        div.className = 'article-card';
-                        div.onclick = () => {
-                            try {
-                                const j = JSON.parse(item.link);
-                                document.getElementById('sheet-title').innerText = cleanedMainTitle;
-                                document.getElementById('sheet-body').innerText = j.body;
-                                document.getElementById('sheet').style.display = 'block';
-                                document.getElementById('sheet-overlay').style.display = 'block';
-                            } catch(e) { window.open(item.link, '_blank'); }
-                        };
-                        div.innerHTML = `<div class="main-headline" style="color:var(--ios-accent)">${cleanedMainTitle}</div><div class="time-meta">${formatTime(item.timestamp)}</div>`;
-                    } else {
+                    else {
                         div.className = 'article-card';
                         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{source: "Source", title: item.title, link: item.link}]; }
                         let count = item.repeats >= 2 ? item.repeats : (item.repeats <= -100 ? Math.abs(item.repeats + 98) : 1);
@@ -110,7 +96,11 @@
                         if (hasExtra) div.classList.add('has-extra-sources');
                         const trayId = `tray-${key}-${idx}`; const chevId = `chev-${key}-${idx}`;
                         let html = `<div class="main-headline" onclick="window.open('${links[0].link}', '_blank')">${cleanedMainTitle}</div><div class="source-row" ${hasExtra ? `onclick="toggleTray('${trayId}', '${chevId}')"` : ''}>${count > 1 ? `<div class="source-badge">${count} SOURCES</div>` : ""}<div class="time-meta">${formatTime(item.timestamp)} ${hasExtra ? `<span id="${chevId}" class="chevron">▶</span>` : ""}</div></div>`;
-                        if (hasExtra) { html += `<div id="${trayId}" class="nested-sources">${links.slice(1).map(l => { const displayTitle = cleanTitle((l.title && l.title !== 1) ? l.title : "Related Coverage"); return `<a href="${l.link}" target="_blank" class="source-item">${displayTitle}</a>`; }).join('')}</div>`; }
+                        if (hasExtra) { html += `<div id="${trayId}" class="nested-sources">${links.slice(1).map(l => { 
+                            // Prioritize l.title, remove Memeorandum, fallback to Source Name
+                            const displayTitle = l.title ? cleanTitle(l.title) : `${l.source} Coverage`; 
+                            return `<a href="${l.link}" target="_blank" class="source-item">${displayTitle}</a>`; 
+                        }).join('')}</div>`; }
                         div.innerHTML = html;
                     }
                     s.list.appendChild(div);
