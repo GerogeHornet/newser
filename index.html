@@ -15,7 +15,7 @@
         .main-headline { font-size: 22px; font-weight: 700; line-height: 1.25; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
         
         .source-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0px; cursor: pointer; }
-        .has-extra-sources .source-row { margin-bottom: 15px; } /* Only add margin if there's a tray below */
+        .has-extra-sources .source-row { margin-bottom: 15px; }
 
         .source-badge { background: #ff3b30; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; display: flex; align-items: center; }
@@ -58,6 +58,12 @@
 
     function formatTime(ts) { return new Date(ts).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}); }
     
+    // Function to remove any text inside parentheses from the end of a string
+    function cleanTitle(text) {
+        if (!text) return "";
+        return text.replace(/\s*\([^)]*\)$/, "").trim();
+    }
+
     function toggleTray(id, chevronId) {
         const tray = document.getElementById(id);
         const chevron = document.getElementById(chevronId);
@@ -95,32 +101,30 @@
 
                 s.data.forEach((item, idx) => {
                     const div = document.createElement('div');
+                    const cleanedMainTitle = cleanTitle(item.title);
+
                     if (item.repeats === -4) {
                         div.className = 'green-notif';
-                        div.innerHTML = `<div style="font-size:21px;">${item.title}</div>`;
+                        div.innerHTML = `<div style="font-size:21px;">${cleanedMainTitle}</div>`;
                     } else if (item.repeats === -3) {
                         div.className = 'death-alert';
-                        div.innerHTML = `<div style="font-size:21px;font-weight:700" onclick="window.open('${item.link}', '_blank')">${item.title}</div>`;
+                        div.innerHTML = `<div style="font-size:21px;font-weight:700" onclick="window.open('${item.link}', '_blank')">${cleanedMainTitle}</div>`;
                     } else if (item.repeats === -5) {
                         div.className = 'article-card';
                         div.onclick = () => {
                             try {
                                 const j = JSON.parse(item.link);
-                                document.getElementById('sheet-title').innerText = item.title;
+                                document.getElementById('sheet-title').innerText = cleanedMainTitle;
                                 document.getElementById('sheet-body').innerText = j.body;
                                 document.getElementById('sheet').style.display = 'block';
                                 document.getElementById('sheet-overlay').style.display = 'block';
                             } catch(e) { window.open(item.link, '_blank'); }
                         };
-                        div.innerHTML = `<div class="main-headline" style="color:var(--ios-accent)">${item.title}</div><div class="time-meta">${formatTime(item.timestamp)}</div>`;
+                        div.innerHTML = `<div class="main-headline" style="color:var(--ios-accent)">${cleanedMainTitle}</div><div class="time-meta">${formatTime(item.timestamp)}</div>`;
                     } else {
                         div.className = 'article-card';
                         let links = []; 
-                        try { 
-                            links = JSON.parse(item.link); 
-                        } catch(e) { 
-                            links = [{source: "Source", title: item.title, link: item.link}]; 
-                        }
+                        try { links = JSON.parse(item.link); } catch(e) { links = [{source: "Source", title: item.title, link: item.link}]; }
                         
                         let count = item.repeats >= 2 ? item.repeats : (item.repeats <= -100 ? Math.abs(item.repeats + 98) : 1);
                         const hasExtra = links.length > 1;
@@ -130,7 +134,7 @@
                         const chevId = `chev-${key}-${idx}`;
                         
                         let html = `
-                            <div class="main-headline" onclick="window.open('${links[0].link}', '_blank')">${item.title}</div>
+                            <div class="main-headline" onclick="window.open('${links[0].link}', '_blank')">${cleanedMainTitle}</div>
                             <div class="source-row" ${hasExtra ? `onclick="toggleTray('${trayId}', '${chevId}')"` : ''}>
                                 ${count > 1 ? `<div class="source-badge">${count} SOURCES</div>` : ""}
                                 <div class="time-meta">
@@ -139,13 +143,12 @@
                                 </div>
                             </div>`;
                         
-                        // Only add the hidden tray HTML if there are actual sub-links to show
                         if (hasExtra) {
                             html += `
                                 <div id="${trayId}" class="nested-sources">
                                     ${links.slice(1).map(l => {
-                                        const displayTitle = (l.title && l.title !== 1) ? l.title : "Related Coverage";
-                                        return `<a href="${l.link}" target="_blank" class="source-item">${displayTitle} (${l.source})</a>`;
+                                        const displayTitle = cleanTitle((l.title && l.title !== 1) ? l.title : "Related Coverage");
+                                        return `<a href="${l.link}" target="_blank" class="source-item">${displayTitle}</a>`;
                                     }).join('')}
                                 </div>`;
                         }
