@@ -6,7 +6,7 @@
     <title>Newser</title>
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 120px 16px; font-size: 17px; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 60px 16px; font-size: 17px; }
         body.lock-scroll { overflow: hidden; position: fixed; width: 100%; }
         h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; }
         #update-display { font-size: 16px; opacity: 0.8; margin-bottom: 20px; font-weight: 400; }
@@ -26,13 +26,10 @@
         .death-alert { background: #e06666 !important; padding: 22px 18px; color: #ffffff !important; }
         .death-alert .article-link { color: white !important; font-weight: 700; font-size: 19px; }
         
-        /* Buttons */
-        .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; color: white; margin-top: 20px; }
+        /* Buttons - Now inside the scroll flow */
+        .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; color: white; margin-top: 30px; }
         .btn-done { background: var(--ios-accent); }
         .btn-undo { background: #3a3a3c; border: 1px solid var(--separator); }
-
-        /* Footer positioning for Done Button */
-        .footer-nav { position: fixed; bottom: 0; left: 0; right: 0; padding: 20px 16px env(safe-area-inset-bottom); background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); z-index: 1000; border-top: 1px solid var(--separator); }
 
         #sheet { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ios-card); z-index:2000; overflow-y:auto; box-sizing: border-box; }
         .sheet-header { position: sticky; top: 0; background: var(--ios-card); padding: 25px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: flex-start; z-index: 2001; }
@@ -61,11 +58,9 @@
         <section id="alerts-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alerts-list" class="list-group"></div></section>
         <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
         <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-badge" class="count-badge"></span></h2><div id="headlines-list" class="list-group"></div></section>
+        
+        <button id="done-btn-list" class="btn btn-done" onclick="api('clear')">Done for Now</button>
     </div>
-</div>
-
-<div id="footer-done" class="footer-nav" style="display:none;">
-    <button class="btn btn-done" onclick="api('clear')">Done for Now</button>
 </div>
 
 <script>
@@ -74,11 +69,10 @@
     function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.body.classList.remove('lock-scroll'); }
     
     async function api(a) { 
-        // Trigger "Connecting..." screen immediately for smooth transition
+        // Force the "Connecting..." screen for all transitions
         document.getElementById('update-display').innerText = "Connecting...";
         document.getElementById('content').style.display = 'none'; 
         document.getElementById('empty-box').style.display = 'none';
-        document.getElementById('footer-done').style.display = 'none';
 
         await fetch(API_URL + "?action=" + a); 
         location.reload(); 
@@ -96,13 +90,11 @@
             if (arts.length === 0) { 
                 document.getElementById('empty-box').style.display = 'block'; 
                 document.getElementById('content').style.display = 'none';
-                document.getElementById('footer-done').style.display = 'none';
                 document.getElementById('undo-btn-empty').style.display = hasBackup ? 'block' : 'none';
             }
             else { 
                 document.getElementById('empty-box').style.display = 'none'; 
                 document.getElementById('content').style.display = 'block'; 
-                document.getElementById('footer-done').style.display = 'block';
             }
 
             const sections = { death: { list: document.getElementById('death-list'), data: arts.filter(a => a.repeats === -3) }, notif: { list: document.getElementById('notif-list'), data: arts.filter(a => a.repeats === -4) }, updates: { list: document.getElementById('updates-list'), data: arts.filter(a => a.repeats === -5) }, alerts: { list: document.getElementById('alerts-list'), data: arts.filter(a => a.repeats <= -99) }, trending: { list: document.getElementById('trending-list'), data: arts.filter(a => a.repeats >= 2) }, headlines: { list: document.getElementById('headlines-list'), data: arts.filter(a => a.repeats === 1) } };
