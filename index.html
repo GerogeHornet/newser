@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Newser</title>
     <style>
-        :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; }
+        :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; --ios-green: #32d74b; }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 120px 16px; font-size: 17px; }
         body.lock-scroll { overflow: hidden; position: fixed; width: 100%; }
         h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; }
@@ -14,19 +14,28 @@
         .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 22px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; box-sizing: border-box; }
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .list-group > div + div { border-top: 1px solid rgba(0, 0, 0, 0.3); }
-        .article-card { padding: 22px 18px; }
+        
+        /* Article Card Layout with Checkbox */
+        .article-card { padding: 22px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .article-content { flex: 1; }
+        
+        /* Save for Later Checkmark */
+        .save-check { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s ease; cursor: pointer; }
+        .save-check.saved { background: var(--ios-green); border-color: var(--ios-green); }
+        .save-check svg { width: 16px; height: 16px; fill: none; stroke: white; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; display: none; }
+        .save-check.saved svg { display: block; }
+
         .main-headline { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
         .source-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .source-badge { background: #ff3b30; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; display: flex; align-items: center; }
-        .green-notif { background: #93c47d !important; padding: 22px 18px; color: #ffffff !important; }
-        .green-notif .article-link { color: #ffffff !important; font-size: 19px; font-weight: 700; }
-        .blue-update { background: #6d9eeb !important; padding: 22px 18px; color: #ffffff !important; cursor: pointer; }
-        .blue-update .article-link { color: #ffffff !important; font-size: 19px; font-weight: 700; }
-        .death-alert { background: #e06666 !important; padding: 22px 18px; color: #ffffff !important; }
-        .death-alert .article-link { color: white !important; font-weight: 700; font-size: 19px; }
         
-        /* Fixed Footer Navigation */
+        /* Colors for specific types */
+        .green-notif { background: #93c47d !important; padding: 22px 18px; color: #ffffff !important; }
+        .blue-update { background: #6d9eeb !important; padding: 22px 18px; color: #ffffff !important; cursor: pointer; }
+        .death-alert { background: #e06666 !important; padding: 22px 18px; color: #ffffff !important; }
+
+        /* Footer Tab Bar */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
         .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 100%; display: flex; align-items: center; justify-content: center; }
         .tab-item.active { color: var(--ios-accent); }
@@ -71,8 +80,8 @@
 
 <div id="view-later" class="container" style="display:none;">
     <h1>Later</h1>
-    <div class="list-group" style="padding: 40px; text-align: center; color: var(--ios-secondary);">
-        No articles saved for later.
+    <div id="later-list" class="list-group" style="min-height: 100px;">
+        <div style="padding: 40px; text-align: center; color: var(--ios-secondary);">No articles saved for later.</div>
     </div>
 </div>
 
@@ -86,17 +95,17 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
     
     function switchTab(tab) {
-        if (tab === 'now') {
-            document.getElementById('view-now').style.display = 'block';
-            document.getElementById('view-later').style.display = 'none';
-            document.getElementById('tab-now').classList.add('active');
-            document.getElementById('tab-later').classList.remove('active');
-        } else {
-            document.getElementById('view-now').style.display = 'none';
-            document.getElementById('view-later').style.display = 'block';
-            document.getElementById('tab-now').classList.remove('active');
-            document.getElementById('tab-later').classList.add('active');
-        }
+        document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
+        document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
+        document.getElementById('tab-now').classList.toggle('active', tab === 'now');
+        document.getElementById('tab-later').classList.toggle('active', tab === 'later');
+    }
+
+    // Toggle save state and visual checkmark
+    async function toggleSave(el, title, link, repeats, timestamp) {
+        el.classList.toggle('saved');
+        const isSaved = el.classList.contains('saved');
+        // Future: Add logic to send save/unsave to Later tab in sheet
     }
 
     function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.body.classList.remove('lock-scroll'); }
@@ -135,8 +144,14 @@
                 const s = sections[key]; const container = document.getElementById(key + '-sec'); s.list.innerHTML = ''; container.style.display = s.data.length ? 'block' : 'none';
                 s.data.forEach((item, idx) => {
                     const div = document.createElement('div');
-                    if (item.repeats === -4) { div.className = 'green-notif'; div.innerHTML = `<div class="article-link">${item.title}</div>`; }
-                    else if (item.repeats === -3) { div.className = 'death-alert'; div.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${item.title}</div>`; }
+                    if (item.repeats === -4) { 
+                        div.className = 'green-notif'; 
+                        div.innerHTML = `<div class="article-link">${item.title}</div>`; 
+                    }
+                    else if (item.repeats === -3) { 
+                        div.className = 'death-alert'; 
+                        div.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${item.title}</div>`; 
+                    }
                     else if (item.repeats === -5) {
                         div.className = 'blue-update';
                         div.onclick = () => { try { const j = JSON.parse(item.link); document.getElementById('sheet-title').innerText = item.title; document.getElementById('sheet-body').innerText = j.body; document.getElementById('sheet').style.display = 'block'; document.body.classList.add('lock-scroll'); } catch(e) { window.open(item.link, '_blank'); } };
@@ -144,7 +159,19 @@
                     } else {
                         div.className = 'article-card';
                         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{source: "Source", title: item.title, link: item.link}]; }
-                        let html = `<div class="main-headline" onclick="window.open('${links[links.length-1].link}', '_blank')">${item.title}</div><div class="source-row">${item.repeats >= 2 ? `<div class="source-badge">${item.repeats} SOURCES</div>` : ""}<div class="time-meta">${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div></div>`;
+                        
+                        // Added checkmark for saving headlines
+                        let html = `
+                            <div class="article-content">
+                                <div class="main-headline" onclick="window.open('${links[links.length-1].link}', '_blank')">${item.title}</div>
+                                <div class="source-row">
+                                    ${item.repeats >= 2 ? `<div class="source-badge">${item.repeats} SOURCES</div>` : ""}
+                                    <div class="time-meta">${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                                </div>
+                            </div>
+                            <div class="save-check" onclick="toggleSave(this, '${item.title.replace(/'/g, "\\'")}', '${item.link}', ${item.repeats}, '${item.timestamp}')">
+                                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>`;
                         div.innerHTML = html;
                     }
                     s.list.appendChild(div);
