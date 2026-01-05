@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Newser</title>
     <style>
-        :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; --ios-green: #32d74b; }
+        :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; --ios-green: #32d74b; --ios-orange: #ff9500; --ios-red: #e06666; }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 120px 16px; font-size: 17px; -webkit-tap-highlight-color: transparent; }
         body.lock-scroll { overflow: hidden; position: fixed; width: 100%; }
         h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; }
@@ -14,7 +14,7 @@
         .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 22px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; box-sizing: border-box; }
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .list-group > div + div { border-top: 1px solid rgba(0, 0, 0, 0.3); }
-        .article-card, .blue-update { padding: 22px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .article-card, .colored-card { padding: 22px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .article-content { flex: 1; min-width: 0; }
         .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s ease; cursor: pointer; }
@@ -26,9 +26,13 @@
         .source-badge { background: #ff3b30; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; }
         .article-link { font-size: 19px; font-weight: 700; line-height: 1.3; flex: 1; min-width: 0; }
-        .green-notif { background: #93c47d !important; padding: 22px 18px; color: #ffffff !important; }
+        
+        /* Colored Sections */
+        .green-notif { background: #93c47d !important; color: #ffffff !important; }
         .blue-update { background: #6d9eeb !important; color: #ffffff !important; cursor: pointer; }
-        .death-alert { background: #e06666 !important; padding: 22px 18px; color: #ffffff !important; }
+        .red-alert { background: var(--ios-red) !important; color: #ffffff !important; }
+        .orange-trending { background: var(--ios-orange) !important; color: #ffffff !important; }
+
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
         .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 100%; display: flex; align-items: center; justify-content: center; }
         .tab-item.active { color: var(--ios-accent); }
@@ -70,16 +74,45 @@
 </div>
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
+    
+    function formatDate(ts) {
+        const d = new Date(ts);
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const dayName = days[d.getDay()];
+        const datePart = `${d.getMonth() + 1}/${d.getDate()}`;
+        let hours = d.getHours();
+        const ampm = hours >= 12 ? 'pm' : 'am';
+        hours = hours % 12 || 12;
+        const minutes = d.getMinutes().toString().padStart(2, '0');
+        return `${dayName} ${datePart} ${hours}:${minutes} ${ampm}`;
+    }
+
     function switchTab(tab) { document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none'; document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none'; document.getElementById('tab-now').classList.toggle('active', tab === 'now'); document.getElementById('tab-later').classList.toggle('active', tab === 'later'); }
     async function toggleSave(event, circle, title, link, repeats) { event.stopPropagation(); const isSaving = !circle.classList.contains('saved'); circle.classList.toggle('saved'); const action = isSaving ? 'save' : 'unsave'; const params = `?action=${action}&title=${encodeURIComponent(title)}&link=${encodeURIComponent(link)}&repeats=${repeats}`; fetch(API_URL + params); }
     function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.body.classList.remove('lock-scroll'); }
     async function api(a) { document.getElementById('update-display').innerText = "Connecting..."; document.getElementById('content').style.display = 'none'; document.getElementById('empty-box').style.display = 'none'; await fetch(API_URL + "?action=" + a); location.reload(); }
+    
     function renderItem(item, isLater = false) {
         const div = document.createElement('div');
-        if (item.repeats === -4) { div.className = 'green-notif'; div.innerHTML = `<div class="article-link">${item.title}</div>`; }
-        else if (item.repeats === -3) { div.className = 'death-alert'; div.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${item.title}</div>`; }
+        // Colored Card Logic
+        if (item.repeats === -4) { div.className = 'colored-card green-notif'; div.innerHTML = `<div class="article-link">${item.title}</div>`; }
+        else if (item.repeats === -3) { div.className = 'colored-card red-alert'; div.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${item.title}</div>`; }
+        else if (item.repeats <= -99) { // ALERTS: Restored bold, bigger text + Red color
+            div.className = 'colored-card red-alert';
+            div.innerHTML = `<div class="article-link truncate" onclick="window.open('${JSON.parse(item.link)[0].link}', '_blank')">${item.title}</div>`;
+            const circle = document.createElement('div'); circle.className = 'save-check' + (isLater ? ' saved' : ''); circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            circle.onclick = (e) => toggleSave(e, circle, item.title, item.link, item.repeats);
+            div.appendChild(circle);
+        }
+        else if (item.repeats >= 2) { // TRENDING: Orange color
+            div.className = 'colored-card orange-trending';
+            div.innerHTML = `<div class="article-link truncate" onclick="window.open('${JSON.parse(item.link)[0].link}', '_blank')">${item.title}</div>`;
+            const circle = document.createElement('div'); circle.className = 'save-check' + (isLater ? ' saved' : ''); circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            circle.onclick = (e) => toggleSave(e, circle, item.title, item.link, item.repeats);
+            div.appendChild(circle);
+        }
         else if (item.repeats === -5) {
-            div.className = 'blue-update';
+            div.className = 'colored-card blue-update';
             const content = document.createElement('div'); content.className = 'article-link truncate'; content.innerText = item.title;
             content.onclick = () => { try { const j = JSON.parse(item.link); document.getElementById('sheet-title').innerText = item.title; document.getElementById('sheet-body').innerText = j.body; document.getElementById('sheet').style.display = 'block'; } catch(e) { window.open(item.link, '_blank'); } };
             const circle = document.createElement('div'); circle.className = 'save-check' + (isLater ? ' saved' : ''); circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
@@ -89,7 +122,7 @@
             div.className = 'article-card';
             let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
             const content = document.createElement('div'); content.className = 'article-content';
-            content.innerHTML = `<div class="main-headline">${item.title}</div><div class="source-row">${item.repeats >= 2 ? `<div class="source-badge">${item.repeats} SOURCES</div>` : ""}<div class="time-meta">${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div></div>`;
+            content.innerHTML = `<div class="main-headline">${item.title}</div><div class="source-row"><div class="time-meta">${formatDate(item.timestamp)}</div></div>`;
             content.onclick = () => window.open(links[links.length-1].link, '_blank');
             const circle = document.createElement('div'); circle.className = 'save-check' + (isLater ? ' saved' : ''); circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
             circle.onclick = (e) => toggleSave(e, circle, item.title, item.link, item.repeats);
