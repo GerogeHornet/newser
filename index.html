@@ -74,11 +74,12 @@
     function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.body.classList.remove('lock-scroll'); }
     
     async function api(a) { 
-        if (a === 'clear') { 
-            document.getElementById('content').style.display = 'none'; 
-            document.getElementById('footer-done').style.display = 'none';
-            document.getElementById('empty-box').style.display = 'block'; 
-        }
+        // Trigger "Connecting..." screen immediately for smooth transition
+        document.getElementById('update-display').innerText = "Connecting...";
+        document.getElementById('content').style.display = 'none'; 
+        document.getElementById('empty-box').style.display = 'none';
+        document.getElementById('footer-done').style.display = 'none';
+
         await fetch(API_URL + "?action=" + a); 
         location.reload(); 
     }
@@ -93,15 +94,12 @@
             const hasBackup = data.backupExists;
 
             if (arts.length === 0) { 
-                // EMPTY STATE
                 document.getElementById('empty-box').style.display = 'block'; 
                 document.getElementById('content').style.display = 'none';
                 document.getElementById('footer-done').style.display = 'none';
-                // Show Undo ONLY if backup exists in sheet
                 document.getElementById('undo-btn-empty').style.display = hasBackup ? 'block' : 'none';
             }
             else { 
-                // CONTENT STATE
                 document.getElementById('empty-box').style.display = 'none'; 
                 document.getElementById('content').style.display = 'block'; 
                 document.getElementById('footer-done').style.display = 'block';
