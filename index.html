@@ -12,16 +12,19 @@
         #update-display { font-size: 16px; opacity: 0.8; margin-bottom: 20px; font-weight: 400; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
         
-        /* RESTORED: Read Count Circle */
         .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 22px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; box-sizing: border-box; }
         
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .list-group > div + div { border-top: 1px solid rgba(0, 0, 0, 0.3); }
-        .article-card { padding: 22px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-        .article-content { flex: 1; }
         
-        /* TOGGLE CIRCLE: Taps On/Off */
-        .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s ease; cursor: pointer; }
+        /* Unified Article Card Layout */
+        .article-card, .blue-update { padding: 22px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .article-content { flex: 1; min-width: 0; } /* min-width: 0 is required for truncation */
+        
+        /* Truncation Logic */
+        .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s ease; cursor: pointer; background: rgba(255,255,255,0.05); }
         .save-check.saved { background: var(--ios-green) !important; border-color: var(--ios-green) !important; }
         .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; display: none; pointer-events: none; }
         .save-check.saved svg { display: block !important; }
@@ -31,11 +34,12 @@
         .source-badge { background: #ff3b30; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; }
         
+        /* Special Card Formatting */
+        .article-link { font-size: 19px; font-weight: 700; line-height: 1.3; flex: 1; min-width: 0; }
         .green-notif { background: #93c47d !important; padding: 22px 18px; color: #ffffff !important; }
-        .blue-update { background: #6d9eeb !important; padding: 22px 18px; color: #ffffff !important; cursor: pointer; }
+        .blue-update { background: #6d9eeb !important; color: #ffffff !important; cursor: pointer; }
         .death-alert { background: #e06666 !important; padding: 22px 18px; color: #ffffff !important; }
 
-        /* Fixed Tab Bar with Center Line */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
         .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 100%; display: flex; align-items: center; justify-content: center; }
         .tab-item.active { color: var(--ios-accent); }
@@ -98,13 +102,11 @@
         document.getElementById('tab-later').classList.toggle('active', tab === 'later');
     }
 
-    // UPDATED: Toggles circle on/off visually and sends save/delete to sheet
     async function toggleSave(event, circle, title, link, repeats) {
         event.stopPropagation();
         const isSaving = !circle.classList.contains('saved');
         circle.classList.toggle('saved'); 
-        
-        const action = isSaving ? 'save' : 'unsave'; // Logic to add/remove from Later tab
+        const action = isSaving ? 'save' : 'unsave';
         const params = `?action=${action}&title=${encodeURIComponent(title)}&link=${encodeURIComponent(link)}&repeats=${repeats}`;
         fetch(API_URL + params).catch(() => {}); 
     }
@@ -154,12 +156,25 @@
 
                 sections[key].forEach(item => {
                     const card = document.createElement('div');
+                    
                     if (item.repeats === -4) { card.className = 'green-notif'; card.innerHTML = `<div class="article-link">${item.title}</div>`; }
                     else if (item.repeats === -3) { card.className = 'death-alert'; card.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${item.title}</div>`; }
                     else if (item.repeats === -5) {
                         card.className = 'blue-update';
-                        card.onclick = () => { try { const j = JSON.parse(item.link); document.getElementById('sheet-title').innerText = item.title; document.getElementById('sheet-body').innerText = j.body; document.getElementById('sheet').style.display = 'block'; } catch(e) { window.open(item.link, '_blank'); } };
-                        card.innerHTML = `<div class="article-link">${item.title}</div>`;
+                        // Content Container for Blue Cards
+                        const content = document.createElement('div');
+                        content.className = 'article-link truncate'; // Added truncation
+                        content.innerText = item.title;
+                        content.onclick = () => { try { const j = JSON.parse(item.link); document.getElementById('sheet-title').innerText = item.title; document.getElementById('sheet-body').innerText = j.body; document.getElementById('sheet').style.display = 'block'; } catch(e) { window.open(item.link, '_blank'); } };
+
+                        // Circle Container for Blue Cards
+                        const circle = document.createElement('div');
+                        circle.className = 'save-check';
+                        circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                        circle.onclick = (e) => toggleSave(e, circle, item.title, item.link, item.repeats);
+
+                        card.appendChild(content);
+                        card.appendChild(circle);
                     } else {
                         card.className = 'article-card';
                         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
