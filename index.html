@@ -6,9 +6,9 @@
     <title>Newser</title>
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; --ios-green: #32d74b; --ios-orange: #ff9500; --ios-red: #e06666; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 120px 16px; font-size: 17px; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 120px 16px; font-size: 17px; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; }
         body.lock-scroll { overflow: hidden; position: fixed; width: 100%; }
-        h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; }
+        h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; cursor: pointer; display: inline-block; }
         #update-display { font-size: 16px; opacity: 0.8; margin-bottom: 20px; font-weight: 400; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
         .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 22px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; box-sizing: border-box; }
@@ -48,11 +48,12 @@
     <div id="sheet-body" class="sheet-content"></div>
 </div>
 <div id="view-now">
-    <h1>Newser</h1>
+    <h1 onclick="refreshApp('now')">Newser</h1>
     <div id="update-display">Connecting...</div>
     <div id="empty-box" style="display:none;">
         <div style="background:#1c1c1e;color:#8e8e93;text-align:center;padding:60px;border-radius:14px;font-size:22px;font-weight:700; border: 1px dashed #38383a; margin-bottom: 20px;">Empty</div>
-        <button id="undo-btn-empty" class="btn btn-undo" onclick="api('undo')">Undo</button> </div>
+        <button id="undo-btn-empty" class="btn btn-undo" onclick="api('undo')">Undo</button>
+    </div>
     <div id="content" style="display:none;">
         <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
         <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list"></div></section>
@@ -64,7 +65,7 @@
     </div>
 </div>
 <div id="view-later" style="display:none;">
-    <h1>Later</h1>
+    <h1 onclick="refreshApp('later')">Later</h1>
     <div id="later-list" class="list-group"></div>
 </div>
 <div class="tab-bar">
@@ -72,6 +73,13 @@
 </div>
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
+    
+    // Logic to handle refreshing via Title tap
+    function refreshApp(targetView) {
+        document.getElementById('update-display').innerText = "Connecting...";
+        window.location.href = window.location.pathname + "?view=" + targetView;
+    }
+
     function formatDate(ts) {
         const d = new Date(ts), today = new Date();
         const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
@@ -81,12 +89,14 @@
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         return `${days[d.getDay()]} ${d.getMonth() + 1}/${d.getDate()} ${h}:${m} ${ampm}`;
     }
+
     function switchTab(tab) {
         document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
         document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
         document.getElementById('tab-now').classList.toggle('active', tab === 'now');
         document.getElementById('tab-later').classList.toggle('active', tab === 'later');
     }
+
     async function api(a) { 
         document.getElementById('update-display').innerText = "Connecting..."; 
         document.getElementById('content').style.display = 'none';
@@ -94,6 +104,7 @@
         await fetch(`${API_URL}?action=${a}`); 
         location.reload(); 
     }
+
     async function toggleSave(event, circle, title, link, repeats) {
         event.stopPropagation();
         const isSaving = !circle.classList.contains('saved');
@@ -101,7 +112,9 @@
         const action = isSaving ? 'save' : 'unsave';
         fetch(`${API_URL}?action=${action}&title=${encodeURIComponent(title)}&link=${encodeURIComponent(link)}&repeats=${repeats}`);
     }
+
     function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.body.classList.remove('lock-scroll'); }
+
     function renderItem(item, isSaved = false) {
         const div = document.createElement('div');
         if (item.repeats === -4) { div.className = 'green-notif'; div.innerText = item.title; }
@@ -130,12 +143,19 @@
         }
         return div;
     }
+
     async function load() {
         try {
+            // Check if we were refreshing into a specific tab
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewParam = urlParams.get('view');
+            if (viewParam) switchTab(viewParam);
+
             const res = await fetch(`${API_URL}?t=${Date.now()}`);
             const data = await res.json();
             document.getElementById('update-display').innerText = "Last checked: " + new Date(data.refreshTime).toLocaleString();
             const arts = data.articles || [], later = data.laterArticles || [];
+            
             if (arts.length === 0) {
                 document.getElementById('empty-box').style.display = 'block';
                 document.getElementById('content').style.display = 'none';
@@ -144,8 +164,10 @@
                 document.getElementById('empty-box').style.display = 'none';
                 document.getElementById('content').style.display = 'block';
             }
+
             const sections = { death: arts.filter(a => a.repeats === -3), notif: arts.filter(a => a.repeats === -4), updates: arts.filter(a => a.repeats === -5), alerts: arts.filter(a => a.repeats <= -99), trending: arts.filter(a => a.repeats >= 2), headlines: arts.filter(a => a.repeats === 1) };
             document.getElementById('headline-badge').innerText = sections.headlines.length;
+            
             Object.keys(sections).forEach(k => {
                 const list = document.getElementById(k + '-list');
                 const sec = document.getElementById(k + '-sec');
@@ -156,6 +178,7 @@
                     list.appendChild(renderItem(item, isSaved));
                 });
             });
+
             const laterList = document.getElementById('later-list');
             laterList.innerHTML = later.length ? '' : '<div style="padding: 40px; text-align: center; color: var(--ios-secondary);">No saved articles.</div>';
             later.forEach(item => laterList.appendChild(renderItem(item, true)));
