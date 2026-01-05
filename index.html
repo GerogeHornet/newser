@@ -112,4 +112,67 @@
     
     async function api(a) { 
         document.getElementById('update-display').innerText = "Connecting...";
-        document.getElementById('content').style.display = 'none';
+        document.getElementById('content').style.display = 'none'; 
+        document.getElementById('empty-box').style.display = 'none';
+        await fetch(API_URL + "?action=" + a); 
+        location.reload(); 
+    }
+
+    async function load() {
+        try {
+            const res = await fetch(API_URL + "?t=" + Date.now());
+            const data = await res.json();
+            document.getElementById('update-display').innerText = "Last checked: " + new Date(data.refreshTime).toLocaleString();
+            
+            const arts = data.articles;
+            const hasBackup = data.backupExists;
+
+            if (arts.length === 0) { 
+                document.getElementById('empty-box').style.display = 'block'; 
+                document.getElementById('content').style.display = 'none';
+                document.getElementById('undo-btn-empty').style.display = hasBackup ? 'block' : 'none';
+            }
+            else { 
+                document.getElementById('empty-box').style.display = 'none'; 
+                document.getElementById('content').style.display = 'block'; 
+            }
+
+            const sections = { death: { list: document.getElementById('death-list'), data: arts.filter(a => a.repeats === -3) }, notif: { list: document.getElementById('notif-list'), data: arts.filter(a => a.repeats === -4) }, updates: { list: document.getElementById('updates-list'), data: arts.filter(a => a.repeats === -5) }, alerts: { list: document.getElementById('alerts-list'), data: arts.filter(a => a.repeats <= -99) }, trending: { list: document.getElementById('trending-list'), data: arts.filter(a => a.repeats >= 2) }, headlines: { list: document.getElementById('headlines-list'), data: arts.filter(a => a.repeats === 1) } };
+            document.getElementById('headline-badge').innerText = sections.headlines.data.length;
+            
+            Object.keys(sections).forEach(key => {
+                const s = sections[key]; const container = document.getElementById(key + '-sec'); s.list.innerHTML = ''; container.style.display = s.data.length ? 'block' : 'none';
+                s.data.forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    // Existing styling logic for Notifs, Death, Updates...
+                    if (item.repeats === -4) { div.className = 'green-notif'; div.innerHTML = `<div class="article-link">${item.title}</div>`; }
+                    else if (item.repeats === -3) { div.className = 'death-alert'; div.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${item.title}</div>`; }
+                    else if (item.repeats === -5) {
+                        div.className = 'blue-update';
+                        div.onclick = () => { try { const j = JSON.parse(item.link); document.getElementById('sheet-title').innerText = item.title; document.getElementById('sheet-body').innerText = j.body; document.getElementById('sheet').style.display = 'block'; document.body.classList.add('lock-scroll'); } catch(e) { window.open(item.link, '_blank'); } };
+                        div.innerHTML = `<div class="article-link">${item.title}</div>`;
+                    } else {
+                        div.className = 'article-card';
+                        let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{source: "Source", title: item.title, link: item.link}]; }
+                        let html = `
+                            <div class="article-content">
+                                <div class="main-headline" onclick="window.open('${links[links.length-1].link}', '_blank')">${item.title}</div>
+                                <div class="source-row">
+                                    ${item.repeats >= 2 ? `<div class="source-badge">${item.repeats} SOURCES</div>` : ""}
+                                    <div class="time-meta">${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                                </div>
+                            </div>
+                            <div class="save-check" onclick="toggleSave(this, '${item.title.replace(/'/g, "\\'")}', '${item.link.replace(/'/g, "\\'")}', ${item.repeats})">
+                                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </div>`;
+                        div.innerHTML = html;
+                    }
+                    s.list.appendChild(div);
+                });
+            });
+        } catch (e) { console.error(e); }
+    }
+    load();
+</script>
+</body>
+</html>
