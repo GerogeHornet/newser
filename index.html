@@ -6,7 +6,7 @@
     <title>Newser</title>
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 40px 16px; font-size: 17px; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 120px 16px; font-size: 17px; }
         body.lock-scroll { overflow: hidden; position: fixed; width: 100%; }
         h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; }
         #update-display { font-size: 16px; opacity: 0.8; margin-bottom: 20px; font-weight: 400; }
@@ -26,7 +26,12 @@
         .death-alert { background: #e06666 !important; padding: 22px 18px; color: #ffffff !important; }
         .death-alert .article-link { color: white !important; font-weight: 700; font-size: 19px; }
         
-        /* Buttons - Scrolling Flow only */
+        /* Fixed Footer Navigation */
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
+        .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .tab-item.active { color: var(--ios-accent); }
+        .tab-divider { width: 1px; height: 40px; background: var(--separator); }
+
         .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; color: white; margin-top: 30px; }
         .btn-done { background: var(--ios-accent); margin-bottom: 40px; }
         .btn-undo { background: #3a3a3c; border: 1px solid var(--separator); }
@@ -42,7 +47,8 @@
     <div class="sheet-header"><h2 id="sheet-title" style="margin:0; font-size:26px; font-weight:700;"></h2><span class="close-sheet" onclick="closeSheet()">Done</span></div>
     <div id="sheet-body" class="sheet-content"></div>
 </div>
-<div class="container">
+
+<div id="view-now" class="container">
     <h1>Newser</h1>
     <div id="update-display">Connecting...</div>
     
@@ -63,17 +69,42 @@
     </div>
 </div>
 
+<div id="view-later" class="container" style="display:none;">
+    <h1>Later</h1>
+    <div class="list-group" style="padding: 40px; text-align: center; color: var(--ios-secondary);">
+        No articles saved for later.
+    </div>
+</div>
+
+<div class="tab-bar">
+    <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
+    <div class="tab-divider"></div>
+    <div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
+</div>
+
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
     
+    function switchTab(tab) {
+        if (tab === 'now') {
+            document.getElementById('view-now').style.display = 'block';
+            document.getElementById('view-later').style.display = 'none';
+            document.getElementById('tab-now').classList.add('active');
+            document.getElementById('tab-later').classList.remove('active');
+        } else {
+            document.getElementById('view-now').style.display = 'none';
+            document.getElementById('view-later').style.display = 'block';
+            document.getElementById('tab-now').classList.remove('active');
+            document.getElementById('tab-later').classList.add('active');
+        }
+    }
+
     function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.body.classList.remove('lock-scroll'); }
     
     async function api(a) { 
-        // Show connecting screen immediately
         document.getElementById('update-display').innerText = "Connecting...";
         document.getElementById('content').style.display = 'none'; 
         document.getElementById('empty-box').style.display = 'none';
-
         await fetch(API_URL + "?action=" + a); 
         location.reload(); 
     }
