@@ -8,7 +8,7 @@
     <link rel="icon" type="image/jpeg" href="icon.jpg">
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; --ios-green: #32d74b; --ios-orange: #ff9500; --ios-red: #e06666; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; font-size: 17px; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 80px 16px; font-size: 17px; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; }
         h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; cursor: pointer; display: inline-block; }
         #update-display { font-size: 16px; opacity: 0.8; margin-bottom: 20px; font-weight: 400; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
@@ -30,11 +30,11 @@
         .alert-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
         .trending-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-orange) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
         
-        /* Updated Tighter Footer with Large Text */
-        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(55px + env(safe-area-inset-bottom)); background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: flex-start; z-index: 1000; padding-top: 5px; }
-        .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 45px; display: flex; align-items: center; justify-content: center; }
+        /* ULTRA COMPACT FOOTER */
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(35px + env(safe-area-inset-bottom)); background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: flex-start; z-index: 1000; padding-top: 5px; }
+        .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 30px; display: flex; align-items: center; justify-content: center; }
         .tab-item.active { color: var(--ios-accent); }
-        .tab-divider { width: 1px; height: 25px; background: var(--separator); align-self: center; margin-bottom: env(safe-area-inset-bottom); }
+        .tab-divider { width: 1px; height: 20px; background: var(--separator); align-self: center; margin-bottom: env(safe-area-inset-bottom); }
         
         .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; color: white; margin-top: 20px; }
         .btn-done { background: var(--ios-accent); margin-bottom: 40px; }
