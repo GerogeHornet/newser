@@ -6,7 +6,7 @@
     <title>Newser</title>
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 60px 16px; font-size: 17px; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 40px 16px; font-size: 17px; }
         body.lock-scroll { overflow: hidden; position: fixed; width: 100%; }
         h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; }
         #update-display { font-size: 16px; opacity: 0.8; margin-bottom: 20px; font-weight: 400; }
@@ -26,9 +26,9 @@
         .death-alert { background: #e06666 !important; padding: 22px 18px; color: #ffffff !important; }
         .death-alert .article-link { color: white !important; font-weight: 700; font-size: 19px; }
         
-        /* Buttons - Now inside the scroll flow */
+        /* Buttons - Scrolling Flow only */
         .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; color: white; margin-top: 30px; }
-        .btn-done { background: var(--ios-accent); }
+        .btn-done { background: var(--ios-accent); margin-bottom: 40px; }
         .btn-undo { background: #3a3a3c; border: 1px solid var(--separator); }
 
         #sheet { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ios-card); z-index:2000; overflow-y:auto; box-sizing: border-box; }
@@ -69,7 +69,7 @@
     function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.body.classList.remove('lock-scroll'); }
     
     async function api(a) { 
-        // Force the "Connecting..." screen for all transitions
+        // Show connecting screen immediately
         document.getElementById('update-display').innerText = "Connecting...";
         document.getElementById('content').style.display = 'none'; 
         document.getElementById('empty-box').style.display = 'none';
