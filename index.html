@@ -74,7 +74,8 @@
     <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div><div class="tab-divider"></div><div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
 </div>
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec
+    const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
+    
     function refreshApp(targetView) {
         document.getElementById('update-display').innerText = "Connecting...";
         window.location.href = window.location.pathname + "?view=" + targetView;
