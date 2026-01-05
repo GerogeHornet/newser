@@ -7,17 +7,22 @@
     <style>
         :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; --ios-green: #32d74b; }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 120px 16px; font-size: 17px; -webkit-tap-highlight-color: transparent; }
+        body.lock-scroll { overflow: hidden; position: fixed; width: 100%; }
         h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; }
         #update-display { font-size: 16px; opacity: 0.8; margin-bottom: 20px; font-weight: 400; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
+        
+        /* RESTORED: Read Count Circle */
+        .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 22px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; box-sizing: border-box; }
+        
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .list-group > div + div { border-top: 1px solid rgba(0, 0, 0, 0.3); }
         .article-card { padding: 22px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .article-content { flex: 1; }
         
-        /* Save Circle - Enhanced with Pulse */
-        .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .save-check.saved { background: var(--ios-green) !important; border-color: var(--ios-green) !important; transform: scale(1.1); }
+        /* TOGGLE CIRCLE: Taps On/Off */
+        .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s ease; cursor: pointer; }
+        .save-check.saved { background: var(--ios-green) !important; border-color: var(--ios-green) !important; }
         .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; display: none; pointer-events: none; }
         .save-check.saved svg { display: block !important; }
 
@@ -26,6 +31,11 @@
         .source-badge { background: #ff3b30; color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
         .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; }
         
+        .green-notif { background: #93c47d !important; padding: 22px 18px; color: #ffffff !important; }
+        .blue-update { background: #6d9eeb !important; padding: 22px 18px; color: #ffffff !important; cursor: pointer; }
+        .death-alert { background: #e06666 !important; padding: 22px 18px; color: #ffffff !important; }
+
+        /* Fixed Tab Bar with Center Line */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 85px; background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); }
         .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 100%; display: flex; align-items: center; justify-content: center; }
         .tab-item.active { color: var(--ios-accent); }
@@ -35,7 +45,6 @@
         .btn-done { background: var(--ios-accent); margin-bottom: 40px; }
         .btn-undo { background: #3a3a3c; border: 1px solid var(--separator); }
         
-        /* Sheet Styles */
         #sheet { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ios-card); z-index:2000; overflow-y:auto; box-sizing: border-box; }
         .sheet-header { position: sticky; top: 0; background: var(--ios-card); padding: 25px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: flex-start; z-index: 2001; }
         .sheet-content { padding: 25px; font-size: 24px; line-height: 1.6; white-space: pre-wrap; color: #ffffff; }
@@ -61,7 +70,7 @@
         <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
         <section id="alerts-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alerts-list" class="list-group"></div></section>
         <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list" class="list-group"></div></section>
-        <section id="headlines-sec"><h2>🗞️ Headlines</h2><div id="headlines-list" class="list-group"></div></section>
+        <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-badge" class="count-badge"></span></h2><div id="headlines-list" class="list-group"></div></section>
         <button id="done-btn-list" class="btn btn-done" onclick="api('clear')">Done for Now</button>
     </div>
 </div>
@@ -81,7 +90,7 @@
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
-
+    
     function switchTab(tab) {
         document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
         document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
@@ -89,15 +98,15 @@
         document.getElementById('tab-later').classList.toggle('active', tab === 'later');
     }
 
-    // MODERN SAVE LOGIC: USES EVENT OBJECT
+    // UPDATED: Toggles circle on/off visually and sends save/delete to sheet
     async function toggleSave(event, circle, title, link, repeats) {
-        event.stopPropagation(); // Stop opening the article
-        if (circle.classList.contains('saved')) return; 
+        event.stopPropagation();
+        const isSaving = !circle.classList.contains('saved');
+        circle.classList.toggle('saved'); 
         
-        circle.classList.add('saved'); // Instant green
-        
-        const params = `?action=save&title=${encodeURIComponent(title)}&link=${encodeURIComponent(link)}&repeats=${repeats}`;
-        fetch(API_URL + params).catch(() => {});
+        const action = isSaving ? 'save' : 'unsave'; // Logic to add/remove from Later tab
+        const params = `?action=${action}&title=${encodeURIComponent(title)}&link=${encodeURIComponent(link)}&repeats=${repeats}`;
+        fetch(API_URL + params).catch(() => {}); 
     }
 
     function closeSheet() { document.getElementById('sheet').style.display = 'none'; document.body.classList.remove('lock-scroll'); }
@@ -135,16 +144,16 @@
                 headlines: arts.filter(a => a.repeats === 1)
             };
             
+            document.getElementById('headline-badge').innerText = sections.headlines.length;
+            
             Object.keys(sections).forEach(key => {
                 const list = document.getElementById(key + '-list');
                 const container = document.getElementById(key + '-sec');
-                if (!list || !container) return;
                 list.innerHTML = '';
                 container.style.display = sections[key].length ? 'block' : 'none';
 
                 sections[key].forEach(item => {
                     const card = document.createElement('div');
-                    
                     if (item.repeats === -4) { card.className = 'green-notif'; card.innerHTML = `<div class="article-link">${item.title}</div>`; }
                     else if (item.repeats === -3) { card.className = 'death-alert'; card.innerHTML = `<div class="article-link" onclick="window.open('${item.link}', '_blank')">${item.title}</div>`; }
                     else if (item.repeats === -5) {
@@ -156,13 +165,11 @@
                         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
                         const finalLink = links[links.length-1].link;
 
-                        // Content Side
                         const content = document.createElement('div');
                         content.className = 'article-content';
                         content.innerHTML = `<div class="main-headline">${item.title}</div><div class="source-row">${item.repeats >= 2 ? `<div class="source-badge">${item.repeats} SOURCES</div>` : ""}<div class="time-meta">${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div></div>`;
                         content.onclick = () => window.open(finalLink, '_blank');
 
-                        // Circle Side
                         const circle = document.createElement('div');
                         circle.className = 'save-check';
                         circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
