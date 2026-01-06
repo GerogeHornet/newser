@@ -34,7 +34,9 @@
         .article-content { flex: 1; min-width: 0; }
         .article-link { font-weight: 700; font-size: 20px; line-height: 1.3; cursor: pointer; color: var(--ios-text); }
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-        .badge { background: var(--trending-red); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
+        
+        /* Updated Badge Style: Number in red */
+        .badge { background: #fff; color: var(--trending-red); padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
         
         .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
@@ -124,14 +126,25 @@
             let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
             const content = document.createElement('div'); content.className = 'article-content';
             const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
+            
+            // Trending UI: Number in red, arrow logic
             const badge = isTrending ? `<span class="badge">${links.length} Sources</span>` : '';
-            const arrow = isTrending ? '<span style="font-size:10px; margin-left:4px;">▼</span>' : '';
-            content.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badge} ${timeStr}${arrow}</div>`;
+            const arrowSpan = isTrending ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px;">▶</span>' : '';
+
+            content.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badge} ${timeStr}${arrowSpan}</div>`;
+            
             if (isTrending) {
                 const list = document.createElement('div'); list.className = 'source-list';
+                // Show other articles, not the main one
                 links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; });
                 div.appendChild(content); div.appendChild(list);
-                content.onclick = () => list.style.display = list.style.display === 'block' ? 'none' : 'block';
+                
+                content.onclick = () => { 
+                    const isVisible = list.style.display === 'block';
+                    list.style.display = isVisible ? 'none' : 'block';
+                    // Arrow toggle logic
+                    content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼';
+                };
             } else { content.onclick = () => window.open(links[0].link, '_blank'); div.appendChild(content); }
         }
 
@@ -157,7 +170,6 @@
             Object.keys(mapping).forEach(key => {
                 const el = document.getElementById(key + '-list'); el.innerHTML = '';
                 const filtered = data.articles.filter(a => {
-                    // Strictly filter Trending for items with 2+ repeats
                     if (key === 'trending') return a.repeats >= 2;
                     if (key === 'headlines') return a.repeats === 1;
                     return a.repeats === mapping[key];
