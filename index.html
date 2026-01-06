@@ -45,7 +45,7 @@
 </head>
 <body>
     <div id="view-now">
-        <header><h1 onclick="refreshApp('now')">Newser</h1><div id="update-display" class="update-time">Connecting...</div></header>
+        <header><h1 onclick="refreshApp()">Newser</h1><div id="update-display" class="update-time">Connecting...</div></header>
         <div id="content" style="display:none;">
             <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
             <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list"></div></section>
@@ -56,7 +56,7 @@
         </div>
     </div>
     <div id="view-later" style="display:none;">
-        <header><h1 onclick="refreshApp('later')">Later</h1><div id="update-display-later" class="update-time">Connecting...</div></header>
+        <header><h1 onclick="refreshApp()">Later</h1><div id="update-display-later" class="update-time">Connecting...</div></header>
         <div id="later-list" class="list-group"></div>
     </div>
     <div class="tab-bar">
@@ -66,10 +66,10 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
-    function refreshApp(target) { 
+    function refreshApp() { 
         document.getElementById('update-display').innerText = "Connecting..."; 
         document.getElementById('update-display-later').innerText = "Connecting...";
-        load(); // Re-trigger the load function
+        load();
     }
 
     async function apiAction(act, params = '') {
@@ -142,11 +142,7 @@
             });
             data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
             document.getElementById('content').style.display = 'block';
-        } catch (e) { 
-            const errorText = "Error Loading Feed";
-            document.getElementById('update-display').innerText = errorText; 
-            document.getElementById('update-display-later').innerText = errorText; 
-        }
+        } catch (e) { document.getElementById('update-display').innerText = "Error Loading Feed"; }
     }
     load();
 </script>
