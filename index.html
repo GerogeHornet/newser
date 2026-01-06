@@ -40,10 +40,10 @@
         .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-card); }
+        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-card); display: block !important; }
         
-        .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
-        .source-link { display: block; color: var(--ios-accent); font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 12px; text-decoration: none; padding-left: 15px; position: relative; }
+        .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; width: 100%; }
+        .source-link { display: block; color: var(--ios-accent); font-size: 17px; font-weight: 500; line-height: 1.5; margin-bottom: 14px; text-decoration: none; padding-left: 20px; position: relative; }
         .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
 
         .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
@@ -130,35 +130,41 @@
                 links = [{title: item.title, link: item.link}]; 
             }
             
-            const content = document.createElement('div'); content.className = 'article-content';
+            const content = document.createElement('div'); 
+            content.className = 'article-content';
             const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
-            
-            // Fix 1: Pull number directly from item.repeats (the column value)
             const badge = isTrending ? `<span class="badge">${item.repeats} Sources</span>` : '';
-            const arrowSpan = isTrending ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px;">▶</span>' : '';
+            const arrowSpan = isTrending ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px; display:inline-block;">▶</span>' : '';
 
             content.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badge} ${timeStr}${arrowSpan}</div>`;
             
             if (isTrending) {
-                const list = document.createElement('div'); list.className = 'source-list';
+                const list = document.createElement('div'); 
+                list.className = 'source-list';
                 
-                // Fix 2: Better handling of the link list extraction
-                // We use slice(1) to skip the lead article, and accommodate both "title" and "source" keys
+                // FIXED: Support "title" OR "source" OR "name" keys from JSON
                 links.slice(1).forEach(l => { 
-                    const subTitle = l.title || l.source || "Related Story";
-                    list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${subTitle}</a>`; 
+                    const subTitle = l.title || l.source || l.name || "Related Source";
+                    const subLink = l.link || "#";
+                    const a = document.createElement('a');
+                    a.className = 'source-link';
+                    a.href = subLink;
+                    a.target = "_blank";
+                    a.innerText = subTitle;
+                    list.appendChild(a);
                 });
                 
                 div.appendChild(content); 
                 div.appendChild(list);
                 
-                content.onclick = () => { 
+                content.onclick = (e) => { 
+                    e.preventDefault();
                     const isVisible = list.style.display === 'block';
                     list.style.display = isVisible ? 'none' : 'block';
                     content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼';
                 };
             } else { 
-                content.onclick = () => window.open(links[0].link, '_blank'); 
+                content.onclick = () => window.open(links[0].link || item.link, '_blank'); 
                 div.appendChild(content); 
             }
         }
@@ -170,7 +176,6 @@
                 e.stopPropagation(); 
                 const currentlySaved = circle.classList.contains('saved'); 
                 circle.classList.toggle('saved'); 
-                // Ensure we save the specific link from the first item in the array
                 let actualLink = item.link;
                 try { actualLink = JSON.parse(item.link)[0].link; } catch(e) {}
                 apiAction(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(actualLink)}&repeats=${item.repeats}`); 
