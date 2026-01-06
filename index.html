@@ -30,11 +30,11 @@
         .alert-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
         .trending-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-orange) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
         
-        /* ULTRA COMPACT FOOTER */
+        /* UPDATED COMPACT FOOTER WITH BALANCED DIVIDER */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(35px + env(safe-area-inset-bottom)); background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: flex-start; z-index: 1000; padding-top: 5px; }
-        .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 30px; display: flex; align-items: center; justify-content: center; }
+        .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 30px; display: flex; align-items: center; justify-content: center; position: relative; }
         .tab-item.active { color: var(--ios-accent); }
-        .tab-divider { width: 1px; height: 20px; background: var(--separator); align-self: center; margin-bottom: env(safe-area-inset-bottom); }
+        .tab-divider { width: 1px; background: var(--separator); position: absolute; left: 50%; top: 5px; bottom: 5px; transform: translateX(-50%); }
         
         .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; color: white; margin-top: 20px; }
         .btn-done { background: var(--ios-accent); margin-bottom: 40px; }
@@ -71,7 +71,9 @@
     <div id="later-list" class="list-group"></div>
 </div>
 <div class="tab-bar">
-    <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div><div class="tab-divider"></div><div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
+    <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
+    <div class="tab-divider"></div>
+    <div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
 </div>
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
