@@ -7,41 +7,44 @@
     <link rel="apple-touch-icon" href="icon.jpg">
     <link rel="icon" type="image/jpeg" href="icon.jpg">
     <style>
-        :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; --ios-green: #32d74b; --ios-orange: #ff9500; --ios-red: #e06666; }
+        :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; --ios-green: #32d74b; --ios-orange: #ff9500; --ios-red: #ff3b30; }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 80px 16px; font-size: 17px; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; }
         h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; cursor: pointer; display: inline-block; }
         #update-display { font-size: 16px; opacity: 0.8; margin-bottom: 20px; font-weight: 400; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
-        .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 22px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; }
+        .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: var(--ios-red); color: white; font-size: 22px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; }
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .list-group > div + div { border-top: 1px solid rgba(0, 0, 0, 0.3); }
         .article-card { padding: 22px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .article-content { flex: 1; min-width: 0; }
+        .main-headline { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 8px; color: var(--ios-text); cursor: pointer; }
+        .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; }
+        
+        /* Reference-Matching Trending UI */
+        .trending-card-border { background: var(--ios-card) !important; border: 2px solid var(--ios-orange) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; }
+        .source-badge { display: inline-block; background: var(--ios-red); color: white; font-size: 12px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; margin-right: 10px; vertical-align: middle; }
+        .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
+        .source-link { display: block; color: var(--ios-accent); font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 12px; text-decoration: none; padding-left: 15px; position: relative; }
+        .source-link::before { content: "•"; position: absolute; left: 0; }
+        
+        .alert-card-border { background: var(--ios-card) !important; border: 2px solid var(--ios-red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; }
         .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
         .save-check.saved { background: var(--ios-green) !important; border-color: var(--ios-green) !important; }
         .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; display: none; }
         .save-check.saved svg { display: block !important; }
-        .main-headline { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
-        .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; }
-        .alert-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
-        .trending-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-orange) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
+        
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(35px + env(safe-area-inset-bottom)); background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: flex-start; z-index: 1000; padding-top: 5px; }
         .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 30px; display: flex; align-items: center; justify-content: center; position: relative; }
         .tab-item.active { color: var(--ios-accent); }
         .tab-divider { width: 1px; background: var(--separator); position: absolute; left: 50%; top: 10px; bottom: 10px; transform: translateX(-50%); }
         .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; color: white; margin-top: 20px; }
         .btn-done { background: var(--ios-accent); margin-bottom: 40px; }
-        .btn-undo { background: #3a3a3c; border: 1px solid var(--separator); margin-bottom: 20px; }
     </style>
 </head>
 <body>
 <div id="view-now">
     <h1 onclick="refreshApp('now')">Newser</h1>
     <div id="update-display">Connecting...</div>
-    <div id="empty-box" style="display:none;">
-        <div style="background:#1c1c1e;color:#8e8e93;text-align:center;padding:60px;border-radius:14px;font-size:22px;font-weight:700; border: 1px dashed #38383a; margin-bottom: 20px;">Empty</div>
-        <button id="undo-btn-empty" class="btn btn-undo" onclick="api('undo')">Undo</button>
-    </div>
     <div id="content" style="display:none;">
         <section id="alerts-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alerts-list"></div></section>
         <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
@@ -60,58 +63,81 @@
 </div>
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
-    function refreshApp(target) { document.getElementById('update-display').innerText = "Connecting..."; document.getElementById('content').style.display = 'none'; document.getElementById('empty-box').style.display = 'none'; window.location.href = window.location.pathname + "?view=" + target; }
-    async function api(a) { document.getElementById('update-display').innerText = "Connecting..."; document.getElementById('content').style.display = 'none'; document.getElementById('empty-box').style.display = 'none'; try { await fetch(`${API_URL}?action=${a}`); location.reload(); } catch(e) { document.getElementById('update-display').innerText = "Error Connecting"; } }
-    function formatDate(ts) { if (!ts) return ""; const d = new Date(ts); let h = d.getHours(), m = d.getMinutes().toString().padStart(2, '0'), ampm = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return `${h}:${m}${ampm}`; }
-    function switchTab(tab) { document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none'; document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none'; document.getElementById('tab-now').classList.toggle('active', tab === 'now'); document.getElementById('tab-later').classList.toggle('active', tab === 'later'); }
-    async function toggleSave(event, circle, title, link, repeats) { event.stopPropagation(); const isSaving = !circle.classList.contains('saved'); circle.classList.toggle('saved'); const cleanTitle = title.trim(); fetch(`${API_URL}?action=${isSaving ? 'save' : 'unsave'}&title=${encodeURIComponent(cleanTitle)}&link=${encodeURIComponent(link)}&repeats=${repeats}`); if (!isSaving && document.getElementById('view-later').style.display === 'block') { circle.closest('.article-card, .alert-card-border, .trending-card-border').style.display = 'none'; } }
     
+    function refreshApp(target) { document.getElementById('update-display').innerText = "Connecting..."; window.location.href = window.location.pathname + "?view=" + target; }
+    async function api(a) { document.getElementById('update-display').innerText = "Connecting..."; try { await fetch(`${API_URL}?action=${a}`); location.reload(); } catch(e) { document.getElementById('update-display').innerText = "Error Connecting"; } }
+    function formatDate(ts) { if (!ts) return ""; const d = new Date(ts); let h = d.getHours(), m = d.getMinutes().toString().padStart(2, '0'), ampm = h >= 12 ? 'pm' : 'am'; h = h % 12 || 12; return `${h}:${m}${ampm} ${h >= 7 && ampm === 'am' ? '▼' : ''}`; }
+    function switchTab(tab) { document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none'; document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none'; document.getElementById('tab-now').classList.toggle('active', tab === 'now'); document.getElementById('tab-later').classList.toggle('active', tab === 'later'); }
+
     function renderItem(item, isSaved = false, showCircle = false) {
         const div = document.createElement('div');
-        div.className = (item.repeats <= -99) ? 'alert-card-border' : (item.repeats >= 2 ? 'trending-card-border' : 'article-card');
+        const isTrending = item.repeats >= 2;
+        div.className = (item.repeats <= -99) ? 'alert-card-border' : (isTrending ? 'trending-card-border' : 'article-card');
+        
+        let links = [];
+        try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
+
         const content = document.createElement('div');
         content.className = 'article-content';
-        content.innerHTML = `<div class="main-headline">${item.title}</div><div class="time-meta">${formatDate(item.timestamp)}</div>`;
-        content.onclick = () => window.open(item.link, '_blank');
-        div.appendChild(content);
+        
+        let badge = isTrending ? `<span class="source-badge">${links.length} Sources</span>` : '';
+        let arrow = isTrending ? ' ▼' : '';
+        
+        content.innerHTML = `<div class="main-headline">${badge}${item.title}${arrow}</div><div class="time-meta">${formatDate(item.timestamp)}</div>`;
+        
+        if (isTrending) {
+            const list = document.createElement('div');
+            list.className = 'source-list';
+            links.forEach(l => {
+                const a = document.createElement('a');
+                a.className = 'source-link';
+                a.href = l.link;
+                a.target = "_blank";
+                a.innerText = l.title;
+                list.appendChild(a);
+            });
+            div.appendChild(content);
+            div.appendChild(list);
+            content.onclick = () => { list.style.display = list.style.display === 'block' ? 'none' : 'block'; };
+        } else {
+            content.onclick = () => window.open(links[0].link, '_blank');
+            div.appendChild(content);
+        }
+
         if (showCircle) {
             const circle = document.createElement('div');
             circle.className = 'save-check' + (isSaved ? ' saved' : '');
             circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            circle.onclick = (e) => toggleSave(e, circle, item.title, item.link, item.repeats);
+            circle.onclick = (e) => { e.stopPropagation(); toggleSave(e, circle, item.title, item.link, item.repeats); };
             div.appendChild(circle);
         }
         return div;
     }
 
+    async function toggleSave(event, circle, title, link, repeats) {
+        const isSaving = !circle.classList.contains('saved');
+        circle.classList.toggle('saved');
+        fetch(`${API_URL}?action=${isSaving ? 'save' : 'unsave'}&title=${encodeURIComponent(title.trim())}&link=${encodeURIComponent(link)}&repeats=${repeats}`);
+        if (!isSaving && document.getElementById('view-later').style.display === 'block') circle.closest('div').style.display = 'none';
+    }
+
     async function load() {
         try {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('view')) switchTab(urlParams.get('view'));
             const res = await fetch(`${API_URL}?t=${Date.now()}`);
             const data = await res.json();
-            document.getElementById('update-display').innerText = "Last checked: " + new Date(data.refreshTime).toLocaleString();
+            document.getElementById('update-display').innerText = `Last checked: ${new Date(data.refreshTime).toLocaleString()}`;
             const arts = data.articles || [], later = data.laterArticles || [];
-            document.getElementById('empty-box').style.display = arts.length ? 'none' : 'block';
-            document.getElementById('content').style.display = arts.length ? 'block' : 'none';
+            document.getElementById('content').style.display = 'block';
             const sections = { alerts: arts.filter(a => a.repeats <= -99), trending: arts.filter(a => a.repeats >= 2), headlines: arts.filter(a => a.repeats === 1) };
             document.getElementById('headline-badge').innerText = sections.headlines.length;
-            
-            // Render Now View: Only Headlines get circles
             Object.keys(sections).forEach(k => {
                 const list = document.getElementById(k + '-list');
                 list.innerHTML = '';
-                document.getElementById(k + '-sec').style.display = sections[k].length ? 'block' : 'none';
-                sections[k].forEach(item => {
-                    const saved = later.some(l => l.title.trim() === item.title.trim());
-                    // k === 'headlines' determines if circle shows on Now tab
-                    list.appendChild(renderItem(item, saved, k === 'headlines'));
-                });
+                document.getElementById(`${k}-sec`).style.display = sections[k].length ? 'block' : 'none';
+                sections[k].forEach(item => list.appendChild(renderItem(item, later.some(l => l.title.trim() === item.title.trim()), k === 'headlines')));
             });
-
-            // Render Later View: Everything gets circles
             const laterList = document.getElementById('later-list');
-            laterList.innerHTML = later.length ? '' : '<div style="padding:40px; text-align:center; color:var(--ios-secondary);">No saved articles.</div>';
+            laterList.innerHTML = later.length ? '' : '<div style="padding:40px; text-align:center;">Empty</div>';
             later.forEach(item => laterList.appendChild(renderItem(item, true, true)));
         } catch (e) { document.getElementById('update-display').innerText = "Load Error"; }
     }
