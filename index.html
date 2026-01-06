@@ -4,154 +4,160 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Newser</title>
-    <link rel="apple-touch-icon" href="icon.jpg">
-    <link rel="icon" type="image/jpeg" href="icon.jpg">
     <style>
-        :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; --ios-green: #32d74b; --ios-orange: #ff9500; --ios-red: #e06666; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 80px 16px; font-size: 17px; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: contain; }
-        h1 { margin-bottom: 5px; font-size: 34px; font-weight: 800; cursor: pointer; display: inline-block; }
-        #update-display { font-size: 16px; opacity: 0.8; margin-bottom: 20px; font-weight: 400; }
-        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; }
-        .count-badge { display: inline-flex; align-items: center; justify-content: center; background-color: #ff3b30; color: white; font-size: 22px; font-weight: 700; min-width: 42px; height: 42px; padding: 0 10px; border-radius: 21px; margin-left: 12px; line-height: 1; }
-        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
-        .list-group > div + div { border-top: 1px solid rgba(0, 0, 0, 0.3); }
-        .article-card { padding: 22px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --trending: #ff453a; --separator: #38383a; --red: #ff3b30; --green: #32d74b; }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; }
+        h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; cursor: pointer; }
+        .update-time { font-size: 16px; color: var(--ios-secondary); font-weight: 500; margin-bottom: 20px; }
+        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
+        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); }
+        .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .article-content { flex: 1; min-width: 0; }
+        .article-link { font-weight: 600; font-size: 20px; line-height: 1.3; cursor: pointer; }
+        .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; }
+        
+        /* Specialized Section Styling */
+        .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; }
+        .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; }
+        .update-box { background: #5856d6 !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; }
+        .trending-border { border: 2px solid var(--ios-orange); border-radius: 14px; margin-bottom: 12px; }
+        
+        .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 11px; text-transform: uppercase; }
         .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
-        .save-check.saved { background: var(--ios-green) !important; border-color: var(--ios-green) !important; }
-        .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; display: none; }
-        .save-check.saved svg { display: block !important; }
-        .main-headline { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
-        .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; }
-        .alert-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
-        .trending-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-orange) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
-        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(35px + env(safe-area-inset-bottom)); background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: flex-start; z-index: 1000; padding-top: 5px; }
-        .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 30px; display: flex; align-items: center; justify-content: center; position: relative; }
+        .save-check.saved { background: var(--green); border-color: var(--green); }
+        .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; display: none; }
+        .save-check.saved svg { display: block; }
+        
+        .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
+        .source-link { display: block; color: var(--ios-accent); font-size: 16px; margin-bottom: 12px; text-decoration: none; padding-left: 15px; position: relative; }
+        .source-link::before { content: "•"; position: absolute; left: 0; }
+
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: rgba(28,28,30,0.95); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; }
+        .tab-item { flex: 1; text-align: center; color: var(--ios-secondary); font-weight: 600; cursor: pointer; }
         .tab-item.active { color: var(--ios-accent); }
-        .tab-divider { width: 1px; background: var(--separator); position: absolute; left: 50%; top: 10px; bottom: 10px; transform: translateX(-50%); }
-        .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; color: white; margin-top: 20px; }
-        .btn-done { background: var(--ios-accent); margin-bottom: 40px; }
-        .btn-undo { background: #3a3a3c; border: 1px solid var(--separator); margin-bottom: 20px; }
+        .done-btn { background: var(--ios-accent); color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; margin-top: 40px; }
     </style>
 </head>
 <body>
-<div id="view-now">
-    <h1 onclick="refreshApp('now')">Newser</h1>
-    <div id="update-display">Connecting...</div>
-    <div id="empty-box" style="display:none;">
-        <div style="background:#1c1c1e;color:#8e8e93;text-align:center;padding:60px;border-radius:14px;font-size:22px;font-weight:700; border: 1px dashed #38383a; margin-bottom: 20px;">Empty</div>
-        <button id="undo-btn-empty" class="btn btn-undo" onclick="api('undo')">Undo</button>
+    <div id="view-now">
+        <header><h1 onclick="location.reload()">Newser</h1><div id="update-display" class="update-time">Connecting...</div></header>
+        <div id="content" style="display:none;">
+            <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
+            <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list"></div></section>
+            <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
+            <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
+            <section id="headlines-sec"><h2>🗞️ Headlines</h2><div id="headlines-list" class="list-group"></div></section>
+            <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
+        </div>
     </div>
-    <div id="content" style="display:none;">
-        <section id="alerts-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alerts-list"></div></section>
-        <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
-        <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-badge" class="count-badge"></span></h2><div id="headlines-list" class="list-group"></div></section>
-        <button class="btn btn-done" onclick="api('clear')">Done for Now</button>
+    <div id="view-later" style="display:none;"><header><h1>Later</h1></header><div id="later-list" class="list-group"></div></div>
+
+    <div class="tab-bar">
+        <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
+        <div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
     </div>
-</div>
-
-<div id="view-later" style="display:none;">
-    <h1 onclick="refreshApp('later')">Later</h1>
-    <div id="later-list" class="list-group"></div>
-</div>
-
-<div class="tab-bar">
-    <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
-    <div class="tab-divider"></div>
-    <div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
-</div>
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
-    
-    function refreshApp(target) { 
-        document.getElementById('update-display').innerText = "Connecting..."; 
-        window.location.href = window.location.pathname + "?view=" + target; 
-    }
 
-    async function api(a) { 
-        document.getElementById('update-display').innerText = "Connecting..."; 
-        try { await fetch(`${API_URL}?action=${a}`); location.reload(); } catch(e) { document.getElementById('update-display').innerText = "Error Connecting"; }
-    }
-
-    function formatDate(ts) {
-        if (!ts) return "";
-        const d = new Date(ts);
-        let h = d.getHours(), m = d.getMinutes().toString().padStart(2, '0'), ampm = h >= 12 ? 'pm' : 'am';
-        h = h % 12 || 12;
-        return `${h}:${m}${ampm}`;
+    async function apiAction(act, params = '') {
+        document.getElementById('update-display').innerText = "Processing...";
+        await fetch(`${API_URL}?action=${act}${params}`);
+        if (act === 'clear') location.reload();
     }
 
     function switchTab(tab) {
         document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
         document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
-        document.getElementById('tab-now').classList.toggle('active', tab === 'now');
-        document.getElementById('tab-later').classList.toggle('active', tab === 'later');
+        document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+        if (tab === 'now') document.getElementById('tab-now').classList.add('active');
+        else document.getElementById('tab-later').classList.add('active');
     }
 
-    async function toggleSave(event, circle, title, link, repeats) {
-        event.stopPropagation();
-        const isSaving = !circle.classList.contains('saved');
-        circle.classList.toggle('saved');
-        const cleanTitle = title.trim();
-        fetch(`${API_URL}?action=${isSaving ? 'save' : 'unsave'}&title=${encodeURIComponent(cleanTitle)}&link=${encodeURIComponent(link)}&repeats=${repeats}`);
-        
-        // If unchecking from the Later view, hide it instantly
-        if (!isSaving && document.getElementById('view-later').style.display === 'block') {
-            circle.closest('.article-card').style.display = 'none';
-        }
-    }
-
-    function renderItem(item, isSaved = false) {
+    function renderItem(item, isSaved, showCircle) {
         const div = document.createElement('div');
-        div.className = (item.repeats <= -99) ? 'alert-card-border' : (item.repeats >= 2 ? 'trending-card-border' : 'article-card');
+        const isTrending = item.repeats >= 2;
         
+        // UI Logic for Specialized Sections
+        if (item.repeats === -3) div.className = 'death-box';
+        else if (item.repeats === -4) div.className = 'notif-box';
+        else if (item.repeats === -5) div.className = 'update-box';
+        else div.className = isTrending ? 'article-card trending-border' : 'article-card';
+
+        let links = [];
+        try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
+
         const content = document.createElement('div');
         content.className = 'article-content';
-        content.innerHTML = `<div class="main-headline">${item.title}</div><div class="time-meta">${formatDate(item.timestamp)}</div>`;
-        content.onclick = () => window.open(item.link, '_blank');
+        const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
+        
+        const badge = isTrending ? `<span class="badge">${links.length} Sources</span>` : '';
+        const arrow = isTrending ? '<span style="font-size:10px; margin-left:4px;">▼</span>' : '';
 
-        const circle = document.createElement('div');
-        circle.className = 'save-check' + (isSaved ? ' saved' : '');
-        circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-        circle.onclick = (e) => toggleSave(e, circle, item.title, item.link, item.repeats);
+        content.innerHTML = `<div class="article-link">${item.title}</div>
+                             <div class="meta">${badge} ${timeStr}${arrow}</div>`;
+        
+        if (isTrending) {
+            const list = document.createElement('div');
+            list.className = 'source-list';
+            links.slice(1).forEach(l => {
+                list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`;
+            });
+            div.appendChild(content);
+            div.appendChild(list);
+            content.onclick = () => list.style.display = list.style.display === 'block' ? 'none' : 'block';
+        } else {
+            content.onclick = () => window.open(links[0].link, '_blank');
+            div.appendChild(content);
+        }
 
-        div.appendChild(content);
-        div.appendChild(circle);
+        if (showCircle) {
+            const circle = document.createElement('div');
+            circle.className = 'save-check' + (isSaved ? ' saved' : '');
+            circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            circle.onclick = (e) => {
+                e.stopPropagation();
+                const currentlySaved = circle.classList.contains('saved');
+                circle.classList.toggle('saved');
+                const action = currentlySaved ? 'unsave' : 'save';
+                apiAction(action, `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`);
+            };
+            div.appendChild(circle);
+        }
         return div;
     }
 
     async function load() {
         try {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('view')) switchTab(urlParams.get('view'));
-            
-            const res = await fetch(`${API_URL}?t=${Date.now()}`);
+            const res = await fetch(API_URL);
             const data = await res.json();
-            document.getElementById('update-display').innerText = "Last checked: " + new Date(data.refreshTime).toLocaleString();
+            document.getElementById('update-display').innerText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
-            const arts = data.articles || [], later = data.laterArticles || [];
-            
-            // Render Now Section
-            document.getElementById('empty-box').style.display = arts.length ? 'none' : 'block';
-            document.getElementById('content').style.display = arts.length ? 'block' : 'none';
-            
-            const sections = { alerts: arts.filter(a => a.repeats <= -99), trending: arts.filter(a => a.repeats >= 2), headlines: arts.filter(a => a.repeats === 1) };
-            document.getElementById('headline-badge').innerText = sections.headlines.length;
-            
-            Object.keys(sections).forEach(k => {
-                const list = document.getElementById(k + '-list');
-                list.innerHTML = '';
-                document.getElementById(k + '-sec').style.display = sections[k].length ? 'block' : 'none';
-                sections[k].forEach(item => list.appendChild(renderItem(item, later.some(l => l.title.trim() === item.title.trim()))));
+            const listMapping = { death: 'death-list', notif: 'notif-list', updates: 'updates-list', trending: 'trending-list', headlines: 'headlines-list' };
+            const laterList = document.getElementById('later-list');
+            laterList.innerHTML = '';
+
+            Object.keys(listMapping).forEach(key => {
+                const el = document.getElementById(listMapping[key]);
+                el.innerHTML = '';
+                const filtered = data.articles.filter(a => {
+                    if (key === 'trending') return a.repeats >= 2;
+                    if (key === 'headlines') return a.repeats === 1;
+                    if (key === 'death') return a.repeats === -3;
+                    if (key === 'notif') return a.repeats === -4;
+                    if (key === 'updates') return a.repeats === -5;
+                    return false;
+                });
+                filtered.forEach(item => {
+                    const isSaved = data.laterArticles.some(l => l.title.trim() === item.title.trim());
+                    el.appendChild(renderItem(item, isSaved, key === 'headlines'));
+                });
+                document.getElementById(key + '-sec').style.display = filtered.length ? 'block' : 'none';
             });
 
-            // Render Later Section
-            const laterList = document.getElementById('later-list');
-            laterList.innerHTML = later.length ? '' : '<div style="padding:40px; text-align:center; color:var(--ios-secondary);">No saved articles.</div>';
-            later.forEach(item => laterList.appendChild(renderItem(item, true)));
-            
-        } catch (e) { document.getElementById('update-display').innerText = "Load Error"; }
+            data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
+            document.getElementById('content').style.display = 'block';
+        } catch (e) { document.getElementById('update-display').innerText = "Error Loading Feed"; }
     }
     load();
 </script>
