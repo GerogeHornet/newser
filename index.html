@@ -6,30 +6,13 @@
     <title>Newser</title>
     <style>
         :root { 
-            --ios-bg: #000000; 
-            --ios-card: #1c1c1e; 
-            --ios-text: #ffffff; 
-            --ios-secondary: #8e8e93; 
-            --ios-accent: #0a84ff; 
-            --separator: #38383a; 
-            --red: #e06666; 
-            --green: #93c47d; 
-            --blue: #6d9eeb; 
-            --orange: #ff9500; 
-            --trending-red: #ff3b30; 
-            --checkmark-green: #32d74b;
+            --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; 
+            --ios-accent: #0a84ff; --separator: #38383a; --red: #e06666; --green: #93c47d; 
+            --blue: #6d9eeb; --orange: #ff9500; --trending-red: #ff3b30; --checkmark-green: #32d74b;
         }
-        
-        body { 
-            font-family: -apple-system, sans-serif; 
-            background: var(--ios-bg); 
-            color: var(--ios-text); 
-            margin: 0; 
-            padding: env(safe-area-inset-top) 16px 100px 16px; 
-            -webkit-tap-highlight-color: transparent; 
-        }
+        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-tap-highlight-color: transparent; }
 
-        /* FULL BLACK CONNECTING SCREEN */
+        /* AUTHENTIC BLACK CONNECTING SCREEN */
         #loading-overlay {
             position: fixed;
             top: 0;
@@ -43,7 +26,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .spinner {
             width: 40px;
             height: 40px;
@@ -59,7 +41,6 @@
         h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; cursor: pointer; }
         .update-time { font-size: 16px; color: var(--ios-secondary); font-weight: 500; margin-bottom: 20px; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; gap: 10px; }
-        
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .article-card:last-child { border-bottom: none; }
@@ -68,7 +49,6 @@
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
         .badge { background: var(--trending-red); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
         
-        /* Specialized Sections */
         .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -92,7 +72,7 @@
 <body>
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <div style="font-size: 20px; font-weight: 600; color: #fff;">Connecting...</div>
+        <div id="loading-text" style="font-size: 20px; font-weight: 600; color: #fff;">Connecting...</div>
     </div>
 
     <div id="view-now" style="display:none;">
@@ -118,11 +98,11 @@
     </div>
 
 <script>
-    // Replace with your current deployment URL
+    // PASTE YOUR WEB APP URL HERE
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     /**
-     * AUTHENTIC REFRESH: Hides everything and shows black screen
+     * AUTHENTIC REFRESH
      */
     function refreshApp() { 
         document.getElementById('loading-overlay').style.display = 'flex';
@@ -149,7 +129,6 @@
         const div = document.createElement('div');
         const isTrending = item.repeats >= 2;
         
-        // REPEATS LOGIC: Formatting for specialized sections
         if (item.repeats === -3) { div.className = 'death-box'; div.innerText = item.title; div.onclick = () => window.open(item.link, '_blank'); return div; }
         if (item.repeats === -4) { div.className = 'notif-box'; div.innerText = item.title; return div; }
         
@@ -209,9 +188,12 @@
             data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
             
             document.getElementById('loading-overlay').style.display = 'none';
-            document.getElementById('view-now').style.display = 'block';
+            // Show only the current view
+            const isLater = document.getElementById('tab-later').classList.contains('active');
+            document.getElementById('view-now').style.display = isLater ? 'none' : 'block';
+            document.getElementById('view-later').style.display = isLater ? 'block' : 'none';
         } catch (e) { 
-            document.querySelector('#loading-overlay div').innerText = "Error Loading Feed";
+            document.getElementById('loading-text').innerText = "Error Loading Feed";
         }
     }
     load();
