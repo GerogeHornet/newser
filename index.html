@@ -17,37 +17,24 @@
         .list-group > div + div { border-top: 1px solid rgba(0, 0, 0, 0.3); }
         .article-card { padding: 22px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .article-content { flex: 1; min-width: 0; }
-        .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
         .save-check.saved { background: var(--ios-green) !important; border-color: var(--ios-green) !important; }
         .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; display: none; }
         .save-check.saved svg { display: block !important; }
         .main-headline { font-size: 20px; font-weight: 700; line-height: 1.3; margin-bottom: 10px; color: var(--ios-text); cursor: pointer; }
         .time-meta { font-size: 14px; color: var(--ios-secondary); font-weight: 500; }
-        .green-notif { background: #93c47d !important; padding: 22px 18px; color: #ffffff !important; font-size: 19px; font-weight: 700; border-radius: 14px; margin-bottom: 20px;}
-        .blue-update { background: #6d9eeb !important; padding: 22px 18px; color: #ffffff !important; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 19px; font-weight: 700; }
-        .death-alert { background: var(--ios-red) !important; padding: 22px 18px; color: #ffffff !important; font-size: 19px; font-weight: 700; border-radius: 14px; margin-bottom: 20px;}
         .alert-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
         .trending-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-orange) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
-        
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(35px + env(safe-area-inset-bottom)); background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: flex-start; z-index: 1000; padding-top: 5px; }
         .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 30px; display: flex; align-items: center; justify-content: center; position: relative; }
         .tab-item.active { color: var(--ios-accent); }
         .tab-divider { width: 1px; background: var(--separator); position: absolute; left: 50%; top: 10px; bottom: 10px; transform: translateX(-50%); }
-        
         .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; color: white; margin-top: 20px; }
         .btn-done { background: var(--ios-accent); margin-bottom: 40px; }
         .btn-undo { background: #3a3a3c; border: 1px solid var(--separator); margin-bottom: 20px; }
-        #sheet { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--ios-card); z-index:2000; overflow-y:auto; box-sizing: border-box; }
-        .sheet-header { position: sticky; top: 0; background: var(--ios-card); padding: 25px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: flex-start; z-index: 2001; }
-        .sheet-content { padding: 25px; font-size: 24px; line-height: 1.6; white-space: pre-wrap; color: #ffffff; }
     </style>
 </head>
 <body>
-<div id="sheet">
-    <div class="sheet-header"><h2 id="sheet-title" style="margin:0; font-size:26px; font-weight:700;"></h2><span style="color:var(--ios-accent); font-size:22px; font-weight:700; cursor:pointer;" onclick="closeSheet()">Done</span></div>
-    <div id="sheet-body" class="sheet-content"></div>
-</div>
 <div id="view-now">
     <h1 onclick="refreshApp('now')">Newser</h1>
     <div id="update-display">Connecting...</div>
@@ -56,48 +43,43 @@
         <button id="undo-btn-empty" class="btn btn-undo" onclick="api('undo')">Undo</button>
     </div>
     <div id="content" style="display:none;">
-        <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
-        <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list"></div></section>
-        <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list" class="list-group"></div></section>
         <section id="alerts-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alerts-list"></div></section>
         <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
         <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-badge" class="count-badge"></span></h2><div id="headlines-list" class="list-group"></div></section>
         <button class="btn btn-done" onclick="api('clear')">Done for Now</button>
     </div>
 </div>
+
 <div id="view-later" style="display:none;">
     <h1 onclick="refreshApp('later')">Later</h1>
     <div id="later-list" class="list-group"></div>
 </div>
+
 <div class="tab-bar">
     <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
     <div class="tab-divider"></div>
     <div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
 </div>
+
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
     
     function refreshApp(target) { 
         document.getElementById('update-display').innerText = "Connecting..."; 
-        document.getElementById('content').style.display = 'none';
-        document.getElementById('empty-box').style.display = 'none';
         window.location.href = window.location.pathname + "?view=" + target; 
     }
 
     async function api(a) { 
         document.getElementById('update-display').innerText = "Connecting..."; 
-        document.getElementById('content').style.display = 'none';
-        document.getElementById('empty-box').style.display = 'none';
         try { await fetch(`${API_URL}?action=${a}`); location.reload(); } catch(e) { document.getElementById('update-display').innerText = "Error Connecting"; }
     }
 
     function formatDate(ts) {
-        const d = new Date(ts), today = new Date();
-        const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth();
+        if (!ts) return "";
+        const d = new Date(ts);
         let h = d.getHours(), m = d.getMinutes().toString().padStart(2, '0'), ampm = h >= 12 ? 'pm' : 'am';
         h = h % 12 || 12;
-        if (isToday) return `${h}:${m} ${ampm}`;
-        return `${d.getMonth() + 1}/${d.getDate()} ${h}:${m} ${ampm}`;
+        return `${h}:${m}${ampm}`;
     }
 
     function switchTab(tab) {
@@ -113,36 +95,29 @@
         circle.classList.toggle('saved');
         const cleanTitle = title.trim();
         fetch(`${API_URL}?action=${isSaving ? 'save' : 'unsave'}&title=${encodeURIComponent(cleanTitle)}&link=${encodeURIComponent(link)}&repeats=${repeats}`);
+        
+        // If unchecking from the Later view, hide it instantly
+        if (!isSaving && document.getElementById('view-later').style.display === 'block') {
+            circle.closest('.article-card').style.display = 'none';
+        }
     }
-
-    function closeSheet() { document.getElementById('sheet').style.display = 'none'; }
 
     function renderItem(item, isSaved = false) {
         const div = document.createElement('div');
-        if (item.repeats === -4) { div.className = 'green-notif'; div.innerText = item.title; }
-        else if (item.repeats === -3) { div.className = 'death-alert'; div.innerText = item.title; div.onclick = () => window.open(item.link, '_blank'); }
-        else if (item.repeats === -5) {
-            div.className = 'blue-update';
-            const content = document.createElement('div'); content.className = 'article-content truncate'; 
-            content.innerText = item.title;
-            content.onclick = () => { try { const j = JSON.parse(item.link); document.getElementById('sheet-title').innerText = item.title; document.getElementById('sheet-body').innerText = j.body; document.getElementById('sheet').style.display = 'block'; } catch(e) { window.open(item.link, '_blank'); } };
-            const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : ''); circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            circle.onclick = (e) => toggleSave(e, circle, item.title, item.link, item.repeats);
-            div.appendChild(content); div.appendChild(circle);
-        } else if (item.repeats <= -99 || item.repeats >= 2) {
-            div.className = item.repeats <= -99 ? 'alert-card-border' : 'trending-card-border';
-            let l = []; try { l = JSON.parse(item.link); } catch(e) { l = [{link: item.link}]; }
-            div.innerHTML = `<div class="article-content"><div class="main-headline" onclick="window.open('${l[l.length-1].link}', '_blank')">${item.title}</div><div class="time-meta">${formatDate(item.timestamp)}</div></div>`;
-        } else {
-            div.className = 'article-card';
-            let l = []; try { l = JSON.parse(item.link); } catch(e) { l = [{link: item.link}]; }
-            const content = document.createElement('div'); content.className = 'article-content';
-            content.innerHTML = `<div class="main-headline">${item.title}</div><div class="time-meta">${formatDate(item.timestamp)}</div>`;
-            content.onclick = () => window.open(l[l.length-1].link, '_blank');
-            const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : ''); circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            circle.onclick = (e) => toggleSave(e, circle, item.title, item.link, item.repeats);
-            div.appendChild(content); div.appendChild(circle);
-        }
+        div.className = (item.repeats <= -99) ? 'alert-card-border' : (item.repeats >= 2 ? 'trending-card-border' : 'article-card');
+        
+        const content = document.createElement('div');
+        content.className = 'article-content';
+        content.innerHTML = `<div class="main-headline">${item.title}</div><div class="time-meta">${formatDate(item.timestamp)}</div>`;
+        content.onclick = () => window.open(item.link, '_blank');
+
+        const circle = document.createElement('div');
+        circle.className = 'save-check' + (isSaved ? ' saved' : '');
+        circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        circle.onclick = (e) => toggleSave(e, circle, item.title, item.link, item.repeats);
+
+        div.appendChild(content);
+        div.appendChild(circle);
         return div;
     }
 
@@ -150,27 +125,32 @@
         try {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('view')) switchTab(urlParams.get('view'));
+            
             const res = await fetch(`${API_URL}?t=${Date.now()}`);
             const data = await res.json();
             document.getElementById('update-display').innerText = "Last checked: " + new Date(data.refreshTime).toLocaleString();
+            
             const arts = data.articles || [], later = data.laterArticles || [];
+            
+            // Render Now Section
             document.getElementById('empty-box').style.display = arts.length ? 'none' : 'block';
-            document.getElementById('undo-btn-empty').style.display = data.backupExists ? 'block' : 'none';
             document.getElementById('content').style.display = arts.length ? 'block' : 'none';
-            const sections = { death: arts.filter(a => a.repeats === -3), notif: arts.filter(a => a.repeats === -4), updates: arts.filter(a => a.repeats === -5), alerts: arts.filter(a => a.repeats <= -99), trending: arts.filter(a => a.repeats >= 2), headlines: arts.filter(a => a.repeats === 1) };
+            
+            const sections = { alerts: arts.filter(a => a.repeats <= -99), trending: arts.filter(a => a.repeats >= 2), headlines: arts.filter(a => a.repeats === 1) };
             document.getElementById('headline-badge').innerText = sections.headlines.length;
+            
             Object.keys(sections).forEach(k => {
                 const list = document.getElementById(k + '-list');
-                const sec = document.getElementById(k + '-sec');
-                if (list) {
-                    list.innerHTML = '';
-                    sec.style.display = sections[k].length ? 'block' : 'none';
-                    sections[k].forEach(item => list.appendChild(renderItem(item, later.some(l => l.title.trim() === item.title.trim()))));
-                }
+                list.innerHTML = '';
+                document.getElementById(k + '-sec').style.display = sections[k].length ? 'block' : 'none';
+                sections[k].forEach(item => list.appendChild(renderItem(item, later.some(l => l.title.trim() === item.title.trim()))));
             });
+
+            // Render Later Section
             const laterList = document.getElementById('later-list');
             laterList.innerHTML = later.length ? '' : '<div style="padding:40px; text-align:center; color:var(--ios-secondary);">No saved articles.</div>';
             later.forEach(item => laterList.appendChild(renderItem(item, true)));
+            
         } catch (e) { document.getElementById('update-display').innerText = "Load Error"; }
     }
     load();
