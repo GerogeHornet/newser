@@ -12,16 +12,13 @@
         }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-tap-highlight-color: transparent; }
 
+        /* AUTHENTIC BLACK CONNECTING SCREEN */
         #loading-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000000; z-index: 9999; display: flex; flex-direction: column;
             justify-content: center; align-items: center;
         }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1);
-            border-left-color: var(--ios-accent); border-radius: 50%;
-            animation: spin 1s linear infinite; margin-bottom: 20px;
-        }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--ios-accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         header { padding: 30px 0 10px 0; }
@@ -30,20 +27,17 @@
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; gap: 10px; }
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-        .article-card:last-child { border-bottom: none; }
-        .article-content { flex: 1; min-width: 0; }
         .article-link { font-weight: 700; font-size: 20px; line-height: 1.3; cursor: pointer; color: var(--ios-text); }
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
-        
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
         
         .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-card); display: block !important; }
+        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-card); }
         
-        .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; width: 100%; }
-        .source-link { display: block; color: var(--ios-accent); font-size: 17px; font-weight: 500; line-height: 1.5; margin-bottom: 14px; text-decoration: none; padding-left: 20px; position: relative; }
+        .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
+        .source-link { display: block; color: var(--ios-accent); font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 12px; text-decoration: none; padding-left: 15px; position: relative; }
         .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
 
         .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
@@ -66,12 +60,20 @@
     <div id="view-now" style="display:none;">
         <header><h1 onclick="refreshApp()">Newser</h1><div id="update-display" class="update-time"></div></header>
         <div id="content">
-            <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
-            <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list"></div></section>
-            <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
-            <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
-            <section id="headlines-sec"><h2>🗞️ Headlines</h2><div id="headlines-list" class="list-group"></div></section>
-            <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
+            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;">
+                <div style="font-size: 50px; margin-bottom: 20px;">🎉</div>
+                <div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div>
+                <div style="color:var(--ios-secondary); margin-bottom: 30px;">You've cleared your feed.</div>
+                <button id="undo-btn" class="done-btn" style="background:#333;" onclick="apiAction('undo')">Undo Clear</button>
+            </div>
+            <div id="article-sections">
+                <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
+                <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list"></div></section>
+                <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
+                <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
+                <section id="headlines-sec"><h2>🗞️ Headlines</h2><div id="headlines-list" class="list-group"></div></section>
+                <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
+            </div>
         </div>
     </div>
 
@@ -98,7 +100,7 @@
     async function apiAction(act, params = '') {
         document.getElementById('loading-overlay').style.display = 'flex';
         await fetch(`${API_URL}?action=${act}${params}`);
-        if (act === 'clear') location.reload();
+        load(); // Refresh state immediately after action
     }
 
     function switchTab(tab) {
@@ -111,8 +113,6 @@
 
     function renderItem(item, isSaved, showCircle) {
         const div = document.createElement('div');
-        const isTrending = item.repeats >= 2;
-        
         if (item.repeats === -3) { div.className = 'death-box'; div.innerText = item.title; div.onclick = () => window.open(item.link, '_blank'); return div; }
         if (item.repeats === -4) { div.className = 'notif-box'; div.innerText = item.title; return div; }
         
@@ -121,65 +121,24 @@
             const text = document.createElement('div'); text.innerText = item.title; text.style.flex = "1"; text.onclick = () => window.open(item.link, '_blank');
             div.appendChild(text);
         } else {
+            const isTrending = item.repeats >= 2;
             div.className = isTrending ? 'trending-border' : 'article-card';
-            
-            let links = []; 
-            try { 
-                links = JSON.parse(item.link); 
-            } catch(e) { 
-                links = [{title: item.title, link: item.link}]; 
-            }
-            
-            const content = document.createElement('div'); 
-            content.className = 'article-content';
+            let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
+            const content = document.createElement('div'); content.className = 'article-content';
             const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
-            const badge = isTrending ? `<span class="badge">${item.repeats} Sources</span>` : '';
-            const arrowSpan = isTrending ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px; display:inline-block;">▶</span>' : '';
-
-            content.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badge} ${timeStr}${arrowSpan}</div>`;
-            
+            const arrowSpan = isTrending ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px;">▶</span>' : '';
+            content.innerHTML = `<div class="article-link">${item.title}</div><div class="meta"><span class="${isTrending?'badge':''}">${isTrending?item.repeats+' Sources':''}</span> ${timeStr}${arrowSpan}</div>`;
             if (isTrending) {
-                const list = document.createElement('div'); 
-                list.className = 'source-list';
-                
-                // FIXED: Support "title" OR "source" OR "name" keys from JSON
-                links.slice(1).forEach(l => { 
-                    const subTitle = l.title || l.source || l.name || "Related Source";
-                    const subLink = l.link || "#";
-                    const a = document.createElement('a');
-                    a.className = 'source-link';
-                    a.href = subLink;
-                    a.target = "_blank";
-                    a.innerText = subTitle;
-                    list.appendChild(a);
-                });
-                
-                div.appendChild(content); 
-                div.appendChild(list);
-                
-                content.onclick = (e) => { 
-                    e.preventDefault();
-                    const isVisible = list.style.display === 'block';
-                    list.style.display = isVisible ? 'none' : 'block';
-                    content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼';
-                };
-            } else { 
-                content.onclick = () => window.open(links[0].link || item.link, '_blank'); 
-                div.appendChild(content); 
-            }
+                const list = document.createElement('div'); list.className = 'source-list';
+                links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; });
+                div.appendChild(content); div.appendChild(list);
+                content.onclick = () => { const isVisible = list.style.display === 'block'; list.style.display = isVisible ? 'none' : 'block'; content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; };
+            } else { content.onclick = () => window.open(links[0].link, '_blank'); div.appendChild(content); }
         }
-
         if (showCircle) {
             const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
             circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            circle.onclick = (e) => { 
-                e.stopPropagation(); 
-                const currentlySaved = circle.classList.contains('saved'); 
-                circle.classList.toggle('saved'); 
-                let actualLink = item.link;
-                try { actualLink = JSON.parse(item.link)[0].link; } catch(e) {}
-                apiAction(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(actualLink)}&repeats=${item.repeats}`); 
-            };
+            circle.onclick = (e) => { e.stopPropagation(); const currentlySaved = circle.classList.contains('saved'); circle.classList.toggle('saved'); apiAction(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); };
             div.appendChild(circle);
         }
         return div;
@@ -191,33 +150,31 @@
             const timeText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             document.getElementById('update-display').innerText = timeText;
             document.getElementById('update-display-later').innerText = timeText;
+
+            // HANDLE EMPTY STATE
+            if (data.articles.length === 0) {
+                document.getElementById('article-sections').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'block';
+                document.getElementById('undo-btn').style.display = data.backupExists ? 'block' : 'none';
+            } else {
+                document.getElementById('article-sections').style.display = 'block';
+                document.getElementById('empty-state').style.display = 'none';
+            }
             
             const mapping = { death: -3, notif: -4, updates: -5, trending: 2, headlines: 1 };
             const laterList = document.getElementById('later-list'); laterList.innerHTML = '';
-            
             Object.keys(mapping).forEach(key => {
                 const el = document.getElementById(key + '-list'); el.innerHTML = '';
-                const filtered = data.articles.filter(a => {
-                    if (key === 'trending') return a.repeats >= 2;
-                    if (key === 'headlines') return a.repeats === 1;
-                    return a.repeats === mapping[key];
-                });
-                filtered.forEach(item => {
-                    const isSaved = data.laterArticles.some(l => l.title.trim() === item.title.trim());
-                    el.appendChild(renderItem(item, isSaved, (key === 'headlines' || key === 'updates')));
-                });
+                const filtered = data.articles.filter(a => key === 'trending' ? a.repeats >= 2 : (key === 'headlines' ? a.repeats === 1 : a.repeats === mapping[key]));
+                filtered.forEach(item => { const isSaved = data.laterArticles.some(l => l.title.trim() === item.title.trim()); el.appendChild(renderItem(item, isSaved, (key === 'headlines' || key === 'updates'))); });
                 document.getElementById(key + '-sec').style.display = filtered.length ? 'block' : 'none';
             });
-            
             data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
             
             document.getElementById('loading-overlay').style.display = 'none';
-            const isLater = document.getElementById('tab-later').classList.contains('active');
-            document.getElementById('view-now').style.display = isLater ? 'none' : 'block';
-            document.getElementById('view-later').style.display = isLater ? 'block' : 'none';
-        } catch (e) { 
-            document.getElementById('loading-text').innerText = "Error Loading Feed";
-        }
+            document.getElementById('view-now').style.display = document.getElementById('tab-now').classList.contains('active') ? 'block' : 'none';
+            document.getElementById('view-later').style.display = document.getElementById('tab-later').classList.contains('active') ? 'block' : 'none';
+        } catch (e) { document.getElementById('loading-text').innerText = "Error Loading Feed"; }
     }
     load();
 </script>
