@@ -6,15 +6,60 @@
     <title>Newser</title>
     <style>
         :root { 
-            --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; 
-            --ios-accent: #0a84ff; --separator: #38383a; --red: #e06666; --green: #93c47d; 
-            --blue: #6d9eeb; --orange: #ff9500; --trending-red: #ff3b30; --checkmark-green: #32d74b;
+            --ios-bg: #000000; 
+            --ios-card: #1c1c1e; 
+            --ios-text: #ffffff; 
+            --ios-secondary: #8e8e93; 
+            --ios-accent: #0a84ff; 
+            --separator: #38383a; 
+            --red: #e06666; 
+            --green: #93c47d; 
+            --blue: #6d9eeb; 
+            --orange: #ff9500; 
+            --trending-red: #ff3b30; 
+            --checkmark-green: #32d74b;
         }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-tap-highlight-color: transparent; }
+        
+        body { 
+            font-family: -apple-system, sans-serif; 
+            background: var(--ios-bg); 
+            color: var(--ios-text); 
+            margin: 0; 
+            padding: env(safe-area-inset-top) 16px 100px 16px; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* FULL BLACK CONNECTING SCREEN */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-left-color: var(--ios-accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         header { padding: 30px 0 10px 0; }
         h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; cursor: pointer; }
         .update-time { font-size: 16px; color: var(--ios-secondary); font-weight: 500; margin-bottom: 20px; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; gap: 10px; }
+        
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .article-card:last-child { border-bottom: none; }
@@ -23,6 +68,7 @@
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
         .badge { background: var(--trending-red); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
         
+        /* Specialized Sections */
         .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -44,9 +90,14 @@
     </style>
 </head>
 <body>
-    <div id="view-now">
-        <header><h1 onclick="refreshApp()">Newser</h1><div id="update-display" class="update-time">Connecting...</div></header>
-        <div id="content" style="display:none;">
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div style="font-size: 20px; font-weight: 600; color: #fff;">Connecting...</div>
+    </div>
+
+    <div id="view-now" style="display:none;">
+        <header><h1 onclick="refreshApp()">Newser</h1><div id="update-display" class="update-time"></div></header>
+        <div id="content">
             <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
             <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list"></div></section>
             <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
@@ -55,25 +106,33 @@
             <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
         </div>
     </div>
+
     <div id="view-later" style="display:none;">
-        <header><h1 onclick="refreshApp()">Later</h1><div id="update-display-later" class="update-time">Connecting...</div></header>
+        <header><h1 onclick="refreshApp()">Later</h1><div id="update-display-later" class="update-time"></div></header>
         <div id="later-list" class="list-group"></div>
     </div>
+
     <div class="tab-bar">
         <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
         <div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
     </div>
+
 <script>
+    // Replace with your current deployment URL
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
+    /**
+     * AUTHENTIC REFRESH: Hides everything and shows black screen
+     */
     function refreshApp() { 
-        document.getElementById('update-display').innerText = "Connecting..."; 
-        document.getElementById('update-display-later').innerText = "Connecting...";
+        document.getElementById('loading-overlay').style.display = 'flex';
+        document.getElementById('view-now').style.display = 'none';
+        document.getElementById('view-later').style.display = 'none';
         load();
     }
 
     async function apiAction(act, params = '') {
-        document.getElementById('update-display').innerText = "Processing...";
+        document.getElementById('loading-overlay').style.display = 'flex';
         await fetch(`${API_URL}?action=${act}${params}`);
         if (act === 'clear') location.reload();
     }
@@ -89,8 +148,11 @@
     function renderItem(item, isSaved, showCircle) {
         const div = document.createElement('div');
         const isTrending = item.repeats >= 2;
+        
+        // REPEATS LOGIC: Formatting for specialized sections
         if (item.repeats === -3) { div.className = 'death-box'; div.innerText = item.title; div.onclick = () => window.open(item.link, '_blank'); return div; }
         if (item.repeats === -4) { div.className = 'notif-box'; div.innerText = item.title; return div; }
+        
         if (item.repeats === -5) {
             div.className = 'update-box';
             const text = document.createElement('div'); text.innerText = item.title; text.style.flex = "1"; text.onclick = () => window.open(item.link, '_blank');
@@ -110,6 +172,7 @@
                 content.onclick = () => list.style.display = list.style.display === 'block' ? 'none' : 'block';
             } else { content.onclick = () => window.open(links[0].link, '_blank'); div.appendChild(content); }
         }
+
         if (showCircle) {
             const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
             circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
@@ -125,8 +188,10 @@
             const timeText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             document.getElementById('update-display').innerText = timeText;
             document.getElementById('update-display-later').innerText = timeText;
+            
             const mapping = { death: -3, notif: -4, updates: -5, trending: 2, headlines: 1 };
             const laterList = document.getElementById('later-list'); laterList.innerHTML = '';
+            
             Object.keys(mapping).forEach(key => {
                 const el = document.getElementById(key + '-list'); el.innerHTML = '';
                 const filtered = data.articles.filter(a => {
@@ -140,9 +205,14 @@
                 });
                 document.getElementById(key + '-sec').style.display = filtered.length ? 'block' : 'none';
             });
+            
             data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
-            document.getElementById('content').style.display = 'block';
-        } catch (e) { document.getElementById('update-display').innerText = "Error Loading Feed"; }
+            
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('view-now').style.display = 'block';
+        } catch (e) { 
+            document.querySelector('#loading-overlay div').innerText = "Error Loading Feed";
+        }
     }
     load();
 </script>
