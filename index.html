@@ -29,13 +29,10 @@
         .death-alert { background: var(--ios-red) !important; padding: 22px 18px; color: #ffffff !important; font-size: 19px; font-weight: 700; border-radius: 14px; margin-bottom: 20px;}
         .alert-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
         .trending-card-border { background: var(--ios-card) !important; border: 3px solid var(--ios-orange) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 10px; }
-        
-        /* FOOTER WITH CENTERED DIVIDER AND LARGER GAPS */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: calc(35px + env(safe-area-inset-bottom)); background: rgba(28, 28, 30, 0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: flex-start; z-index: 1000; padding-top: 5px; }
         .tab-item { flex: 1; text-align: center; font-size: 18px; font-weight: 600; color: var(--ios-secondary); cursor: pointer; height: 30px; display: flex; align-items: center; justify-content: center; position: relative; }
         .tab-item.active { color: var(--ios-accent); }
         .tab-divider { width: 1px; background: var(--separator); position: absolute; left: 50%; top: 10px; bottom: 10px; transform: translateX(-50%); }
-        
         .btn { padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; width: 100%; color: white; margin-top: 20px; }
         .btn-done { background: var(--ios-accent); margin-bottom: 40px; }
         .btn-undo { background: #3a3a3c; border: 1px solid var(--separator); margin-bottom: 20px; }
@@ -77,7 +74,23 @@
 </div>
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
-    function refreshApp(target) { document.getElementById('update-display').innerText = "Connecting..."; window.location.href = window.location.pathname + "?view=" + target; }
+
+    // Instant Feedback Refresh
+    function refreshApp(target) { 
+        document.getElementById('update-display').innerText = "Connecting...";
+        document.getElementById('content').style.display = 'none';
+        document.getElementById('empty-box').style.display = 'none';
+        document.getElementById('later-list').style.display = 'none';
+        window.location.href = window.location.pathname + "?view=" + target; 
+    }
+
+    async function api(a) { 
+        document.getElementById('update-display').innerText = "Connecting..."; 
+        document.getElementById('content').style.display = 'none';
+        document.getElementById('empty-box').style.display = 'none';
+        try { await fetch(`${API_URL}?action=${a}`); location.reload(); } catch(e) { document.getElementById('update-display').innerText = "Error Connecting"; }
+    }
+
     function formatDate(ts) {
         const d = new Date(ts), today = new Date();
         const isToday = d.getDate() === today.getDate() && d.getMonth() === today.getMonth();
@@ -86,23 +99,23 @@
         if (isToday) return `${h}:${m} ${ampm}`;
         return `${d.getMonth() + 1}/${d.getDate()} ${h}:${m} ${ampm}`;
     }
+
     function switchTab(tab) {
         document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
         document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
         document.getElementById('tab-now').classList.toggle('active', tab === 'now');
         document.getElementById('tab-later').classList.toggle('active', tab === 'later');
     }
-    async function api(a) { 
-        document.getElementById('update-display').innerText = "Connecting..."; 
-        try { await fetch(`${API_URL}?action=${a}`); location.reload(); } catch(e) { document.getElementById('update-display').innerText = "Error Connecting"; }
-    }
+
     async function toggleSave(event, circle, title, link, repeats) {
         event.stopPropagation();
         const isSaving = !circle.classList.contains('saved');
         circle.classList.toggle('saved');
         fetch(`${API_URL}?action=${isSaving ? 'save' : 'unsave'}&title=${encodeURIComponent(title)}&link=${encodeURIComponent(link)}&repeats=${repeats}`);
     }
+
     function closeSheet() { document.getElementById('sheet').style.display = 'none'; }
+
     function renderItem(item, isSaved = false) {
         const div = document.createElement('div');
         if (item.repeats === -4) { div.className = 'green-notif'; div.innerText = item.title; }
@@ -131,9 +144,10 @@
         }
         return div;
     }
+
     async function load() {
         const controller = new AbortController();
-        const timeout = setTimeout(() => { controller.abort(); document.getElementById('update-display').innerText = "Load Error: Check Connection"; }, 10000);
+        const timeout = setTimeout(() => { controller.abort(); document.getElementById('update-display').innerText = "Load Error"; }, 12000);
         try {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('view')) switchTab(urlParams.get('view'));
