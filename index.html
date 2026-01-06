@@ -35,8 +35,8 @@
         .article-link { font-weight: 700; font-size: 20px; line-height: 1.3; cursor: pointer; color: var(--ios-text); }
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
         
-        /* Updated Badge Style: Number in red */
-        .badge { background: #fff; color: var(--trending-red); padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
+        /* Fixed Badge Style: White text on solid red */
+        .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
         
         .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
@@ -87,6 +87,7 @@
     </div>
 
 <script>
+    // MAKE SURE TO PASTE YOUR ACTUAL WEB APP URL HERE
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     function refreshApp() { 
@@ -123,11 +124,19 @@
             div.appendChild(text);
         } else {
             div.className = isTrending ? 'trending-border' : 'article-card';
-            let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
+            
+            // Extract Links correctly from stored JSON
+            let links = []; 
+            try { 
+                links = JSON.parse(item.link); 
+            } catch(e) { 
+                links = [{title: item.title, link: item.link}]; 
+            }
+            
             const content = document.createElement('div'); content.className = 'article-content';
             const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
             
-            // Trending UI: Number in red, arrow logic
+            // UI elements: Badge and Right Arrow
             const badge = isTrending ? `<span class="badge">${links.length} Sources</span>` : '';
             const arrowSpan = isTrending ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px;">▶</span>' : '';
 
@@ -135,23 +144,33 @@
             
             if (isTrending) {
                 const list = document.createElement('div'); list.className = 'source-list';
-                // Show other articles, not the main one
-                links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; });
-                div.appendChild(content); div.appendChild(list);
+                // Show other articles, skipping index 0 (main article)
+                links.slice(1).forEach(l => { 
+                    list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; 
+                });
+                div.appendChild(content); 
+                div.appendChild(list);
                 
                 content.onclick = () => { 
                     const isVisible = list.style.display === 'block';
                     list.style.display = isVisible ? 'none' : 'block';
-                    // Arrow toggle logic
                     content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼';
                 };
-            } else { content.onclick = () => window.open(links[0].link, '_blank'); div.appendChild(content); }
+            } else { 
+                content.onclick = () => window.open(links[0].link, '_blank'); 
+                div.appendChild(content); 
+            }
         }
 
         if (showCircle) {
             const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
             circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            circle.onclick = (e) => { e.stopPropagation(); const currentlySaved = circle.classList.contains('saved'); circle.classList.toggle('saved'); apiAction(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); };
+            circle.onclick = (e) => { 
+                e.stopPropagation(); 
+                const currentlySaved = circle.classList.contains('saved'); 
+                circle.classList.toggle('saved'); 
+                apiAction(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); 
+            };
             div.appendChild(circle);
         }
         return div;
