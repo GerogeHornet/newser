@@ -23,7 +23,6 @@
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
         .badge { background: var(--trending-red); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
         
-        /* Specialized Sections */
         .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -46,7 +45,7 @@
 </head>
 <body>
     <div id="view-now">
-        <header><h1 onclick="location.reload()">Newser</h1><div id="update-display" class="update-time">Connecting...</div></header>
+        <header><h1 onclick="refreshApp('now')">Newser</h1><div id="update-display" class="update-time">Connecting...</div></header>
         <div id="content" style="display:none;">
             <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
             <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list"></div></section>
@@ -56,13 +55,22 @@
             <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
         </div>
     </div>
-    <div id="view-later" style="display:none;"><header><h1>Later</h1></header><div id="later-list" class="list-group"></div></div>
+    <div id="view-later" style="display:none;">
+        <header><h1 onclick="refreshApp('later')">Later</h1><div id="update-display-later" class="update-time">Connecting...</div></header>
+        <div id="later-list" class="list-group"></div>
+    </div>
     <div class="tab-bar">
         <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
         <div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
     </div>
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
+
+    function refreshApp(target) { 
+        document.getElementById('update-display').innerText = "Connecting..."; 
+        document.getElementById('update-display-later').innerText = "Connecting...";
+        load(); // Re-trigger the load function
+    }
 
     async function apiAction(act, params = '') {
         document.getElementById('update-display').innerText = "Processing...";
@@ -81,12 +89,8 @@
     function renderItem(item, isSaved, showCircle) {
         const div = document.createElement('div');
         const isTrending = item.repeats >= 2;
-        
-        // REPEATS LOGIC: Formatting based on codes
         if (item.repeats === -3) { div.className = 'death-box'; div.innerText = item.title; div.onclick = () => window.open(item.link, '_blank'); return div; }
         if (item.repeats === -4) { div.className = 'notif-box'; div.innerText = item.title; return div; }
-        
-        // Updates Box gets specific styling with checkmark
         if (item.repeats === -5) {
             div.className = 'update-box';
             const text = document.createElement('div'); text.innerText = item.title; text.style.flex = "1"; text.onclick = () => window.open(item.link, '_blank');
@@ -106,7 +110,6 @@
                 content.onclick = () => list.style.display = list.style.display === 'block' ? 'none' : 'block';
             } else { content.onclick = () => window.open(links[0].link, '_blank'); div.appendChild(content); }
         }
-
         if (showCircle) {
             const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
             circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
@@ -119,7 +122,9 @@
     async function load() {
         try {
             const res = await fetch(API_URL); const data = await res.json();
-            document.getElementById('update-display').innerText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString();
+            const timeText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            document.getElementById('update-display').innerText = timeText;
+            document.getElementById('update-display-later').innerText = timeText;
             const mapping = { death: -3, notif: -4, updates: -5, trending: 2, headlines: 1 };
             const laterList = document.getElementById('later-list'); laterList.innerHTML = '';
             Object.keys(mapping).forEach(key => {
@@ -137,7 +142,11 @@
             });
             data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
             document.getElementById('content').style.display = 'block';
-        } catch (e) { document.getElementById('update-display').innerText = "Error Loading Feed"; }
+        } catch (e) { 
+            const errorText = "Error Loading Feed";
+            document.getElementById('update-display').innerText = errorText; 
+            document.getElementById('update-display-later').innerText = errorText; 
+        }
     }
     load();
 </script>
