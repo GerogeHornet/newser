@@ -90,6 +90,7 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
+    // Refresh function shows the black overlay
     function refreshApp() { 
         document.getElementById('loading-overlay').style.display = 'flex';
         document.getElementById('view-now').style.display = 'none';
@@ -97,10 +98,17 @@
         load();
     }
 
+    // apiAction handles high-level sheet resets (Undo/Clear)
     async function apiAction(act, params = '') {
         document.getElementById('loading-overlay').style.display = 'flex';
         await fetch(`${API_URL}?action=${act}${params}`);
-        load(); // Refresh state immediately after action
+        load();
+    }
+
+    // backgroundSave handles checkmarks WITHOUT refreshing the UI
+    async function backgroundSave(act, params = '') {
+        // No loading overlay - just send the request in the background
+        fetch(`${API_URL}?action=${act}${params}`);
     }
 
     function switchTab(tab) {
@@ -138,7 +146,15 @@
         if (showCircle) {
             const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
             circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            circle.onclick = (e) => { e.stopPropagation(); const currentlySaved = circle.classList.contains('saved'); circle.classList.toggle('saved'); apiAction(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); };
+            circle.onclick = (e) => { 
+                e.stopPropagation(); 
+                const currentlySaved = circle.classList.contains('saved'); 
+                circle.classList.toggle('saved'); // Instant visual change
+                
+                const action = currentlySaved ? 'unsave' : 'save';
+                // Send request in background - NO REFRESH
+                backgroundSave(action, `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); 
+            };
             div.appendChild(circle);
         }
         return div;
@@ -151,7 +167,6 @@
             document.getElementById('update-display').innerText = timeText;
             document.getElementById('update-display-later').innerText = timeText;
 
-            // HANDLE EMPTY STATE
             if (data.articles.length === 0) {
                 document.getElementById('article-sections').style.display = 'none';
                 document.getElementById('empty-state').style.display = 'block';
