@@ -5,33 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Newser</title>
     <style>
-        :root { --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; --ios-accent: #0a84ff; --separator: #38383a; --red: #ff3b30; --green: #32d74b; --orange: #ff9500; }
-        body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; }
+        :root { 
+            --ios-bg: #000000; 
+            --ios-card: #1c1c1e; 
+            --ios-text: #ffffff; 
+            --ios-secondary: #8e8e93; 
+            --ios-accent: #0a84ff; 
+            --separator: #38383a; 
+            --red: #e06666; 
+            --green: #93c47d; 
+            --blue: #6d9eeb;
+            --orange: #ff9500;
+            --trending-red: #ff3b30;
+        }
+        body { 
+            font-family: -apple-system, sans-serif; 
+            background: var(--ios-bg); 
+            color: var(--ios-text); 
+            margin: 0; 
+            padding: env(safe-area-inset-top) 16px 100px 16px; 
+            -webkit-tap-highlight-color: transparent;
+        }
+        header { padding: 30px 0 10px 0; }
         h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; cursor: pointer; }
         .update-time { font-size: 16px; color: var(--ios-secondary); font-weight: 500; margin-bottom: 20px; }
-        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; }
-        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); }
+        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; gap: 10px; }
+        
+        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .article-card:last-child { border-bottom: none; }
         .article-content { flex: 1; min-width: 0; }
-        .article-link { font-weight: 600; font-size: 20px; line-height: 1.3; cursor: pointer; }
-        .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; }
+        .article-link { font-weight: 700; font-size: 20px; line-height: 1.3; cursor: pointer; color: var(--ios-text); }
         
-        /* Section Styles */
-        .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; }
-        .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; }
-        .update-box { background: #5856d6 !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; }
-        .trending-border { border: 2px solid var(--orange); border-radius: 14px; margin-bottom: 12px; }
+        /* IMAGE MATCHING: Specialized Section Colors */
+        .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
+        .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
+        .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         
-        .badge { background: var(--red); color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800; font-size: 11px; text-transform: uppercase; }
+        /* IMAGE MATCHING: Trending Logic */
+        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-card); }
+        .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        .badge { background: var(--trending-red); color: white; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
+
+        /* IMAGE MATCHING: Collapsible Multi-Source List */
+        .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
+        .source-link { display: block; color: var(--ios-accent); font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 12px; text-decoration: none; padding-left: 15px; position: relative; }
+        .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
+
         .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
-        .save-check.saved { background: var(--green); border-color: var(--green); }
+        .save-check.saved { background: #32d74b; border-color: #32d74b; }
         .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; display: none; }
         .save-check.saved svg { display: block; }
-        
-        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: rgba(28,28,30,0.95); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; }
-        .tab-item { flex: 1; text-align: center; color: var(--ios-secondary); font-weight: 600; cursor: pointer; }
+
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 65px; background: rgba(28,28,30,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; }
+        .tab-item { flex: 1; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 17px; cursor: pointer; }
         .tab-item.active { color: var(--ios-accent); }
-        .done-btn { background: var(--ios-accent); color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; margin-top: 40px; }
+        
+        .done-btn { background: var(--ios-accent); color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; margin-top: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -46,7 +76,11 @@
             <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
         </div>
     </div>
-    <div id="view-later" style="display:none;"><header><h1>Later</h1></header><div id="later-list" class="list-group"></div></div>
+
+    <div id="view-later" style="display:none;">
+        <header><h1>Later</h1></header>
+        <div id="later-list" class="list-group"></div>
+    </div>
 
     <div class="tab-bar">
         <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
@@ -54,6 +88,7 @@
     </div>
 
 <script>
+    // PASTE YOUR WEB APP URL HERE
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
     async function apiAction(act, params = '') {
@@ -70,27 +105,58 @@
         else document.getElementById('tab-later').classList.add('active');
     }
 
+    function formatDate(ts) { 
+        if (!ts) return ""; 
+        const d = new Date(ts); 
+        let h = d.getHours(), m = d.getMinutes().toString().padStart(2, '0'), ampm = h >= 12 ? 'pm' : 'am'; 
+        h = h % 12 || 12; 
+        return `${h}:${m}${ampm}`; 
+    }
+
     function renderItem(item, isSaved, showCircle) {
         const div = document.createElement('div');
         const isTrending = item.repeats >= 2;
         
-        // REPEATS LOGIC: Determines section assignment and style
+        // Apply Section Styling based on repeats codes
         if (item.repeats === -3) div.className = 'death-box';
         else if (item.repeats === -4) div.className = 'notif-box';
         else if (item.repeats === -5) div.className = 'update-box';
-        else div.className = isTrending ? 'article-card trending-border' : 'article-card';
+        else div.className = isTrending ? 'trending-border' : 'article-card';
+
+        let links = [];
+        try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
 
         const content = document.createElement('div');
         content.className = 'article-content';
-        const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
+        const timeStr = item.timestamp ? formatDate(item.timestamp) : "";
         
-        const badge = isTrending ? `<span class="badge">${item.repeats} Sources</span>` : '';
+        const badge = isTrending ? `<span class="badge">${links.length} Sources</span>` : '';
         const arrow = isTrending ? '<span style="font-size:10px; margin-left:4px;">▼</span>' : '';
 
-        content.innerHTML = `<div class="article-link">${item.title}</div>
-                             <div class="meta">${badge} ${timeStr}${arrow}</div>`;
-        content.onclick = () => window.open(item.link, '_blank');
-        div.appendChild(content);
+        content.innerHTML = `
+            <div class="article-link">${item.title}</div>
+            <div class="meta">${badge} ${timeStr}${arrow}</div>
+        `;
+        
+        if (isTrending) {
+            const list = document.createElement('div');
+            list.className = 'source-list';
+            // Show all grouped sources except the lead article
+            links.slice(1).forEach(l => {
+                const a = document.createElement('a');
+                a.className = 'source-link';
+                a.href = l.link; a.target = "_blank";
+                a.innerText = l.title;
+                list.appendChild(a);
+            });
+            div.appendChild(content);
+            div.appendChild(list);
+            // Collapsible Logic
+            content.onclick = () => list.style.display = list.style.display === 'block' ? 'none' : 'block';
+        } else {
+            content.onclick = () => window.open(links[0].link, '_blank');
+            div.appendChild(content);
+        }
 
         if (showCircle) {
             const circle = document.createElement('div');
@@ -98,9 +164,9 @@
             circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
             circle.onclick = (e) => {
                 e.stopPropagation();
-                const currentStatus = circle.classList.contains('saved');
+                const currentlySaved = circle.classList.contains('saved');
                 circle.classList.toggle('saved');
-                apiAction(currentStatus ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`);
+                apiAction(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`);
             };
             div.appendChild(circle);
         }
@@ -111,14 +177,20 @@
         try {
             const res = await fetch(API_URL);
             const data = await res.json();
-            document.getElementById('update-display').innerText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString();
+            document.getElementById('update-display').innerText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             
             const mapping = { death: -3, notif: -4, updates: -5, trending: 2, headlines: 1 };
-            
+            const laterList = document.getElementById('later-list');
+            laterList.innerHTML = '';
+
             Object.keys(mapping).forEach(key => {
                 const list = document.getElementById(key + '-list');
                 list.innerHTML = '';
-                const filtered = data.articles.filter(a => key === 'trending' ? a.repeats >= 2 : (key === 'headlines' ? a.repeats === 1 : a.repeats === mapping[key]));
+                const filtered = data.articles.filter(a => {
+                    if (key === 'trending') return a.repeats >= 2;
+                    if (key === 'headlines') return a.repeats === 1;
+                    return a.repeats === mapping[key];
+                });
                 filtered.forEach(item => {
                     const isSaved = data.laterArticles.some(l => l.title.trim() === item.title.trim());
                     list.appendChild(renderItem(item, isSaved, key === 'headlines'));
@@ -126,10 +198,7 @@
                 document.getElementById(key + '-sec').style.display = filtered.length ? 'block' : 'none';
             });
 
-            const laterList = document.getElementById('later-list');
-            laterList.innerHTML = '';
             data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
-            
             document.getElementById('content').style.display = 'block';
         } catch (e) { document.getElementById('update-display').innerText = "Error Loading Feed"; }
     }
