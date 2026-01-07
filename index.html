@@ -8,7 +8,7 @@
         :root { 
             --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; 
             --ios-accent: #0a84ff; --separator: #38383a; --red: #ff5e5e; --green: #93c47d; 
-            --blue: #6d9eeb; --orange: #ff9500; --trending-red: #ff3b30;
+            --blue: #6d9eeb; --orange: #ff9500; --trending-red: #ff3b30; --checkmark-green: #32d74b;
         }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-tap-highlight-color: transparent; }
         body.no-scroll { overflow: hidden; position: fixed; width: 100%; }
@@ -32,10 +32,9 @@
         .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); position: relative; }
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
 
-        /* DEATH BOX refined */
         .death-box { background: #ffffff !important; border: none !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #000000 !important; font-size: 20px; cursor: pointer; }
-        
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700 !important; color: #ffffff !important; font-size: 20px; }
+        
         .update-box { background: #6d9eeb !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
 
         .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
@@ -43,6 +42,15 @@
         .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
 
         .arrow-icon { font-size: 12px; margin-left: 6px; display: inline-block; vertical-align: middle; }
+
+        .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
+        .save-check.saved { background: var(--checkmark-green); border-color: var(--checkmark-green); }
+        .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; display: none; }
+        .save-check.saved svg { display: block; }
+
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background: rgba(28,28,30,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; padding-bottom: 15px; }
+        .tab-item { flex: 1; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 17px; cursor: pointer; }
+        .tab-item.active { color: var(--ios-accent); }
 
         #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; color: #ffffff; z-index: 10001; display: none; flex-direction: column; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -52,8 +60,6 @@
         .modal-body { flex: 1; overflow-y: auto; padding: 25px 20px; font-size: 22px; line-height: 1.6; font-weight: 400; }
 
         .done-btn { background: var(--ios-accent); color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; margin-top: 20px; cursor: pointer; margin-bottom: 20px; }
-        
-        /* UNDO BUTTON refined label */
         #undo-btn { background: #3a3a3c; color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; margin-top: 10px; margin-bottom: 100px; }
     </style>
 </head>
@@ -85,16 +91,35 @@
         </div>
     </div>
 
+    <div id="view-later" style="display:none;">
+        <header><h1>Later</h1></header>
+        <div id="later-list" class="list-group"></div>
+    </div>
+
+    <div class="tab-bar">
+        <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
+        <div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
+    </div>
+
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
-    
+    let globalLaterData = [];
+
     function stripEmojis(str) {
         return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
     }
 
     function refreshApp() { document.getElementById('loading-overlay').style.display = 'flex'; load(); }
     async function apiAction(act) { document.getElementById('loading-overlay').style.display = 'flex'; await fetch(`${API_URL}?action=${act}`); load(); }
-    
+    async function backgroundSave(act, params) { fetch(`${API_URL}?action=${act}${params}`); }
+
+    function switchTab(tab) {
+        document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
+        document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
+        document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+        if (tab === 'now') document.getElementById('tab-now').classList.add('active'); else document.getElementById('tab-later').classList.add('active');
+    }
+
     function openModal(title, content) {
         document.getElementById('modal-title').innerText = stripEmojis(title);
         document.getElementById('modal-body').innerHTML = content;
@@ -104,58 +129,74 @@
     function closeModal() { document.getElementById('update-modal').style.display = 'none'; document.body.classList.remove('no-scroll'); }
 
     function formatDate(iso) {
+        if(!iso) return "";
         const d = new Date(iso), now = new Date();
         const isToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
         const t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
         return isToday ? t : `${d.toLocaleDateString('en-US', { weekday: 'long' })} ${(d.getMonth()+1)}/${d.getDate()} ${t}`;
     }
 
-    function renderItem(item) {
+    function renderItem(item, showCircle = false) {
         const div = document.createElement('div');
         const r = item.repeats;
-        const cleanTitle = stripEmojis(item.title);
+        const isSaved = globalLaterData.some(l => l.title.trim() === item.title.trim());
 
-        if (r === -3) { // Death logic refined
-            div.className = 'death-box';
-            div.innerHTML = `<div>${cleanTitle}</div>`;
-            let l = JSON.parse(item.link);
-            div.onclick = () => window.open(l[0].link, '_blank'); return div;
+        if (r === -3) { // Death
+            div.className = 'death-box'; div.innerHTML = `<div>${stripEmojis(item.title)}</div>`;
+            let l = JSON.parse(item.link); div.onclick = () => window.open(l[0].link, '_blank'); return div;
         }
         if (r === -4) { // Notif
             div.className = 'notif-box'; div.innerHTML = `<div>${item.title}</div>`; return div;
         }
         if (r === -5) { // Update
-            div.className = 'update-box'; div.innerText = cleanTitle;
-            div.onclick = () => openModal(item.title, item.link); return div;
+            div.className = 'update-box';
+            const contentCont = document.createElement('div');
+            contentCont.style.flex = "1";
+            contentCont.innerText = stripEmojis(item.title);
+            contentCont.onclick = () => openModal(item.title, item.link);
+            div.appendChild(contentCont);
+        } else {
+            const isTrending = r >= 2;
+            const isAlert = r === -99;
+            div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
+            
+            let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
+            
+            const content = document.createElement('div'); content.className = 'article-content';
+            const timeStr = formatDate(item.timestamp);
+            const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon">▶</span>' : '';
+            const badgeText = isAlert ? 'ALERT' : (isTrending ? r + ' Sources' : '');
+            const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
+            
+            content.innerHTML = `<div class="article-link">${stripEmojis(item.title)}</div><div class="meta">${badgeHtml} ${timeStr}${arrowSpan}</div>`;
+            
+            if ((isTrending || isAlert) && links.length > 1) {
+                const list = document.createElement('div'); list.className = 'source-list';
+                links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; });
+                div.appendChild(content); div.appendChild(list);
+                content.onclick = () => { 
+                    const isVisible = list.style.display === 'block'; 
+                    list.style.display = isVisible ? 'none' : 'block'; 
+                    content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; 
+                };
+            } else {
+                content.onclick = () => window.open(links[0].link, '_blank');
+                div.appendChild(content);
+            }
         }
 
-        const isTrending = r >= 2;
-        const isAlert = r === -99;
-        div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
-        
-        let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
-        
-        const content = document.createElement('div'); content.className = 'article-content';
-        const timeStr = item.timestamp ? formatDate(item.timestamp) : "";
-        const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon">▶</span>' : '';
-        const badgeText = isAlert ? 'ALERT' : (isTrending ? r + ' Sources' : '');
-        const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
-        
-        content.innerHTML = `<div class="article-link">${cleanTitle}</div><div class="meta">${badgeHtml} ${timeStr}${arrowSpan}</div>`;
-        
-        if ((isTrending || isAlert) && links.length > 1) {
-            const list = document.createElement('div'); list.className = 'source-list';
-            links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; });
-            div.appendChild(content); div.appendChild(list);
-            
-            content.onclick = () => { 
-                const isVisible = list.style.display === 'block'; 
-                list.style.display = isVisible ? 'none' : 'block'; 
-                content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; 
+        // SAVE BUTTON (Restricted logic)
+        if (showCircle) {
+            const circle = document.createElement('div');
+            circle.className = 'save-check' + (isSaved ? ' saved' : '');
+            circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            circle.onclick = (e) => {
+                e.stopPropagation();
+                const currentlySaved = circle.classList.contains('saved');
+                circle.classList.toggle('saved');
+                backgroundSave(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`);
             };
-        } else {
-            content.onclick = () => window.open(links[0].link, '_blank');
-            div.appendChild(content);
+            div.appendChild(circle);
         }
         
         return div;
@@ -164,7 +205,9 @@
     async function load() {
         try {
             const res = await fetch(API_URL); const data = await res.json();
+            globalLaterData = data.laterArticles;
             document.getElementById('update-display').innerText = "Last checked " + formatDate(data.refreshTime);
+            
             if (data.articles.length === 0) { document.getElementById('article-sections').style.display = 'none'; document.getElementById('empty-state').style.display = 'block'; } else { document.getElementById('article-sections').style.display = 'block'; document.getElementById('empty-state').style.display = 'none'; }
             
             const mapping = { death: -3, notif: -4, updates: -5, alert: -99, trending: 2, headlines: 1 };
@@ -176,9 +219,18 @@
                     return a.repeats === mapping[key];
                 });
                 if (key === 'headlines') { filtered.reverse(); document.getElementById('headline-count').innerText = filtered.length; }
-                filtered.forEach(item => el.appendChild(renderItem(item)));
+                
+                // RESTRICTION: Only show circle on updates and headlines
+                const circleLogic = (key === 'updates' || key === 'headlines');
+                filtered.forEach(item => el.appendChild(renderItem(item, circleLogic)));
+                
                 const sec = document.getElementById(key + '-sec'); if (sec) sec.style.display = filtered.length ? 'block' : 'none';
             });
+
+            const laterEl = document.getElementById('later-list');
+            laterEl.innerHTML = '';
+            globalLaterData.forEach(item => laterEl.appendChild(renderItem(item, true)));
+
             document.getElementById('loading-overlay').style.display = 'none';
         } catch (e) { console.log(e); }
     }
