@@ -133,20 +133,20 @@
             div.appendChild(text);
         } else {
             div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
-            
             let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
             const content = document.createElement('div'); content.className = 'article-content';
             const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
             const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px;">▶</span>' : '';
-            
             const badgeText = isAlert ? 'ALERT' : (isTrending ? item.repeats + ' Sources' : '');
-            const badgeHtml = badgeText ? `<span class="badge">${badgeText}</span>` : '';
-
+            const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
             content.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badgeHtml} ${timeStr}${arrowSpan}</div>`;
             
             if ((isTrending || isAlert) && links.length > 1) {
                 const list = document.createElement('div'); list.className = 'source-list';
-                links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; });
+                // Skip index 0 to avoid duplicating the main article title in the list
+                links.slice(1).forEach(l => { 
+                    list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; 
+                });
                 div.appendChild(content); div.appendChild(list);
                 content.onclick = () => { const isVisible = list.style.display === 'block'; list.style.display = isVisible ? 'none' : 'block'; content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; };
             } else { 
@@ -154,7 +154,8 @@
                 div.appendChild(content); 
             }
         }
-        if (showCircle) {
+        // ONLY SHOW CIRCLE IF NOT AN ALERT
+        if (showCircle && !isAlert) {
             const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
             circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
             circle.onclick = (e) => { 
@@ -174,7 +175,6 @@
             const timeText = "Last checked " + new Date(data.refreshTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             document.getElementById('update-display').innerText = timeText;
             document.getElementById('update-display-later').innerText = timeText;
-
             if (data.articles.length === 0) {
                 document.getElementById('article-sections').style.display = 'none';
                 document.getElementById('empty-state').style.display = 'block';
@@ -183,10 +183,8 @@
                 document.getElementById('article-sections').style.display = 'block';
                 document.getElementById('empty-state').style.display = 'none';
             }
-            
             const mapping = { alert: -99, death: -3, notif: -4, updates: -5, trending: 2, headlines: 1 };
             const laterList = document.getElementById('later-list'); laterList.innerHTML = '';
-            
             Object.keys(mapping).forEach(key => {
                 const el = document.getElementById(key + '-list');
                 if (!el) return;
@@ -196,9 +194,7 @@
                     if (key === 'headlines') return a.repeats === 1;
                     return a.repeats === mapping[key];
                 });
-                
                 if (key === 'headlines') document.getElementById('headline-count').innerText = filtered.length;
-
                 filtered.forEach(item => { 
                     const isSaved = data.laterArticles.some(l => l.title.trim() === item.title.trim()); 
                     el.appendChild(renderItem(item, isSaved, (key === 'headlines' || key === 'updates' || key === 'alert'))); 
@@ -207,7 +203,6 @@
                 if (sec) sec.style.display = filtered.length ? 'block' : 'none';
             });
             data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
-            
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('view-now').style.display = document.getElementById('tab-now').classList.contains('active') ? 'block' : 'none';
             document.getElementById('view-later').style.display = document.getElementById('tab-later').classList.contains('active') ? 'block' : 'none';
