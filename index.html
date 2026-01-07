@@ -7,7 +7,7 @@
     <style>
         :root { 
             --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; 
-            --ios-accent: #0a84ff; --separator: #38383a; --red: #ff5e5e; --green: #32d74b; 
+            --ios-accent: #0a84ff; --separator: #38383a; --red: #ff5e5e; --green: #93c47d; 
             --blue: #6d9eeb; --orange: #ff9500; --trending-red: #ff3b30;
         }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-tap-highlight-color: transparent; }
@@ -27,14 +27,17 @@
         .article-link { font-weight: 700; font-size: 20px; line-height: 1.3; cursor: pointer; color: var(--ios-text); }
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
         
-        .alert-border { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); }
-        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); }
+        .alert-border { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); position: relative; }
+        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); position: relative; }
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
 
-        /* DEATH BOX: White with Black Text */
         .death-box { background: #ffffff !important; border: none !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #000000 !important; font-size: 20px; cursor: pointer; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #000000 !important; font-size: 20px; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
+
+        .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
+        .source-link { display: block; color: var(--ios-accent); font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 12px; text-decoration: none; padding-left: 15px; position: relative; }
+        .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
 
         #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; color: #ffffff; z-index: 10001; display: none; flex-direction: column; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -74,11 +77,15 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
     
+    function stripEmojis(str) {
+        return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
+    }
+
     function refreshApp() { document.getElementById('loading-overlay').style.display = 'flex'; load(); }
     async function apiAction(act) { document.getElementById('loading-overlay').style.display = 'flex'; await fetch(`${API_URL}?action=${act}`); load(); }
     
     function openModal(title, content) {
-        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-title').innerText = stripEmojis(title);
         document.getElementById('modal-body').innerHTML = content;
         document.getElementById('update-modal').style.display = 'flex';
         document.body.classList.add('no-scroll');
@@ -95,9 +102,10 @@
     function renderItem(item) {
         const div = document.createElement('div');
         const r = item.repeats;
+        const cleanTitle = stripEmojis(item.title);
 
         if (r === -3) { // Death
-            div.className = 'death-box'; div.innerText = item.title;
+            div.className = 'death-box'; div.innerText = cleanTitle;
             let l = JSON.parse(item.link);
             div.onclick = () => window.open(l[0].link, '_blank'); return div;
         }
@@ -105,20 +113,38 @@
             div.className = 'notif-box'; div.innerHTML = `<div>${item.title}</div>`; return div;
         }
         if (r === -5) { // Update
-            div.className = 'update-box'; div.innerText = item.title;
+            div.className = 'update-box'; div.innerText = cleanTitle;
             div.onclick = () => openModal(item.title, item.link); return div;
         }
 
-        div.className = (r === -99) ? 'alert-border' : (r >= 2 ? 'trending-border' : 'article-card');
+        const isTrending = r >= 2;
+        const isAlert = r === -99;
+        div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
+        
+        let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
+        
         const content = document.createElement('div'); content.className = 'article-content';
         const timeStr = item.timestamp ? formatDate(item.timestamp) : "";
-        const badgeText = (r === -99) ? 'ALERT' : (r >= 2 ? r + ' Sources' : '');
+        const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px;">▶</span>' : '';
+        const badgeText = isAlert ? 'ALERT' : (isTrending ? r + ' Sources' : '');
         const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
-        content.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badgeHtml} ${timeStr}</div>`;
         
-        let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
-        content.onclick = () => window.open(links[0].link, '_blank');
-        div.appendChild(content);
+        content.innerHTML = `<div class="article-link">${cleanTitle}</div><div class="meta">${badgeHtml} ${timeStr}${arrowSpan}</div>`;
+        
+        if ((isTrending || isAlert) && links.length > 1) {
+            const list = document.createElement('div'); list.className = 'source-list';
+            links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; });
+            div.appendChild(content); div.appendChild(list);
+            content.onclick = () => { 
+                const isVisible = list.style.display === 'block'; 
+                list.style.display = isVisible ? 'none' : 'block'; 
+                content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; 
+            };
+        } else {
+            content.onclick = () => window.open(links[0].link, '_blank');
+            div.appendChild(content);
+        }
+        
         return div;
     }
 
