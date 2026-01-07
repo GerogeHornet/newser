@@ -36,10 +36,8 @@
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700 !important; color: #ffffff !important; font-size: 20px; }
         .update-box { background: #6d9eeb !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
 
-        .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
         .source-link { display: block; color: var(--ios-accent) !important; font-size: 16px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; text-decoration: none !important; padding-left: 15px; position: relative; }
         .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
-
         .arrow-icon { font-size: 12px; margin-left: 6px; display: inline-block; vertical-align: middle; }
 
         .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
@@ -64,20 +62,12 @@
 </head>
 <body>
     <div id="loading-overlay"><div class="spinner"></div><div style="font-size: 20px; font-weight: 600; color: #fff;">Connecting...</div></div>
-
-    <div id="update-modal">
-        <div class="modal-header"><h3 id="modal-title">Update</h3><div class="close-btn" onclick="closeModal()">✕</div></div>
-        <div id="modal-body" class="modal-body"></div>
-    </div>
+    <div id="update-modal"><div class="modal-header"><h3 id="modal-title">Update</h3><div class="close-btn" onclick="closeModal()">✕</div></div><div id="modal-body" class="modal-body"></div></div>
 
     <div id="view-now" style="display:none;">
         <header><h1 onclick="handleTabClick('now')">Newser</h1><div id="update-display" class="update-time"></div></header>
         <div id="content">
-            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;">
-                <div style="font-size: 50px; margin-bottom: 20px;">🎉</div>
-                <div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div>
-                <button id="undo-btn" onclick="apiAction('undo')">Undo</button>
-            </div>
+            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;"><div style="font-size: 50px; margin-bottom: 20px;">🎉</div><div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div><button id="undo-btn" onclick="apiAction('undo')">Undo</button></div>
             <div id="article-sections">
                 <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
                 <section id="notif-sec" style="display:none;"><h2>📣 Notifications</h2><div id="notif-list"></div></section>
@@ -90,50 +80,28 @@
         </div>
     </div>
 
-    <div id="view-later" style="display:none;">
-        <header><h1>Later</h1></header>
-        <div id="later-list" class="list-group"></div>
-    </div>
-
-    <div class="tab-bar">
-        <div id="tab-now" class="tab-item active" onclick="handleTabClick('now')">Now</div>
-        <div id="tab-later" class="tab-item" onclick="handleTabClick('later')">Later</div>
-    </div>
+    <div id="view-later" style="display:none;"><header><h1>Later</h1></header><div id="later-list" class="list-group"></div></div>
+    <div class="tab-bar"><div id="tab-now" class="tab-item active" onclick="handleTabClick('now')">Now</div><div id="tab-later" class="tab-item" onclick="handleTabClick('later')">Later</div></div>
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
     let globalLaterData = [];
     let currentTab = 'now';
 
-    function stripEmojis(str) {
-        return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
-    }
-
-    // Consolidated logic: Switch tabs AND refresh on tap
-    function handleTabClick(tab) {
-        document.getElementById('loading-overlay').style.display = 'flex';
-        currentTab = tab;
-        load();
-    }
-
-    async function apiAction(act) { 
-        document.getElementById('loading-overlay').style.display = 'flex'; 
-        await fetch(`${API_URL}?action=${act}`); 
-        load(); 
-    }
-    
+    function stripEmojis(str) { return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim(); }
+    function handleTabClick(tab) { document.getElementById('loading-overlay').style.display = 'flex'; currentTab = tab; load(); }
+    async function apiAction(act) { document.getElementById('loading-overlay').style.display = 'flex'; await fetch(`${API_URL}?action=${act}`); load(); }
     async function backgroundSave(act, params) { fetch(`${API_URL}?action=${act}${params}`); }
 
     function switchView(tab) {
         document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
         document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
         document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-        if (tab === 'now') document.getElementById('tab-now').classList.add('active'); 
-        else document.getElementById('tab-later').classList.add('active');
+        if (tab === 'now') document.getElementById('tab-now').classList.add('active'); else document.getElementById('tab-later').classList.add('active');
     }
 
     function openModal(title, content) {
-        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-title').innerText = stripEmojis(title);
         document.getElementById('modal-body').innerHTML = content;
         document.getElementById('update-modal').style.display = 'flex';
         document.body.classList.add('no-scroll');
@@ -162,54 +130,33 @@
         }
         if (r === -5) { // Update
             div.className = 'update-box';
-            const contentCont = document.createElement('div');
-            contentCont.style.flex = "1";
-            contentCont.innerText = stripEmojis(item.title);
-            contentCont.onclick = () => openModal(item.title, item.link);
+            const contentCont = document.createElement('div'); contentCont.style.flex = "1";
+            contentCont.innerText = item.title; contentCont.onclick = () => openModal(item.title, item.link);
             div.appendChild(contentCont);
         } else {
-            const isTrending = r >= 2;
-            const isAlert = r === -99;
+            const isTrending = r >= 2; const isAlert = r === -99;
             div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
-            
             let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
-            
             const content = document.createElement('div'); content.className = 'article-content';
-            const timeStr = formatDate(item.timestamp);
             const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon">▶</span>' : '';
             const badgeText = isAlert ? 'ALERT' : (isTrending ? r + ' Sources' : '');
             const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
-            
-            content.innerHTML = `<div class="article-link">${stripEmojis(item.title)}</div><div class="meta">${badgeHtml} ${timeStr}${arrowSpan}</div>`;
+            content.innerHTML = `<div class="article-link">${stripEmojis(item.title)}</div><div class="meta">${badgeHtml} ${formatDate(item.timestamp)}${arrowSpan}</div>`;
             
             if ((isTrending || isAlert) && links.length > 1) {
                 const list = document.createElement('div'); list.className = 'source-list';
                 links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; });
                 div.appendChild(content); div.appendChild(list);
-                content.onclick = () => { 
-                    const isVisible = list.style.display === 'block'; 
-                    list.style.display = isVisible ? 'none' : 'block'; 
-                    content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; 
-                };
-            } else {
-                content.onclick = () => window.open(links[0].link, '_blank');
-                div.appendChild(content);
-            }
+                content.onclick = () => { const isVisible = list.style.display === 'block'; list.style.display = isVisible ? 'none' : 'block'; content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; };
+            } else { content.onclick = () => window.open(links[0].link, '_blank'); div.appendChild(content); }
         }
 
         if (showCircle) {
-            const circle = document.createElement('div');
-            circle.className = 'save-check' + (isSaved ? ' saved' : '');
+            const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
             circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            circle.onclick = (e) => {
-                e.stopPropagation();
-                const currentlySaved = circle.classList.contains('saved');
-                circle.classList.toggle('saved');
-                backgroundSave(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`);
-            };
+            circle.onclick = (e) => { e.stopPropagation(); const cur = circle.classList.contains('saved'); circle.classList.toggle('saved'); backgroundSave(cur ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); };
             div.appendChild(circle);
         }
-        
         return div;
     }
 
@@ -218,37 +165,18 @@
             const res = await fetch(API_URL); const data = await res.json();
             globalLaterData = data.laterArticles;
             document.getElementById('update-display').innerText = "Last checked " + formatDate(data.refreshTime);
-            
-            if (data.articles.length === 0) { 
-                document.getElementById('article-sections').style.display = 'none'; 
-                document.getElementById('empty-state').style.display = 'block'; 
-            } else { 
-                document.getElementById('article-sections').style.display = 'block'; 
-                document.getElementById('empty-state').style.display = 'none'; 
-            }
-            
+            if (data.articles.length === 0) { document.getElementById('article-sections').style.display = 'none'; document.getElementById('empty-state').style.display = 'block'; } else { document.getElementById('article-sections').style.display = 'block'; document.getElementById('empty-state').style.display = 'none'; }
             const mapping = { death: -3, notif: -4, updates: -5, alert: -99, trending: 2, headlines: 1 };
             Object.keys(mapping).forEach(key => {
                 const el = document.getElementById(key + '-list'); if (!el) return; el.innerHTML = '';
-                let filtered = data.articles.filter(a => {
-                    if (key === 'trending') return a.repeats >= 2;
-                    if (key === 'headlines') return a.repeats === 1;
-                    return a.repeats === mapping[key];
-                });
+                let filtered = data.articles.filter(a => { if (key === 'trending') return a.repeats >= 2; if (key === 'headlines') return a.repeats === 1; return a.repeats === mapping[key]; });
                 if (key === 'headlines') { filtered.reverse(); document.getElementById('headline-count').innerText = filtered.length; }
-                
-                const circleLogic = (key === 'updates' || key === 'headlines');
-                filtered.forEach(item => el.appendChild(renderItem(item, circleLogic)));
-                
+                filtered.forEach(item => el.appendChild(renderItem(item, (key === 'updates' || key === 'headlines'))));
                 const sec = document.getElementById(key + '-sec'); if (sec) sec.style.display = filtered.length ? 'block' : 'none';
             });
-
-            const laterEl = document.getElementById('later-list');
-            laterEl.innerHTML = '';
+            const laterEl = document.getElementById('later-list'); laterEl.innerHTML = '';
             globalLaterData.forEach(item => laterEl.appendChild(renderItem(item, true)));
-
-            switchView(currentTab);
-            document.getElementById('loading-overlay').style.display = 'none';
+            switchView(currentTab); document.getElementById('loading-overlay').style.display = 'none';
         } catch (e) { console.log(e); }
     }
     load();
