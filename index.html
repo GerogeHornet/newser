@@ -28,13 +28,12 @@
         .article-link { font-weight: 700; font-size: 20px; line-height: 1.3; cursor: pointer; color: var(--ios-text); }
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
         
-        .alert-border { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); position: relative; }
-        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); position: relative; }
+        .alert-border { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); position: relative; display: flex; justify-content: space-between; align-items: center; }
+        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); position: relative; display: flex; justify-content: space-between; align-items: center; }
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
 
         .death-box { background: #ffffff !important; border: none !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #000000 !important; font-size: 20px; cursor: pointer; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700 !important; color: #ffffff !important; font-size: 20px; }
-        
         .update-box { background: #6d9eeb !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
 
         .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
@@ -71,7 +70,7 @@
         <div id="modal-body" class="modal-body"></div>
     </div>
 
-    <div id="view-now">
+    <div id="view-now" style="display:none;">
         <header><h1 onclick="refreshApp()">Newser</h1><div id="update-display" class="update-time"></div></header>
         <div id="content">
             <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;">
@@ -98,30 +97,49 @@
 
     <div class="tab-bar">
         <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
-        <div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div>
+        <div id="tab-later" class="tab-item" onclick="refreshLater()">Later</div>
     </div>
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
     let globalLaterData = [];
+    let currentTab = 'now';
 
     function stripEmojis(str) {
         return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
     }
 
-    function refreshApp() { document.getElementById('loading-overlay').style.display = 'flex'; load(); }
-    async function apiAction(act) { document.getElementById('loading-overlay').style.display = 'flex'; await fetch(`${API_URL}?action=${act}`); load(); }
+    function refreshApp() { 
+        document.getElementById('loading-overlay').style.display = 'flex'; 
+        currentTab = 'now';
+        load(); 
+    }
+    
+    function refreshLater() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+        currentTab = 'later';
+        load();
+    }
+
+    async function apiAction(act) { 
+        document.getElementById('loading-overlay').style.display = 'flex'; 
+        await fetch(`${API_URL}?action=${act}`); 
+        load(); 
+    }
+    
     async function backgroundSave(act, params) { fetch(`${API_URL}?action=${act}${params}`); }
 
     function switchTab(tab) {
+        currentTab = tab;
         document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
         document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
         document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-        if (tab === 'now') document.getElementById('tab-now').classList.add('active'); else document.getElementById('tab-later').classList.add('active');
+        if (tab === 'now') document.getElementById('tab-now').classList.add('active'); 
+        else document.getElementById('tab-later').classList.add('active');
     }
 
     function openModal(title, content) {
-        document.getElementById('modal-title').innerText = stripEmojis(title);
+        document.getElementById('modal-title').innerText = title;
         document.getElementById('modal-body').innerHTML = content;
         document.getElementById('update-modal').style.display = 'flex';
         document.body.classList.add('no-scroll');
@@ -185,7 +203,6 @@
             }
         }
 
-        // SAVE BUTTON (Restricted logic)
         if (showCircle) {
             const circle = document.createElement('div');
             circle.className = 'save-check' + (isSaved ? ' saved' : '');
@@ -208,7 +225,13 @@
             globalLaterData = data.laterArticles;
             document.getElementById('update-display').innerText = "Last checked " + formatDate(data.refreshTime);
             
-            if (data.articles.length === 0) { document.getElementById('article-sections').style.display = 'none'; document.getElementById('empty-state').style.display = 'block'; } else { document.getElementById('article-sections').style.display = 'block'; document.getElementById('empty-state').style.display = 'none'; }
+            if (data.articles.length === 0) { 
+                document.getElementById('article-sections').style.display = 'none'; 
+                document.getElementById('empty-state').style.display = 'block'; 
+            } else { 
+                document.getElementById('article-sections').style.display = 'block'; 
+                document.getElementById('empty-state').style.display = 'none'; 
+            }
             
             const mapping = { death: -3, notif: -4, updates: -5, alert: -99, trending: 2, headlines: 1 };
             Object.keys(mapping).forEach(key => {
@@ -220,7 +243,6 @@
                 });
                 if (key === 'headlines') { filtered.reverse(); document.getElementById('headline-count').innerText = filtered.length; }
                 
-                // RESTRICTION: Only show circle on updates and headlines
                 const circleLogic = (key === 'updates' || key === 'headlines');
                 filtered.forEach(item => el.appendChild(renderItem(item, circleLogic)));
                 
@@ -231,6 +253,8 @@
             laterEl.innerHTML = '';
             globalLaterData.forEach(item => laterEl.appendChild(renderItem(item, true)));
 
+            // Switch to the current tab view after data finishes loading
+            switchTab(currentTab);
             document.getElementById('loading-overlay').style.display = 'none';
         } catch (e) { console.log(e); }
     }
