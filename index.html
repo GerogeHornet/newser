@@ -31,11 +31,11 @@
         .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); }
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
 
-        /* DEATH BOX: Solid White with Black Text */
-        .death-box { background: #ffffff !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #000000 !important; font-size: 20px; cursor: pointer; }
+        /* UPDATED DEATH BOX: Solid White Background, Black Text, No Red Border */
+        .death-box { background: #ffffff !important; border: none !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #000000 !important; font-size: 20px; cursor: pointer; }
         
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
-        .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
+        .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
 
         #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; color: #000000; z-index: 10001; display: none; flex-direction: column; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -65,7 +65,7 @@
             </div>
             <div id="article-sections">
                 <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
-                <section id="notif-sec" style="display:none;"><h2>💡 Notifications</h2><div id="notif-list"></div></section>
+                <section id="notif-sec" style="display:none;"><h2>✨ Notifications</h2><div id="notif-list"></div></section>
                 <section id="updates-sec" style="display:none;"><h2>🔄 Updates</h2><div id="updates-list"></div></section>
                 <section id="alert-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alert-list"></div></section>
                 <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
@@ -120,7 +120,7 @@
         const content = document.createElement('div'); content.className = 'article-content';
         const timeStr = item.timestamp ? formatDate(item.timestamp) : "";
         const badgeText = (r === -99) ? 'ALERT' : (r >= 2 ? r + ' Sources' : '');
-        const badgeHtml = badgeText ? `<span class="badge">${badgeText}</span>` : '';
+        const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
         content.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badgeHtml} ${timeStr}</div>`;
         
         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
