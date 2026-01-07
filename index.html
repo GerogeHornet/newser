@@ -66,31 +66,28 @@
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
 
-    function refreshApp() { document.getElementById('loading-overlay').style.display = 'flex'; document.getElementById('view-now').style.display = 'none'; document.getElementById('view-later').style.display = 'none'; load(); }
+    function refreshApp() { document.getElementById('loading-overlay').style.display = 'flex'; load(); }
     async function apiAction(act, params = '') { document.getElementById('loading-overlay').style.display = 'flex'; await fetch(`${API_URL}?action=${act}${params}`); load(); }
     async function backgroundSave(act, params = '') { fetch(`${API_URL}?action=${act}${params}`); }
     
-    // FORMAT DATE HELPER
     function formatDate(isoString) {
         const date = new Date(isoString);
         const now = new Date();
         const isToday = date.getDate() === now.getDate() && 
                         date.getMonth() === now.getMonth() && 
                         date.getFullYear() === now.getFullYear();
-
-        const timeOptions = { hour: 'numeric', minute: '2-digit', hour12: true };
-        const timePart = date.toLocaleTimeString([], timeOptions);
-
-        if (isToday) {
-            return timePart;
-        } else {
-            const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-            const shortDate = (date.getMonth() + 1) + '/' + date.getDate();
-            return `${dayName} ${shortDate} ${timePart}`;
-        }
+        const timePart = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+        if (isToday) return timePart;
+        return `${date.toLocaleDateString('en-US', { weekday: 'long' })} ${(date.getMonth() + 1)}/${date.getDate()} ${timePart}`;
     }
 
-    function switchTab(tab) { document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none'; document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none'; document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active')); if (tab === 'now') document.getElementById('tab-now').classList.add('active'); else document.getElementById('tab-later').classList.add('active'); }
+    function switchTab(tab) {
+        document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
+        document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
+        document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+        if (tab === 'now') document.getElementById('tab-now').classList.add('active');
+        else document.getElementById('tab-later').classList.add('active');
+    }
     
     function renderItem(item, isSaved, showCircle) {
         const div = document.createElement('div');
@@ -102,10 +99,7 @@
             div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
             let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
             const content = document.createElement('div'); content.className = 'article-content';
-            
-            // USE NEW FORMATDATE FUNCTION
             const timeStr = item.timestamp ? formatDate(item.timestamp) : "";
-            
             const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px;">▶</span>' : '';
             const badgeText = isAlert ? 'ALERT' : (isTrending ? item.repeats + ' Sources' : '');
             const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
@@ -130,19 +124,38 @@
         try {
             const res = await fetch(API_URL); const data = await res.json();
             const timeText = "Last checked " + formatDate(data.refreshTime);
-            document.getElementById('update-display').innerText = timeText; document.getElementById('update-display-later').innerText = timeText;
-            if (data.articles.length === 0) { document.getElementById('article-sections').style.display = 'none'; document.getElementById('empty-state').style.display = 'block'; document.getElementById('undo-btn').style.display = data.backupExists ? 'block' : 'none'; } else { document.getElementById('article-sections').style.display = 'block'; document.getElementById('empty-state').style.display = 'none'; }
+            document.getElementById('update-display').innerText = timeText;
+            document.getElementById('update-display-later').innerText = timeText;
+            
+            if (data.articles.length === 0) {
+                document.getElementById('article-sections').style.display = 'none';
+                document.getElementById('empty-state').style.display = 'block';
+            } else {
+                document.getElementById('article-sections').style.display = 'block';
+                document.getElementById('empty-state').style.display = 'none';
+            }
+
             const mapping = { alert: -99, death: -3, notif: -4, updates: -5, trending: 2, headlines: 1 };
             const laterList = document.getElementById('later-list'); laterList.innerHTML = '';
+            
             Object.keys(mapping).forEach(key => {
                 const el = document.getElementById(key + '-list'); if (!el) return; el.innerHTML = '';
-                const filtered = data.articles.filter(a => { if (key === 'trending') return a.repeats >= 2; if (key === 'headlines') return a.repeats === 1; return a.repeats === mapping[key]; });
-                if (key === 'headlines') document.getElementById('headline-count').innerText = filtered.length;
+                let filtered = data.articles.filter(a => { if (key === 'trending') return a.repeats >= 2; if (key === 'headlines') return a.repeats === 1; return a.repeats === mapping[key]; });
+                
+                // FLIP HEADLINES TO OLDEST FIRST
+                if (key === 'headlines') {
+                    filtered.reverse();
+                    document.getElementById('headline-count').innerText = filtered.length;
+                }
+                
                 filtered.forEach(item => { const isSaved = data.laterArticles.some(l => l.title.trim() === item.title.trim()); el.appendChild(renderItem(item, isSaved, (key === 'headlines' || key === 'updates' || key === 'alert'))); });
                 const sec = document.getElementById(key + '-sec'); if (sec) sec.style.display = filtered.length ? 'block' : 'none';
             });
+            
             data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
-            document.getElementById('loading-overlay').style.display = 'none'; document.getElementById('view-now').style.display = document.getElementById('tab-now').classList.contains('active') ? 'block' : 'none'; document.getElementById('view-later').style.display = document.getElementById('tab-later').classList.contains('active') ? 'block' : 'none';
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('view-now').style.display = document.getElementById('tab-now').classList.contains('active') ? 'block' : 'none';
+            document.getElementById('view-later').style.display = document.getElementById('tab-later').classList.contains('active') ? 'block' : 'none';
         } catch (e) { document.getElementById('loading-text').innerText = "Error Loading Feed"; }
     }
     load();
