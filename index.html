@@ -71,7 +71,7 @@
     </div>
 
     <div id="view-now" style="display:none;">
-        <header><h1 onclick="refreshApp()">Newser</h1><div id="update-display" class="update-time"></div></header>
+        <header><h1 onclick="handleTabClick('now')">Newser</h1><div id="update-display" class="update-time"></div></header>
         <div id="content">
             <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;">
                 <div style="font-size: 50px; margin-bottom: 20px;">🎉</div>
@@ -96,8 +96,8 @@
     </div>
 
     <div class="tab-bar">
-        <div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div>
-        <div id="tab-later" class="tab-item" onclick="refreshLater()">Later</div>
+        <div id="tab-now" class="tab-item active" onclick="handleTabClick('now')">Now</div>
+        <div id="tab-later" class="tab-item" onclick="handleTabClick('later')">Later</div>
     </div>
 
 <script>
@@ -109,15 +109,10 @@
         return str.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim();
     }
 
-    function refreshApp() { 
-        document.getElementById('loading-overlay').style.display = 'flex'; 
-        currentTab = 'now';
-        load(); 
-    }
-    
-    function refreshLater() {
+    // Consolidated logic: Switch tabs AND refresh on tap
+    function handleTabClick(tab) {
         document.getElementById('loading-overlay').style.display = 'flex';
-        currentTab = 'later';
+        currentTab = tab;
         load();
     }
 
@@ -129,8 +124,7 @@
     
     async function backgroundSave(act, params) { fetch(`${API_URL}?action=${act}${params}`); }
 
-    function switchTab(tab) {
-        currentTab = tab;
+    function switchView(tab) {
         document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
         document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
         document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
@@ -253,8 +247,7 @@
             laterEl.innerHTML = '';
             globalLaterData.forEach(item => laterEl.appendChild(renderItem(item, true)));
 
-            // Switch to the current tab view after data finishes loading
-            switchTab(currentTab);
+            switchView(currentTab);
             document.getElementById('loading-overlay').style.display = 'none';
         } catch (e) { console.log(e); }
     }
