@@ -28,7 +28,7 @@
         .headline-badge { background: var(--trending-red); color: white; width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; }
         .alert-border { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); }
         .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); }
-        .death-box { background: var(--red) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
+        .death-box { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); font-weight: 700; font-size: 20px; cursor: pointer; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
         .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
@@ -73,9 +73,7 @@
     function formatDate(isoString) {
         const date = new Date(isoString);
         const now = new Date();
-        const isToday = date.getDate() === now.getDate() && 
-                        date.getMonth() === now.getMonth() && 
-                        date.getFullYear() === now.getFullYear();
+        const isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
         const timePart = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
         if (isToday) return timePart;
         return `${date.toLocaleDateString('en-US', { weekday: 'long' })} ${(date.getMonth() + 1)}/${date.getDate()} ${timePart}`;
@@ -92,9 +90,25 @@
     function renderItem(item, isSaved, showCircle) {
         const div = document.createElement('div');
         const isAlert = item.repeats === -99;
+        const isDeath = item.repeats === -3;
+        const isNotif = item.repeats === -4;
         const isTrending = item.repeats >= 2;
-        if (item.repeats === -3) { div.className = 'death-box'; div.innerText = item.title; div.onclick = () => window.open(item.link, '_blank'); return div; }
-        if (item.repeats === -4) { div.className = 'notif-box'; div.innerText = item.title; return div; }
+        
+        if (isDeath) {
+            div.className = 'death-box';
+            let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
+            div.innerHTML = `<div class="article-link">${item.title}</div>`;
+            div.onclick = () => window.open(links[0].link, '_blank');
+            return div;
+        }
+
+        if (isNotif) { 
+            div.className = 'notif-box'; 
+            div.innerHTML = `<div class="article-text">${item.title}</div>`;
+            div.style.cursor = "default";
+            return div; 
+        }
+
         if (item.repeats === -5) { div.className = 'update-box'; const text = document.createElement('div'); text.innerText = item.title; text.style.flex = "1"; text.onclick = () => window.open(item.link, '_blank'); div.appendChild(text); } else {
             div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
             let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
@@ -111,7 +125,7 @@
                 content.onclick = () => { const isVisible = list.style.display === 'block'; list.style.display = isVisible ? 'none' : 'block'; content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; };
             } else { content.onclick = () => window.open(links[0].link, '_blank'); div.appendChild(content); }
         }
-        if (showCircle && !isAlert) {
+        if (showCircle && !isAlert && !isDeath && !isNotif) {
             const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
             circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
             circle.onclick = (e) => { e.stopPropagation(); const currentlySaved = circle.classList.contains('saved'); circle.classList.toggle('saved'); backgroundSave(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); };
@@ -126,32 +140,16 @@
             const timeText = "Last checked " + formatDate(data.refreshTime);
             document.getElementById('update-display').innerText = timeText;
             document.getElementById('update-display-later').innerText = timeText;
-            
-            if (data.articles.length === 0) {
-                document.getElementById('article-sections').style.display = 'none';
-                document.getElementById('empty-state').style.display = 'block';
-            } else {
-                document.getElementById('article-sections').style.display = 'block';
-                document.getElementById('empty-state').style.display = 'none';
-            }
-
+            if (data.articles.length === 0) { document.getElementById('article-sections').style.display = 'none'; document.getElementById('empty-state').style.display = 'block'; } else { document.getElementById('article-sections').style.display = 'block'; document.getElementById('empty-state').style.display = 'none'; }
             const mapping = { alert: -99, death: -3, notif: -4, updates: -5, trending: 2, headlines: 1 };
             const laterList = document.getElementById('later-list'); laterList.innerHTML = '';
-            
             Object.keys(mapping).forEach(key => {
                 const el = document.getElementById(key + '-list'); if (!el) return; el.innerHTML = '';
                 let filtered = data.articles.filter(a => { if (key === 'trending') return a.repeats >= 2; if (key === 'headlines') return a.repeats === 1; return a.repeats === mapping[key]; });
-                
-                // FLIP HEADLINES TO OLDEST FIRST
-                if (key === 'headlines') {
-                    filtered.reverse();
-                    document.getElementById('headline-count').innerText = filtered.length;
-                }
-                
+                if (key === 'headlines') { filtered.reverse(); document.getElementById('headline-count').innerText = filtered.length; }
                 filtered.forEach(item => { const isSaved = data.laterArticles.some(l => l.title.trim() === item.title.trim()); el.appendChild(renderItem(item, isSaved, (key === 'headlines' || key === 'updates' || key === 'alert'))); });
                 const sec = document.getElementById(key + '-sec'); if (sec) sec.style.display = filtered.length ? 'block' : 'none';
             });
-            
             data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('view-now').style.display = document.getElementById('tab-now').classList.contains('active') ? 'block' : 'none';
