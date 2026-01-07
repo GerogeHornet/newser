@@ -41,7 +41,7 @@
         .source-link { display: block; color: var(--ios-accent) !important; font-size: 16px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; text-decoration: none !important; padding-left: 15px; position: relative; }
         .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
 
-        .arrow-icon { font-size: 12px; margin-left: 6px; display: inline-block; vertical-align: middle; transition: transform 0.2s; }
+        .arrow-icon { font-size: 12px; margin-left: 6px; display: inline-block; vertical-align: middle; }
 
         #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; color: #ffffff; z-index: 10001; display: none; flex-direction: column; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -50,7 +50,10 @@
         .close-btn { font-size: 32px; cursor: pointer; padding: 5px 15px; color: #ffffff; }
         .modal-body { flex: 1; overflow-y: auto; padding: 25px 20px; font-size: 22px; line-height: 1.6; font-weight: 400; }
 
-        .done-btn { background: #3a3a3c; color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; margin-top: 20px; cursor: pointer; margin-bottom: 100px; }
+        .done-btn { background: var(--ios-accent); color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; margin-top: 20px; cursor: pointer; margin-bottom: 20px; }
+        
+        /* UNDO BUTTON STYLE */
+        #undo-btn { background: #3a3a3c; color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; margin-top: 10px; margin-bottom: 100px; }
     </style>
 </head>
 <body>
@@ -64,7 +67,11 @@
     <div id="view-now">
         <header><h1 onclick="refreshApp()">Newser</h1><div id="update-display" class="update-time"></div></header>
         <div id="content">
-            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;"><div style="font-size: 50px; margin-bottom: 20px;">🎉</div><div style="font-size: 24px; font-weight: 700;">All Caught Up!</div></div>
+            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;">
+                <div style="font-size: 50px; margin-bottom: 20px;">🎉</div>
+                <div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div>
+                <button id="undo-btn" onclick="apiAction('undo')">Undo Clear</button>
+            </div>
             <div id="article-sections">
                 <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
                 <section id="notif-sec" style="display:none;"><h2>📣 Notifications</h2><div id="notif-list"></div></section>
@@ -130,8 +137,6 @@
         const content = document.createElement('div'); content.className = 'article-content';
         const timeStr = item.timestamp ? formatDate(item.timestamp) : "";
         
-        // THREE-STATE ARROW LOGIC
-        // Start pointing away from time (▶)
         const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon">▶</span>' : '';
         const badgeText = isAlert ? 'ALERT' : (isTrending ? r + ' Sources' : '');
         const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
@@ -146,7 +151,6 @@
             content.onclick = () => { 
                 const isVisible = list.style.display === 'block'; 
                 list.style.display = isVisible ? 'none' : 'block'; 
-                // Toggle between ▶ and ▼
                 content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; 
             };
         } else {
