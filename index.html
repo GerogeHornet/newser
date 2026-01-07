@@ -7,15 +7,17 @@
     <style>
         :root { 
             --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; 
-            --separator: #38383a; --red: #ff5e5e; --green: #93c47d; 
+            --ios-accent: #0a84ff; --separator: #38383a; --red: #ff5e5e; --green: #93c47d; 
             --blue: #6d9eeb; --orange: #ff9500; --trending-red: #ff3b30;
         }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-tap-highlight-color: transparent; }
         body.no-scroll { overflow: hidden; position: fixed; width: 100%; }
 
+        /* UPDATED LOADING SPINNER: Now Blue */
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: #ffffff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--ios-accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
+
         header { padding: 30px 0 10px 0; }
         h1 { font-size: 42px; font-weight: 800; margin: 0; letter-spacing: -1px; }
         .update-time { font-size: 16px; color: var(--ios-secondary); font-weight: 500; margin-bottom: 20px; }
@@ -32,16 +34,11 @@
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
 
         .death-box { background: #ffffff !important; border: none !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #000000 !important; font-size: 20px; cursor: pointer; }
-        
-        /* NOTIFICATION BOX: Bold and White Text per request */
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700 !important; color: #ffffff !important; font-size: 20px; }
-        
-        .update-box { background: #6d9eeb !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
+        .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
 
         .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
-        
-        /* NESTED LINKS: Blue, no underline per request */
-        .source-link { display: block; color: var(--blue) !important; font-size: 16px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; text-decoration: none !important; padding-left: 15px; position: relative; }
+        .source-link { display: block; color: var(--ios-accent) !important; font-size: 16px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; text-decoration: none !important; padding-left: 15px; position: relative; }
         .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
 
         #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; color: #ffffff; z-index: 10001; display: none; flex-direction: column; animation: slideUp 0.3s ease-out; }
@@ -144,7 +141,7 @@
             content.onclick = () => { 
                 const isVisible = list.style.display === 'block'; 
                 list.style.display = isVisible ? 'none' : 'block'; 
-                // Toggle arrow logic remains intact
+                content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; 
             };
         } else {
             content.onclick = () => window.open(links[0].link, '_blank');
@@ -168,7 +165,6 @@
                     if (key === 'headlines') return a.repeats === 1;
                     return a.repeats === mapping[key];
                 });
-                // Headlines chronological order flip (cite: 1.1)
                 if (key === 'headlines') { filtered.reverse(); document.getElementById('headline-count').innerText = filtered.length; }
                 filtered.forEach(item => el.appendChild(renderItem(item)));
                 const sec = document.getElementById(key + '-sec'); if (sec) sec.style.display = filtered.length ? 'block' : 'none';
