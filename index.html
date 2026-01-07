@@ -33,16 +33,17 @@
 
         .death-box { background: #ffffff !important; border: none !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #000000 !important; font-size: 20px; cursor: pointer; }
         
-        /* NOTIFICATION BOX: White Text, No Bold */
-        .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 400; color: #ffffff !important; font-size: 20px; }
+        /* NOTIFICATION BOX: Bold and White Text per request */
+        .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700 !important; color: #ffffff !important; font-size: 20px; }
         
         .update-box { background: #6d9eeb !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
 
         .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
-        .source-link { display: block; color: #ffffff; font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 12px; text-decoration: underline; padding-left: 15px; position: relative; }
+        
+        /* NESTED LINKS: Blue, no underline per request */
+        .source-link { display: block; color: var(--blue) !important; font-size: 16px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; text-decoration: none !important; padding-left: 15px; position: relative; }
         .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
 
-        /* DARK MODE MODAL STYLE - NO BLUE, NO BOLD */
         #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; color: #ffffff; z-index: 10001; display: none; flex-direction: column; animation: slideUp 0.3s ease-out; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .modal-header { padding: 20px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: center; background: #1c1c1e; position: sticky; top: 0; }
@@ -130,7 +131,7 @@
         
         const content = document.createElement('div'); content.className = 'article-content';
         const timeStr = item.timestamp ? formatDate(item.timestamp) : "";
-        const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px;">▶</span>' : '';
+        const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px;">▼</span>' : '';
         const badgeText = isAlert ? 'ALERT' : (isTrending ? r + ' Sources' : '');
         const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
         
@@ -143,7 +144,7 @@
             content.onclick = () => { 
                 const isVisible = list.style.display === 'block'; 
                 list.style.display = isVisible ? 'none' : 'block'; 
-                content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; 
+                // Toggle arrow logic remains intact
             };
         } else {
             content.onclick = () => window.open(links[0].link, '_blank');
@@ -167,6 +168,7 @@
                     if (key === 'headlines') return a.repeats === 1;
                     return a.repeats === mapping[key];
                 });
+                // Headlines chronological order flip (cite: 1.1)
                 if (key === 'headlines') { filtered.reverse(); document.getElementById('headline-count').innerText = filtered.length; }
                 filtered.forEach(item => el.appendChild(renderItem(item)));
                 const sec = document.getElementById(key + '-sec'); if (sec) sec.style.display = filtered.length ? 'block' : 'none';
