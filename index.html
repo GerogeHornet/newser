@@ -32,8 +32,9 @@
         .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); position: relative; }
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
 
+        /* DEATH BOX refined */
         .death-box { background: #ffffff !important; border: none !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #000000 !important; font-size: 20px; cursor: pointer; }
-        .death-meta { color: #666; font-size: 14px; margin-top: 5px; font-weight: 600; }
+        
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700 !important; color: #ffffff !important; font-size: 20px; }
         .update-box { background: #6d9eeb !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
 
@@ -52,7 +53,7 @@
 
         .done-btn { background: var(--ios-accent); color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; margin-top: 20px; cursor: pointer; margin-bottom: 20px; }
         
-        /* UNDO BUTTON STYLE */
+        /* UNDO BUTTON refined label */
         #undo-btn { background: #3a3a3c; color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; margin-top: 10px; margin-bottom: 100px; }
     </style>
 </head>
@@ -70,7 +71,7 @@
             <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;">
                 <div style="font-size: 50px; margin-bottom: 20px;">🎉</div>
                 <div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div>
-                <button id="undo-btn" onclick="apiAction('undo')">Undo Clear</button>
+                <button id="undo-btn" onclick="apiAction('undo')">Undo</button>
             </div>
             <div id="article-sections">
                 <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
@@ -114,9 +115,9 @@
         const r = item.repeats;
         const cleanTitle = stripEmojis(item.title);
 
-        if (r === -3) { // Death
+        if (r === -3) { // Death logic refined
             div.className = 'death-box';
-            div.innerHTML = `<div>${cleanTitle}</div><div class="death-meta">💀 Death Confirmation</div>`;
+            div.innerHTML = `<div>${cleanTitle}</div>`;
             let l = JSON.parse(item.link);
             div.onclick = () => window.open(l[0].link, '_blank'); return div;
         }
@@ -136,7 +137,6 @@
         
         const content = document.createElement('div'); content.className = 'article-content';
         const timeStr = item.timestamp ? formatDate(item.timestamp) : "";
-        
         const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon">▶</span>' : '';
         const badgeText = isAlert ? 'ALERT' : (isTrending ? r + ' Sources' : '');
         const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
