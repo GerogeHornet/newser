@@ -36,6 +36,7 @@
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700 !important; color: #ffffff !important; font-size: 20px; }
         .update-box { background: #6d9eeb !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
 
+        .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
         .source-link { display: block; color: var(--ios-accent) !important; font-size: 16px; font-weight: 700; line-height: 1.4; margin-bottom: 12px; text-decoration: none !important; padding-left: 15px; position: relative; }
         .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
         .arrow-icon { font-size: 12px; margin-left: 6px; display: inline-block; vertical-align: middle; }
@@ -67,7 +68,11 @@
     <div id="view-now" style="display:none;">
         <header><h1 onclick="handleTabClick('now')">Newser</h1><div id="update-display" class="update-time"></div></header>
         <div id="content">
-            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;"><div style="font-size: 50px; margin-bottom: 20px;">🎉</div><div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div><button id="undo-btn" onclick="apiAction('undo')">Undo</button></div>
+            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;">
+                <div style="font-size: 50px; margin-bottom: 20px;">🎉</div>
+                <div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div>
+                <button id="undo-btn" onclick="apiAction('undo')">Undo</button>
+            </div>
             <div id="article-sections">
                 <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
                 <section id="notif-sec" style="display:none;"><h2>📣 Notifications</h2><div id="notif-list"></div></section>
@@ -81,7 +86,11 @@
     </div>
 
     <div id="view-later" style="display:none;"><header><h1>Later</h1></header><div id="later-list" class="list-group"></div></div>
-    <div class="tab-bar"><div id="tab-now" class="tab-item active" onclick="handleTabClick('now')">Now</div><div id="tab-later" class="tab-item" onclick="handleTabClick('later')">Later</div></div>
+
+    <div class="tab-bar">
+        <div id="tab-now" class="tab-item active" onclick="handleTabClick('now')">Now</div>
+        <div id="tab-later" class="tab-item" onclick="handleTabClick('later')">Later</div>
+    </div>
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
@@ -131,7 +140,7 @@
         if (r === -5) { // Update
             div.className = 'update-box';
             const contentCont = document.createElement('div'); contentCont.style.flex = "1";
-            contentCont.innerText = item.title; contentCont.onclick = () => openModal(item.title, item.link);
+            contentCont.innerText = stripEmojis(item.title); contentCont.onclick = () => openModal(item.title, item.link);
             div.appendChild(contentCont);
         } else {
             const isTrending = r >= 2; const isAlert = r === -99;
@@ -139,15 +148,16 @@
             let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
             const content = document.createElement('div'); content.className = 'article-content';
             const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon">▶</span>' : '';
-            const badgeText = isAlert ? 'ALERT' : (isTrending ? r + ' Sources' : '');
-            const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
+            const badgeHtml = isAlert ? '<span class="badge" style="background:var(--trending-red);">ALERT</span>' : (isTrending ? `<span class="badge">${r} Sources</span>` : '');
             content.innerHTML = `<div class="article-link">${stripEmojis(item.title)}</div><div class="meta">${badgeHtml} ${formatDate(item.timestamp)}${arrowSpan}</div>`;
-            
             if ((isTrending || isAlert) && links.length > 1) {
                 const list = document.createElement('div'); list.className = 'source-list';
                 links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; });
                 div.appendChild(content); div.appendChild(list);
-                content.onclick = () => { const isVisible = list.style.display === 'block'; list.style.display = isVisible ? 'none' : 'block'; content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; };
+                content.onclick = () => { 
+                    const isV = list.style.display === 'block'; list.style.display = isV ? 'none' : 'block'; 
+                    content.querySelector('.arrow-icon').innerText = isV ? '▶' : '▼'; 
+                };
             } else { content.onclick = () => window.open(links[0].link, '_blank'); div.appendChild(content); }
         }
 
