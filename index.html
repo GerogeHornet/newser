@@ -11,6 +11,8 @@
             --blue: #6d9eeb; --orange: #ff9500; --trending-red: #ff3b30; --checkmark-green: #32d74b;
         }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-tap-highlight-color: transparent; }
+        body.no-scroll { overflow: hidden; position: fixed; width: 100%; }
+
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--ios-accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -25,19 +27,24 @@
         .article-link { font-weight: 700; font-size: 20px; line-height: 1.3; cursor: pointer; color: var(--ios-text); }
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: 12px; text-transform: uppercase; }
-        .headline-badge { background: var(--trending-red); color: white; width: 28px; height: 28px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; }
         .alert-border { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); }
         .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); }
         .death-box { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); font-weight: 700; font-size: 20px; cursor: pointer; }
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; }
-        .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; }
         .source-list { display: none; margin-top: 15px; border-top: 1px solid var(--separator); padding-top: 10px; }
         .source-link { display: block; color: var(--ios-accent); font-size: 16px; font-weight: 500; line-height: 1.4; margin-bottom: 12px; text-decoration: none; padding-left: 15px; position: relative; }
         .source-link::before { content: "•"; position: absolute; left: 0; color: var(--ios-secondary); }
-        .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
-        .save-check.saved { background: var(--checkmark-green); border-color: var(--checkmark-green); }
-        .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; display: none; }
-        .save-check.saved svg { display: block; }
+
+        /* FULL SCREEN UPDATE MODAL */
+        #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; color: #000000; z-index: 10001; display: none; flex-direction: column; animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { padding: 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f8f8f8; position: sticky; top: 0; }
+        .modal-header h3 { margin: 0; font-size: 20px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 80%; }
+        .close-btn { font-size: 28px; font-weight: 300; cursor: pointer; padding: 5px 15px; }
+        .modal-body { flex: 1; overflow-y: auto; padding: 25px 20px; font-size: 18px; line-height: 1.6; }
+        .modal-body b { display: block; margin-top: 20px; font-size: 22px; margin-bottom: 10px; }
+
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background: rgba(28,28,30,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; padding-bottom: 15px; }
         .tab-item { flex: 1; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 17px; cursor: pointer; }
         .tab-item.active { color: var(--ios-accent); }
@@ -46,6 +53,12 @@
 </head>
 <body>
     <div id="loading-overlay"><div class="spinner"></div><div id="loading-text" style="font-size: 20px; font-weight: 600; color: #fff;">Connecting...</div></div>
+
+    <div id="update-modal">
+        <div class="modal-header"><h3 id="modal-title">Update</h3><div class="close-btn" onclick="closeModal()">✕</div></div>
+        <div id="modal-body" class="modal-body"></div>
+    </div>
+
     <div id="view-now" style="display:none;">
         <header><h1 onclick="refreshApp()">Newser</h1><div id="update-display" class="update-time"></div></header>
         <div id="content">
@@ -61,100 +74,85 @@
             </div>
         </div>
     </div>
+
     <div id="view-later" style="display:none;"><header><h1 onclick="refreshApp()">Later</h1><div id="update-display-later" class="update-time"></div></header><div id="later-list" class="list-group"></div></div>
     <div class="tab-bar"><div id="tab-now" class="tab-item active" onclick="switchTab('now')">Now</div><div id="tab-later" class="tab-item" onclick="switchTab('later')">Later</div></div>
+
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
-
     function refreshApp() { document.getElementById('loading-overlay').style.display = 'flex'; load(); }
     async function apiAction(act, params = '') { document.getElementById('loading-overlay').style.display = 'flex'; await fetch(`${API_URL}?action=${act}${params}`); load(); }
-    async function backgroundSave(act, params = '') { fetch(`${API_URL}?action=${act}${params}`); }
     
-    function formatDate(isoString) {
-        const date = new Date(isoString);
-        const now = new Date();
-        const isToday = date.getDate() === now.getDate() && date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-        const timePart = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-        if (isToday) return timePart;
-        return `${date.toLocaleDateString('en-US', { weekday: 'long' })} ${(date.getMonth() + 1)}/${date.getDate()} ${timePart}`;
+    function openModal(title, content) {
+        document.getElementById('modal-title').innerText = title;
+        document.getElementById('modal-body').innerHTML = content;
+        document.getElementById('update-modal').style.display = 'flex';
+        document.body.classList.add('no-scroll');
+    }
+    function closeModal() {
+        document.getElementById('update-modal').style.display = 'none';
+        document.body.classList.remove('no-scroll');
+    }
+
+    function formatDate(iso) {
+        const d = new Date(iso), now = new Date();
+        const isToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        const t = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+        return isToday ? t : `${d.toLocaleDateString('en-US', { weekday: 'long' })} ${(d.getMonth()+1)}/${d.getDate()} ${t}`;
     }
 
     function switchTab(tab) {
         document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none';
         document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none';
         document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
-        if (tab === 'now') document.getElementById('tab-now').classList.add('active');
-        else document.getElementById('tab-later').classList.add('active');
+        if (tab === 'now') document.getElementById('tab-now').classList.add('active'); else document.getElementById('tab-later').classList.add('active');
     }
-    
-    function renderItem(item, isSaved, showCircle) {
+
+    function renderItem(item, isSaved) {
         const div = document.createElement('div');
-        const isAlert = item.repeats === -99;
-        const isDeath = item.repeats === -3;
-        const isNotif = item.repeats === -4;
-        const isTrending = item.repeats >= 2;
+        const isAlert = item.repeats === -99, isDeath = item.repeats === -3, isNotif = item.repeats === -4, isUpdate = item.repeats === -5, isTrending = item.repeats >= 2;
         
-        if (isDeath) {
-            div.className = 'death-box';
-            let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
-            div.innerHTML = `<div class="article-link">${item.title}</div>`;
-            div.onclick = () => window.open(links[0].link, '_blank');
+        if (isUpdate) {
+            div.className = 'update-box'; div.innerHTML = `<div>${item.title}</div>`;
+            div.onclick = () => openModal(item.title, item.link); // item.link holds the AI text
             return div;
         }
+        if (isDeath) {
+            div.className = 'death-box'; let l = JSON.parse(item.link);
+            div.innerHTML = `<div class="article-link">${item.title}</div>`;
+            div.onclick = () => window.open(l[0].link, '_blank'); return div;
+        }
+        if (isNotif) { div.className = 'notif-box'; div.innerHTML = `<div class="article-text">${item.title}</div>`; return div; }
 
-        if (isNotif) { 
-            div.className = 'notif-box'; 
-            div.innerHTML = `<div class="article-text">${item.title}</div>`;
-            div.style.cursor = "default";
-            return div; 
-        }
-
-        if (item.repeats === -5) { div.className = 'update-box'; const text = document.createElement('div'); text.innerText = item.title; text.style.flex = "1"; text.onclick = () => window.open(item.link, '_blank'); div.appendChild(text); } else {
-            div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
-            let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
-            const content = document.createElement('div'); content.className = 'article-content';
-            const timeStr = item.timestamp ? formatDate(item.timestamp) : "";
-            const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon" style="font-size:10px; margin-left:4px;">▶</span>' : '';
-            const badgeText = isAlert ? 'ALERT' : (isTrending ? item.repeats + ' Sources' : '');
-            const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
-            content.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badgeHtml} ${timeStr}${arrowSpan}</div>`;
-            if ((isTrending || isAlert) && links.length > 1) {
-                const list = document.createElement('div'); list.className = 'source-list';
-                links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">${l.title}</a>`; });
-                div.appendChild(content); div.appendChild(list);
-                content.onclick = () => { const isVisible = list.style.display === 'block'; list.style.display = isVisible ? 'none' : 'block'; content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; };
-            } else { content.onclick = () => window.open(links[0].link, '_blank'); div.appendChild(content); }
-        }
-        if (showCircle && !isAlert && !isDeath && !isNotif) {
-            const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
-            circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            circle.onclick = (e) => { e.stopPropagation(); const currentlySaved = circle.classList.contains('saved'); circle.classList.toggle('saved'); backgroundSave(currentlySaved ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); };
-            div.appendChild(circle);
-        }
+        div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
+        let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
+        const content = document.createElement('div'); content.className = 'article-content';
+        const timeStr = item.timestamp ? formatDate(item.timestamp) : "";
+        const badgeText = isAlert ? 'ALERT' : (isTrending ? item.repeats + ' Sources' : '');
+        const badgeHtml = badgeText ? `<span class="badge" style="background:var(--trending-red); color:white; padding:2px 6px; border-radius:4px; font-weight:800; font-size:12px;">${badgeText}</span>` : '';
+        content.innerHTML = `<div class="article-link">${item.title}</div><div class="meta">${badgeHtml} ${timeStr}</div>`;
+        
+        content.onclick = () => window.open(links[0].link, '_blank');
+        div.appendChild(content);
         return div;
     }
 
     async function load() {
         try {
             const res = await fetch(API_URL); const data = await res.json();
-            const timeText = "Last checked " + formatDate(data.refreshTime);
-            document.getElementById('update-display').innerText = timeText;
-            document.getElementById('update-display-later').innerText = timeText;
+            document.getElementById('update-display').innerText = "Last checked " + formatDate(data.refreshTime);
             if (data.articles.length === 0) { document.getElementById('article-sections').style.display = 'none'; document.getElementById('empty-state').style.display = 'block'; } else { document.getElementById('article-sections').style.display = 'block'; document.getElementById('empty-state').style.display = 'none'; }
             const mapping = { alert: -99, death: -3, notif: -4, updates: -5, trending: 2, headlines: 1 };
-            const laterList = document.getElementById('later-list'); laterList.innerHTML = '';
             Object.keys(mapping).forEach(key => {
                 const el = document.getElementById(key + '-list'); if (!el) return; el.innerHTML = '';
                 let filtered = data.articles.filter(a => { if (key === 'trending') return a.repeats >= 2; if (key === 'headlines') return a.repeats === 1; return a.repeats === mapping[key]; });
                 if (key === 'headlines') { filtered.reverse(); document.getElementById('headline-count').innerText = filtered.length; }
-                filtered.forEach(item => { const isSaved = data.laterArticles.some(l => l.title.trim() === item.title.trim()); el.appendChild(renderItem(item, isSaved, (key === 'headlines' || key === 'updates' || key === 'alert'))); });
+                filtered.forEach(item => el.appendChild(renderItem(item)));
                 const sec = document.getElementById(key + '-sec'); if (sec) sec.style.display = filtered.length ? 'block' : 'none';
             });
-            data.laterArticles.forEach(item => laterList.appendChild(renderItem(item, true, true)));
             document.getElementById('loading-overlay').style.display = 'none';
-            document.getElementById('view-now').style.display = document.getElementById('tab-now').classList.contains('active') ? 'block' : 'none';
-            document.getElementById('view-later').style.display = document.getElementById('tab-later').classList.contains('active') ? 'block' : 'none';
-        } catch (e) { document.getElementById('loading-text').innerText = "Error Loading Feed"; }
+            document.getElementById('view-now').style.display = 'block';
+        } catch (e) { console.log(e); }
     }
     load();
 </script>
