@@ -27,7 +27,7 @@
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; }
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 12px; text-transform: uppercase; font-weight: 800; }
         .death-box { background: #fff !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 800; color: #000 !important; font-size: 22px; cursor: pointer; }
-        .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
         #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; z-index: 10001; display: none; flex-direction: column; }
         .modal-header { padding: 20px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: center; background: #1c1c1e; }
@@ -48,14 +48,17 @@
     <div id="update-modal"><div class="modal-header"><h3 id="modal-title">Update</h3><div class="close-btn" onclick="closeModal()">✕</div></div><div id="modal-body" class="modal-body"></div></div>
     <div id="view-now" style="display:none;">
         <header><h1 onclick="refreshFeedOnly()">Newser</h1><div id="update-display" class="update-time"></div></header>
-        <div id="article-sections">
-            <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
-            <section id="notif-sec" style="display:none;"><h2>📣 Notifications</h2><div id="notif-list"></div></section>
-            <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
-            <section id="alert-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alert-list"></div></section>
-            <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
-            <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-count" style="background:var(--trending-red); color:white; width:28px; height:28px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">0</span></h2><div id="headlines-list" class="list-group"></div></section>
-            <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
+        <div id="content">
+            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;"><div style="font-size: 24px; font-weight: 700;">All Caught Up!</div><button style="background:#3a3a3c;color:#fff;width:100%;padding:20px;border-radius:16px;border:none;margin-top:20px;font-weight:700;" onclick="apiAction('undo')">Undo</button></div>
+            <div id="article-sections">
+                <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
+                <section id="notif-sec" style="display:none;"><h2>📣 Notifications</h2><div id="notif-list"></div></section>
+                <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
+                <section id="alert-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alert-list"></div></section>
+                <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
+                <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-count" style="background:var(--trending-red); color:white; width:28px; height:28px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">0</span></h2><div id="headlines-list" class="list-group"></div></section>
+                <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
+            </div>
         </div>
     </div>
     <div id="view-later" style="display:none;"><header><h1 onclick="refreshFeedOnly()">Later</h1></header><div id="later-list" class="list-group"></div></div>
@@ -73,15 +76,17 @@
     function renderItem(item, showCircle = false) {
         const div = document.createElement('div'), r = parseInt(item.repeats), isSaved = globalLaterData.some(l => l.title.trim() === item.title.trim());
         if (r === -3) { div.className = 'death-box'; div.innerText = stripEmojis(item.title); let l = JSON.parse(item.link || "[]"); if(l[0]) div.onclick = () => window.open(l[0].link, '_blank'); return div; }
+        
+        // Notification Logic
         if (r === -4) { 
             div.className = 'notif-box'; 
             const txt = document.createElement('div'); txt.innerText = item.title; txt.style.flex = "1";
             let l = []; try { l = JSON.parse(item.link); } catch(e){}
             if (l.length > 0 && l[0].link) txt.onclick = () => window.open(l[0].link, '_blank');
             div.appendChild(txt);
-            if (currentTab === 'later') { div.appendChild(createCircle(item, isSaved)); }
             return div; 
         }
+
         if (r === -5) { div.className = 'update-box'; const row = document.createElement('div'); row.className = 'card-main-row'; const txt = document.createElement('div'); txt.style.flex = "1"; txt.innerText = stripEmojis(item.title); txt.onclick = () => openModal(item.title, item.link); row.appendChild(txt); row.appendChild(createCircle(item, isSaved)); div.appendChild(row); return div; }
         const isTrending = r >= 2, isAlert = r === -99; div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
