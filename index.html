@@ -19,26 +19,25 @@
             background: var(--ios-bg); color: var(--ios-text); 
             margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; 
             -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none; /* Disable copy/paste magnifier */
+            -webkit-user-select: none;
             user-select: none;
         }
         
-        /* RE-ENABLE SELECTION IN MODALS ONLY */
         .modal-body { -webkit-user-select: text; user-select: text; }
-
         body.no-scroll { overflow: hidden; position: fixed; width: 100%; }
+        
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--ios-accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* WORKING BAR */
-        #working-bar { position: fixed; top: 0; left: 0; right: 0; height: 50px; background: rgba(28,28,30,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-accent); display: none; align-items: center; justify-content: center; z-index: 10002; color: var(--ios-accent); font-weight: 600; font-size: 16px; transition: height 0.4s ease; }
+        #working-bar { position: fixed; top: 0; left: 0; right: 0; height: 50px; background: rgba(28,28,30,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-accent); display: none; align-items: center; justify-content: center; z-index: 10002; color: var(--ios-accent); font-weight: 600; font-size: 16px; }
         .bar-pulse { width: 8px; height: 8px; background: var(--ios-accent); border-radius: 50%; margin-right: 10px; animation: pulse 1s infinite alternate; }
         @keyframes pulse { from { opacity: 0.3; transform: scale(0.8); } to { opacity: 1; transform: scale(1.1); } }
 
         header h1 { font-size: 42px; font-weight: 800; margin: 0; cursor: pointer; letter-spacing: -1px; }
         .update-time { font-size: 14px; color: var(--ios-secondary); margin-bottom: 20px; font-weight: 500; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; gap: 10px; }
+        
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); transition: transform 0.1s ease; }
         .card-active { transform: scale(0.96); } 
@@ -52,15 +51,15 @@
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
         
-        /* ACTION SHEET */
+        #later-empty { background: #2c2c2e; padding: 30px; border-radius: 14px; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 18px; display: none; margin-top: 20px; }
+
         #action-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10003; display: none; }
         #action-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #1c1c1e; border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 10004; display: none; flex-direction: column; padding: 20px; padding-bottom: 40px; animation: slideIn 0.3s ease; }
         @keyframes slideIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .action-btn { background: #2c2c2e; color: var(--ios-accent); padding: 18px; border-radius: 12px; text-align: center; font-weight: 600; font-size: 19px; margin-bottom: 10px; cursor: pointer; }
         .action-cancel { color: var(--red); background: #2c2c2e; }
 
-        /* AI RESULT MODAL */
-        #ai-result-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; z-index: 10005; display: none; flex-direction: column; }
+        #ai-result-modal, #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; z-index: 10005; display: none; flex-direction: column; }
         .modal-header { padding: 20px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: center; background: #1c1c1e; }
         .modal-body { flex: 1; overflow-y: auto; padding: 30px 25px; font-size: 22px; line-height: 1.6; }
         .close-btn { font-size: 30px; cursor: pointer; padding: 5px 15px; }
@@ -74,20 +73,13 @@
         .tab-item { flex: 1; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 17px; cursor: pointer; }
         .tab-item.active { color: var(--ios-accent); }
         .done-btn { background: var(--ios-accent); color: #fff; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; margin-top: 20px; cursor: pointer; }
-        
-        #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; z-index: 10001; display: none; flex-direction: column; }
+        #undo-btn { background: #3a3a3c; color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div id="loading-overlay"><div class="spinner"></div></div>
-    
     <div id="working-bar"><div class="bar-pulse"></div><span>Perplexity is researching...</span></div>
-
-    <div id="ai-result-modal">
-        <div class="modal-header"><h3 id="ai-title">AI Lookup</h3><div class="close-btn" onclick="closeAiModal()">✕</div></div>
-        <div id="ai-body" class="modal-body"></div>
-    </div>
-
+    <div id="ai-result-modal"><div class="modal-header"><h3 id="ai-title">AI Lookup</h3><div class="close-btn" onclick="closeAiModal()">✕</div></div><div id="ai-body" class="modal-body"></div></div>
     <div id="update-modal"><div class="modal-header"><h3 id="modal-title">Update</h3><div class="close-btn" onclick="closeModal()">✕</div></div><div id="modal-body" class="modal-body"></div></div>
     
     <div id="action-sheet-overlay" onclick="closeActionSheet()"></div>
@@ -101,21 +93,23 @@
 
     <div id="view-now" style="display:none;">
         <header><h1 onclick="refreshFeedOnly()">Newser</h1><div id="update-display" class="update-time"></div></header>
-        <div id="content">
-            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;"><div style="font-size: 24px; font-weight: 700;">All Caught Up!</div><button style="background:#3a3a3c;color:#fff;width:100%;padding:20px;border-radius:16px;border:none;margin-top:20px;font-weight:700;" onclick="apiAction('undo')">Undo</button></div>
-            <div id="article-sections">
-                <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
-                <section id="notif-sec" style="display:none;"><h2>📣 Notifications</h2><div id="notif-list"></div></section>
-                <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
-                <section id="alert-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alert-list"></div></section>
-                <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
-                <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-count" style="background:var(--trending-red); color:white; width:28px; height:28px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">0</span></h2><div id="headlines-list" class="list-group"></div></section>
-                <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
-            </div>
+        <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;"><div style="font-size: 50px; margin-bottom: 20px;">🎉</div><div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div><button id="undo-btn" onclick="apiAction('undo')">Undo</button></div>
+        <div id="article-sections">
+            <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
+            <section id="notif-sec" style="display:none;"><h2>📣 Notifications</h2><div id="notif-list"></div></section>
+            <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
+            <section id="alert-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alert-list"></div></section>
+            <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
+            <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-count" style="background:var(--trending-red); color:white; width:28px; height:28px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">0</span></h2><div id="headlines-list" class="list-group"></div></section>
+            <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
         </div>
     </div>
     
-    <div id="view-later" style="display:none;"><header><h1 onclick="refreshFeedOnly()">Later</h1></header><div id="later-list" class="list-group"></div></div>
+    <div id="view-later" style="display:none;">
+        <header><h1 onclick="refreshFeedOnly()">Later</h1></header>
+        <div id="later-empty">Empty</div>
+        <div id="later-list" class="list-group"></div>
+    </div>
     
     <div class="tab-bar"><div id="tab-now" class="tab-item active" onclick="switchViewOnly('now')">Now</div><div id="tab-later" class="tab-item" onclick="switchViewOnly('later')">Later</div></div>
 
@@ -125,10 +119,8 @@
     let pressTimer; let currentTargetHeadline = "";
 
     function stripEmojis(str) { return str.toString().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim(); }
-    
     function openModal(title, content) { document.getElementById('modal-title').innerText = stripEmojis(title); document.getElementById('modal-body').innerHTML = content.toString().replace(/\*/g, "").replace(/[\[\]]/g, "").trim(); document.getElementById('update-modal').style.display = 'flex'; document.body.classList.add('no-scroll'); }
     function closeModal() { document.getElementById('update-modal').style.display = 'none'; document.body.classList.remove('no-scroll'); }
-    
     function closeAiModal() { document.getElementById('ai-result-modal').style.display = 'none'; document.body.classList.remove('no-scroll'); }
 
     function switchViewOnly(tab) { currentTab = tab; document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none'; document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none'; document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active')); document.getElementById('tab-' + tab).classList.add('active'); window.scrollTo(0,0); }
@@ -136,93 +128,56 @@
     async function apiAction(act) { document.getElementById('loading-overlay').style.display = 'flex'; await fetch(`${API_URL}?action=${act}`); load(); }
     async function backgroundSave(act, params) { fetch(`${API_URL}?action=${act}${params}`); }
 
-    function openActionSheet(headline) {
-        currentTargetHeadline = headline;
-        document.getElementById('target-title').innerText = headline;
-        document.getElementById('action-sheet-overlay').style.display = 'block';
-        document.getElementById('action-sheet').style.display = 'flex';
-    }
-    function closeActionSheet() { 
-        document.getElementById('action-sheet-overlay').style.display = 'none';
-        document.getElementById('action-sheet').style.display = 'none'; 
-    }
+    function openActionSheet(headline) { currentTargetHeadline = headline; document.getElementById('target-title').innerText = headline; document.getElementById('action-sheet-overlay').style.display = 'block'; document.getElementById('action-sheet').style.display = 'flex'; }
+    function closeActionSheet() { document.getElementById('action-sheet-overlay').style.display = 'none'; document.getElementById('action-sheet').style.display = 'none'; }
 
     async function triggerAi(type) {
         closeActionSheet();
         const bar = document.getElementById('working-bar');
         bar.style.display = 'flex';
-        
         try {
-            const response = await fetch(`${API_URL}?action=aiLookup&type=${type}&headline=${encodeURIComponent(currentTargetHeadline)}`);
-            const text = await response.text();
+            const res = await fetch(`${API_URL}?action=aiLookup&type=${type}&headline=${encodeURIComponent(currentTargetHeadline)}`);
+            const text = await res.text();
             bar.style.display = 'none';
-            
             document.getElementById('ai-title').innerText = type + ": " + stripEmojis(currentTargetHeadline);
             document.getElementById('ai-body').innerHTML = text;
             document.getElementById('ai-result-modal').style.display = 'flex';
             document.body.classList.add('no-scroll');
-        } catch(e) {
-            bar.style.display = 'none';
-            alert("AI Error");
-        }
+        } catch(e) { bar.style.display = 'none'; alert("AI Error"); }
     }
 
     function renderItem(item, showCircle = false) {
         const div = document.createElement('div'), r = parseInt(item.repeats), isSaved = globalLaterData.some(l => l.title.trim() === item.title.trim());
         if (r === -3) { div.className = 'death-box'; div.innerText = stripEmojis(item.title); let l = JSON.parse(item.link || "[]"); if(l[0]) div.onclick = () => window.open(l[0].link, '_blank'); return div; }
-        
         if (r === -4) { 
             div.className = 'notif-box'; 
             const txt = document.createElement('div'); txt.innerText = item.title; txt.style.flex = "1";
             let l = []; try { l = JSON.parse(item.link); } catch(e){}
             if (l.length > 0 && l[0].link) txt.onclick = () => window.open(l[0].link, '_blank');
             div.appendChild(txt);
+            if (currentTab === 'later') div.appendChild(createCircle(item, isSaved));
             return div; 
         }
-
         if (r === -5) { div.className = 'update-box'; const row = document.createElement('div'); row.className = 'card-main-row'; const txt = document.createElement('div'); txt.style.flex = "1"; txt.innerText = stripEmojis(item.title); txt.onclick = () => openModal(item.title, item.link); row.appendChild(txt); row.appendChild(createCircle(item, isSaved)); div.appendChild(row); return div; }
-        
-        const isTrending = r >= 2, isAlert = r === -99; 
-        div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
-        
-        // --- LONG PRESS IOS LOGIC ---
-        div.oncontextmenu = (e) => e.preventDefault(); // Extra iOS prevention
-        div.ontouchstart = (e) => {
-            div.classList.add('card-active');
-            pressTimer = setTimeout(() => {
-                div.classList.remove('card-active');
-                openActionSheet(item.title);
-            }, 600);
-        };
-        div.ontouchend = () => {
-            div.classList.remove('card-active');
-            clearTimeout(pressTimer);
-        };
-        // ---------------------------
-
+        const isTrending = r >= 2, isAlert = r === -99; div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
+        div.oncontextmenu = (e) => e.preventDefault();
+        div.ontouchstart = () => { div.classList.add('card-active'); pressTimer = setTimeout(() => { div.classList.remove('card-active'); openActionSheet(item.title); }, 600); };
+        div.ontouchend = () => { div.classList.remove('card-active'); clearTimeout(pressTimer); };
         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
         const mainRow = document.createElement('div'); mainRow.className = 'card-main-row';
         const content = document.createElement('div'); content.className = 'article-content';
-        const arrow = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon">▶</span>' : '';
         const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : "";
-        content.innerHTML = `<div class="article-link" onclick="window.open('${links[0].link}', '_blank')">${stripEmojis(item.title)}</div><div class="meta">${isAlert ? '<span class="badge">ALERT</span>' : (isTrending ? `<span class="badge">${r} Sources</span>` : '')} ${timeStr}${arrow}</div>`;
+        content.innerHTML = `<div class="article-link" onclick="window.open('${links[0].link}', '_blank')">${stripEmojis(item.title)}</div><div class="meta">${isAlert ? '<span class="badge">ALERT</span>' : (isTrending ? `<span class="badge">${r} Sources</span>` : '')} ${timeStr}</div>`;
         mainRow.appendChild(content);
         if (showCircle || currentTab === 'later' || (!isTrending && !isAlert)) mainRow.appendChild(createCircle(item, isSaved));
         div.appendChild(mainRow);
-        
-        if ((isTrending || isAlert) && links.length > 1) {
-            const list = document.createElement('div'); list.className = 'source-list';
-            links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">• ${l.title}</a>`; });
-            div.appendChild(list);
-            content.querySelector('.meta').onclick = (e) => { e.stopPropagation(); const isV = list.style.display === 'block'; list.style.display = isV ? 'none' : 'block'; content.querySelector('.arrow-icon').innerText = isV ? '▶' : '▼'; };
-        }
         return div;
     }
 
     function createCircle(item, isSaved) {
         const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
         circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-        circle.onclick = (e) => { e.stopPropagation(); const cur = circle.classList.contains('saved'); circle.classList.toggle('saved'); backgroundSave(cur ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); };
+        circle.onclick = (e) => { e.stopPropagation(); const cur = circle.classList.contains('saved'); circle.classList.toggle('saved'); backgroundSave(cur ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); if(currentTab==='later') setTimeout(load, 500); };
         return circle;
     }
 
@@ -230,7 +185,21 @@
         try {
             const res = await fetch(API_URL), data = await res.json();
             globalLaterData = data.laterArticles;
+            document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('update-display').innerText = "Last checked " + (data.refreshTime ? new Date(data.refreshTime).toLocaleTimeString() : "");
+            
+            // Empty State Logic for Now Tab
+            if (data.articles.length === 0) {
+                document.getElementById('empty-state').style.display = 'block';
+                document.getElementById('article-sections').style.display = 'none';
+            } else {
+                document.getElementById('empty-state').style.display = 'none';
+                document.getElementById('article-sections').style.display = 'block';
+            }
+
+            // Empty State Logic for Later Tab
+            document.getElementById('later-empty').style.display = globalLaterData.length === 0 ? 'block' : 'none';
+
             const mapping = { death: -3, notif: -4, updates: -5, alert: -99, trending: 2, headlines: 1 };
             Object.keys(mapping).forEach(key => {
                 const el = document.getElementById(key + '-list'); if (!el) return; el.innerHTML = '';
@@ -241,7 +210,6 @@
             });
             const laterList = document.getElementById('later-list'); laterList.innerHTML = '';
             globalLaterData.forEach(item => laterList.appendChild(renderItem(item, true)));
-            document.getElementById('loading-overlay').style.display = 'none';
             switchViewOnly(currentTab);
         } catch (e) { document.getElementById('loading-overlay').style.display = 'none'; }
     }
