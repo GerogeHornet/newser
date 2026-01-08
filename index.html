@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     
     <link rel="icon" type="image/jpeg" href="icon.jpg">
-    
     <link rel="apple-touch-icon" href="icon.jpg">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -21,17 +20,14 @@
         }
         body { font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; -webkit-tap-highlight-color: transparent; }
         
-        /* Loading Overlay */
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--ios-accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* Header */
         header h1 { font-size: 42px; font-weight: 800; margin: 0; cursor: pointer; letter-spacing: -1px; }
         .update-time { font-size: 14px; color: var(--ios-secondary); margin-bottom: 20px; font-weight: 500; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; gap: 10px; }
         
-        /* Cards & Lists */
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
         .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); }
         .article-card:last-child { border-bottom: none; }
@@ -39,20 +35,23 @@
         .card-main-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; width: 100%; }
         .article-content { flex: 1; min-width: 0; }
         .article-link { font-weight: 700; font-size: 20px; line-height: 1.3; color: var(--ios-text); cursor: pointer; text-decoration: none; display: block; }
-        .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        
+        .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 12px; text-transform: uppercase; font-weight: 800; }
 
-        /* Special Borders */
         .alert-border { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); }
         .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); }
 
-        /* Save Circle */
+        /* NESTED SOURCE LINKS */
+        .source-list { display: none; margin-top: 15px; padding-top: 15px; border-top: 0.5px solid var(--separator); width: 100%; }
+        .source-link { display: block; color: var(--blue) !important; font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 15px; text-decoration: none !important; padding-left: 5px; }
+        .arrow-icon { font-size: 12px; margin-left: 6px; display: inline-block; vertical-align: middle; }
+
         .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; margin-top: 2px; }
         .save-check.saved { background: var(--checkmark-green); border-color: var(--checkmark-green); }
         .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; display: none; }
         .save-check.saved svg { display: block; }
 
-        /* Bottom Tabs */
         .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background: rgba(28,28,30,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; padding-bottom: 15px; }
         .tab-item { flex: 1; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 17px; cursor: pointer; }
         .tab-item.active { color: var(--ios-accent); }
@@ -121,8 +120,9 @@
         const mainRow = document.createElement('div'); mainRow.className = 'card-main-row';
         const content = document.createElement('div'); content.className = 'article-content';
         const badgeHtml = isAlert ? '<span class="badge">ALERT</span>' : (isTrending ? `<span class="badge">${item.repeats} Sources</span>` : '');
+        const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon">▶</span>' : '';
         
-        content.innerHTML = `<div class="article-link" onclick="window.open('${links[0].link}', '_blank')">${stripEmojis(item.title)}</div><div class="meta">${badgeHtml} ${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>`;
+        content.innerHTML = `<div class="article-link" onclick="window.open('${links[0].link}', '_blank')">${stripEmojis(item.title)}</div><div class="meta">${badgeHtml} ${new Date(item.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}${arrowSpan}</div>`;
         
         mainRow.appendChild(content);
 
@@ -138,6 +138,20 @@
         
         mainRow.appendChild(circle);
         div.appendChild(mainRow);
+
+        // Group expansion logic
+        if ((isTrending || isAlert) && links.length > 1) {
+            const list = document.createElement('div'); list.className = 'source-list';
+            links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">• ${l.title}</a>`; });
+            div.appendChild(list);
+            content.querySelector('.meta').onclick = (e) => {
+                e.stopPropagation();
+                const isVisible = list.style.display === 'block'; 
+                list.style.display = isVisible ? 'none' : 'block'; 
+                content.querySelector('.arrow-icon').innerText = isVisible ? '▶' : '▼'; 
+            };
+        }
+
         return div;
     }
 
