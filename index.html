@@ -27,7 +27,7 @@
         .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; }
         .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 12px; text-transform: uppercase; font-weight: 800; }
         .death-box { background: #fff !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 800; color: #000 !important; font-size: 22px; cursor: pointer; }
-        .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
+        .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
         #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; z-index: 10001; display: none; flex-direction: column; }
         .modal-header { padding: 20px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: center; background: #1c1c1e; }
@@ -61,7 +61,7 @@
             </div>
         </div>
     </div>
-    <div id="view-later" style="display:none;"><header><h1>Later</h1></header><div id="later-list" class="list-group"></div></div>
+    <div id="view-later" style="display:none;"><header><h1 onclick="refreshFeedOnly()">Later</h1></header><div id="later-list" class="list-group"></div></div>
     <div class="tab-bar"><div id="tab-now" class="tab-item active" onclick="switchViewOnly('now')">Now</div><div id="tab-later" class="tab-item" onclick="switchViewOnly('later')">Later</div></div>
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
@@ -76,12 +76,19 @@
     function renderItem(item, showCircle = false) {
         const div = document.createElement('div'), r = parseInt(item.repeats), isSaved = globalLaterData.some(l => l.title.trim() === item.title.trim());
         if (r === -3) { div.className = 'death-box'; div.innerText = stripEmojis(item.title); let l = JSON.parse(item.link || "[]"); if(l[0]) div.onclick = () => window.open(l[0].link, '_blank'); return div; }
+        
+        // Notification Logic
         if (r === -4) { 
-            div.className = 'notif-box'; div.innerText = item.title; 
+            div.className = 'notif-box'; 
+            const txt = document.createElement('div'); txt.innerText = item.title; txt.style.flex = "1";
             let l = []; try { l = JSON.parse(item.link); } catch(e){}
-            if (l.length > 0 && l[0].link) div.onclick = () => window.open(l[0].link, '_blank');
+            if (l.length > 0 && l[0].link) txt.onclick = () => window.open(l[0].link, '_blank');
+            div.appendChild(txt);
+            // ONLY SHOW CHECKMARK FOR NOTIFICATIONS IN LATER TAB
+            if (currentTab === 'later') { div.appendChild(createCircle(item, isSaved)); }
             return div; 
         }
+
         if (r === -5) { div.className = 'update-box'; const row = document.createElement('div'); row.className = 'card-main-row'; const txt = document.createElement('div'); txt.style.flex = "1"; txt.innerText = stripEmojis(item.title); txt.onclick = () => openModal(item.title, item.link); row.appendChild(txt); row.appendChild(createCircle(item, isSaved)); div.appendChild(row); return div; }
         const isTrending = r >= 2, isAlert = r === -99; div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
