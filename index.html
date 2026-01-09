@@ -2,255 +2,766 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <link rel="icon" type="image/jpeg" href="icon.jpg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Textify">
+    <title>Textify</title>
+    
     <link rel="apple-touch-icon" href="icon.jpg">
-    <title>Newser</title>
+    <link rel="icon" type="image/jpeg" href="icon.jpg">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --ios-bg: #000000; --ios-card: #1c1c1e; --ios-text: #ffffff; --ios-secondary: #8e8e93; 
-            --ios-accent: #0a84ff; --separator: #38383a; --red: #ff5e5e; --green: #93c47d; 
-            --blue: #6d9eeb; --orange: #ff9500; --trending-red: #ff3b30; --checkmark-green: #32d74b;
+        :root {
+            --bg:#0a0a0a;
+            --surface:#141414;
+            --surface-hover:#1a1a1a;
+            --border:#2a2a2a;
+            --text:#fafafa;
+            --text-muted:#888;
+            --text-dim:#555;
+            --accent:#FFEF00; 
+            --accent-dim:#e6d700;
+            --accent-bg:rgba(255, 239, 0, 0.1); 
+            --success:#4ade80;
+            --error:#f87171;
+            --warning:#fbbf24;
+            --serif:'Instrument Serif',Georgia,serif;
+            --sans:'DM Sans',system-ui,sans-serif;
+            --radius:12px;
+            --radius-sm:8px
         }
+        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        html,body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6;overflow-x:hidden}
+        .app{display:flex;flex-direction:column;min-height:100vh}
         
-        body { 
-            font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); 
-            margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; 
-            -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none;
+        .header {
+            padding: 20px 24px;
+            padding-top: max(20px, env(safe-area-inset-top) + 10px); 
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            border-bottom:1px solid var(--border);
+            position:sticky;
+            top:0;
+            background:var(--bg);
+            z-index:100;
         }
-        
-        .modal-body { -webkit-user-select: text; user-select: text; }
-        body.no-scroll { overflow: hidden; position: fixed; width: 100%; }
-        
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--ios-accent); border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        #working-bar { position: fixed; top: 0; left: 0; right: 0; height: 50px; background: rgba(28,28,30,0.95); backdrop-filter: blur(20px); border-bottom: 1px solid var(--ios-accent); display: none; align-items: center; justify-content: center; z-index: 10002; color: var(--ios-accent); font-weight: 600; font-size: 16px; }
-        .bar-pulse { width: 8px; height: 8px; background: var(--ios-accent); border-radius: 50%; margin-right: 10px; animation: pulse 1s infinite alternate; }
-        @keyframes pulse { from { opacity: 0.3; transform: scale(0.8); } to { opacity: 1; transform: scale(1.1); } }
 
-        header h1 { font-size: 42px; font-weight: 800; margin: 0; cursor: pointer; letter-spacing: -1px; }
-        .update-time { font-size: 14px; color: var(--ios-secondary); margin-bottom: 20px; font-weight: 500; }
-        h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; gap: 10px; }
+        .logo{font-family:var(--serif);font-size:1.75rem;font-style:italic}.logo span{color:var(--accent)}
+        .header-actions{display:flex;align-items:center;gap:12px}
+        .sync-status{display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--accent)}
+        .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim)}
+        .sync-dot.syncing{background:var(--warning);animation:pulse 1s infinite}
+        .sync-dot.synced{background:var(--success)}.sync-dot.error{background:var(--error)}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        .icon-btn{width:40px;height:40px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
+        .icon-btn.spinning svg{animation:spin 1s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .icon-btn svg{width:20px;height:20px}
+        .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+        .auth-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center}
+        .auth-screen.hidden{display:none}
+        .auth-icon{width:80px;height:80px;margin-bottom:24px;color:var(--accent)}
+        .auth-title{font-family:var(--serif);font-size:1.75rem;font-style:italic;margin-bottom:12px}
+        .auth-desc{color:var(--text-muted);font-size:0.95rem;max-width:320px;margin-bottom:32px}
+        .auth-btn{display:flex;align-items:center;gap:12px;padding:16px 32px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius);font-family:var(--sans);font-size:1rem;font-weight:500;cursor:pointer; opacity: 1; transition: opacity 0.3s;}
+        .auth-btn:disabled{opacity: 0.5; cursor: not-allowed;}
+        .auth-btn svg{width:24px;height:24px}
+        .content{flex:1;display:none;flex-direction:column;overflow:hidden}
+        .content.visible{display:flex}
+        .playlist-container{flex:1;overflow-y:auto;padding:20px 24px;padding-bottom:220px}
+        .playlist-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+        .playlist-title{font-family:var(--serif);font-size:1.25rem;font-style:italic}
+        .playlist-count{font-size:0.85rem;color:var(--text-muted)}
+        .playlist-empty{text-align:center;padding:60px 20px;color:var(--text-muted)}
+        .playlist{display:flex;flex-direction:column;gap:8px}
         
-        .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
+        .track{display:flex;align-items:center;gap:16px;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);cursor:pointer; transition: transform 0.2s, box-shadow 0.2s;}
+        .track:hover{background:var(--surface-hover)}
+        .track.active{background:var(--accent-bg);border-color:var(--accent)}
+        .track.dragging {opacity: 0.5; background: var(--surface-hover); transform: scale(0.98); box-shadow: 0 4px 12px rgba(0,0,0,0.5); z-index: 10;}
+        .track.generating{opacity:0.7}
         
-        .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); transition: transform 0.1s ease; }
-        .alert-border { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); transition: transform 0.1s ease; }
-        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); transition: transform 0.1s ease; }
-        .card-active { transform: scale(0.96); } 
+        .track-number{width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;color:var(--text-muted);flex-shrink:0}
+        .track.active .track-number{color:var(--accent)}
+        .track-equalizer{display:none;gap:2px;align-items:flex-end;height:16px}
+        .track.active.playing .track-number span{display:none}
+        .track.active.playing .track-equalizer{display:flex}
+        .eq-bar{width:3px;background:var(--accent);border-radius:1px;animation:eq 0.8s ease-in-out infinite}
+        .eq-bar:nth-child(1){height:60%;animation-delay:0s}
+        .eq-bar:nth-child(2){height:100%;animation-delay:0.2s}
+        .eq-bar:nth-child(3){height:40%;animation-delay:0.4s}
+        @keyframes eq{0%,100%{transform:scaleY(1)}50%{transform:scaleY(0.5)}}
+        .track-info{flex:1;min-width:0}
+        .track-title{font-weight:500;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
+        .track-meta{display:flex;align-items:center;gap:12px;font-size:0.8rem;color:var(--text-muted)}
+        .track-folder{display:flex;align-items:center;gap:4px}
+        .track-folder svg{width:14px;height:14px}
+        .status-badge{padding:4px 8px;border-radius:4px;font-size:0.7rem;font-weight:500;text-transform:uppercase}
+        .status-badge.cached{background:rgba(74,222,128,0.15);color:var(--success)} 
+        .status-badge.downloaded{background:var(--accent-bg);color:var(--accent);} 
+        .status-badge.generating{background:rgba(251,191,36,0.15);color:var(--warning)}
+        .status-badge.new{background:rgba(232,255,71,0.15);color:var(--accent)}
+        .status-badge.pending{background:rgba(136,136,136,0.15);color:var(--text-muted)}
+        
+        .track-actions {display:flex; align-items:center; gap:8px;}
+        .track-delete-btn{width:40px;height:40px;border-radius:50%;border:none;background:rgba(248,113,113,0.15);color:var(--error);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+        .track-delete-btn svg{width:18px;height:18px}
+        .track-drag-handle {width:40px; height:40px; display:flex; align-items:center; justify-content:center; color: var(--text-dim); cursor: grab; touch-action: none;}
+        .track-drag-handle svg {width: 20px; height: 20px;}
 
-        .card-main-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-        .article-link { font-weight: 700; font-size: 20px; line-height: 1.3; color: var(--ios-text); cursor: pointer; text-decoration: none; flex: 1; }
-        .meta { font-size: 14px; color: var(--ios-secondary); margin-top: 10px; font-weight: 600; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .badge { background: var(--trending-red); color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 12px; text-transform: uppercase; font-weight: 800; }
-        
-        .death-box { background: #fff !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 800; color: #000 !important; font-size: 22px; cursor: pointer; }
-        .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
-        .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
-        
-        .source-list { display: none; margin-top: 15px; padding-top: 15px; border-top: 0.5px solid var(--separator); width: 100%; }
-        .source-link { display: block; color: var(--ios-accent) !important; font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 15px; text-decoration: none !important; }
-        .arrow-icon { font-size: 12px; margin-left: 6px; }
+        .player{position:fixed;bottom:0;left:0;right:0;background:linear-gradient(to top,var(--bg) 80%,transparent);padding:20px 24px 32px;padding-bottom:max(32px,env(safe-area-inset-bottom)); z-index: 200;}
+        .player.hidden{display:none}
+        .player-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 -8px 32px rgba(0,0,0,0.4)}
+        .player-track-info{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+        .player-track-title{flex:1;font-weight:500;font-size:0.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .player-track-position{font-size:0.8rem;color:var(--text-muted)}
+        .player-progress{margin-bottom:16px}
+        .progress-bar{width:100%;height:16px;background:var(--border);border-radius:8px;overflow:hidden;cursor:pointer; position: relative; touch-action: none;} 
+        .progress-fill{height:100%;background:var(--accent);border-radius:8px;width:0%; pointer-events: none;}
+        .progress-times{display:flex;justify-content:space-between;margin-top:8px;font-size:0.75rem;color:var(--text-muted)}
+        .player-controls{display:flex;align-items:center;justify-content:center;gap:12px}
+        .control-btn{width:48px;height:48px;border-radius:50%;border:none;background:transparent;color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
+        .control-btn svg{width:24px;height:24px}
+        .control-btn.play-pause{width:64px;height:64px;background:var(--accent);color:#000000;} 
+        .control-btn.play-pause svg{width:28px;height:28px}
+        .speed-btn{min-width:48px;padding:8px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-family:var(--sans);font-size:0.8rem;font-weight:500;cursor:pointer}
+        .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-100px);padding:14px 24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:0.9rem;opacity:0;transition:all 0.3s;z-index:300}
+        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+        .toast.error{border-color:var(--error)}.toast.success{border-color:var(--success)}
 
-        #later-empty { background: #2c2c2e; padding: 30px; border-radius: 14px; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 18px; display: none; margin-top: 20px; }
-        #action-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10003; display: none; }
-        #action-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #1c1c1e; border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 10004; display: none; flex-direction: column; padding: 20px; padding-bottom: 40px; animation: slideIn 0.3s ease; }
-        @keyframes slideIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
-        .action-btn { background: #2c2c2e; color: var(--ios-accent); padding: 18px; border-radius: 12px; text-align: center; font-weight: 600; font-size: 19px; margin-bottom: 10px; cursor: pointer; }
-        .action-cancel { color: var(--red); background: #2c2c2e; }
-
-        #ai-result-modal, #update-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; z-index: 10005; display: none; flex-direction: column; }
-        .modal-header { padding: 20px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: center; background: #1c1c1e; }
-        .modal-body { flex: 1; overflow-y: auto; padding: 30px 25px; font-size: 22px; line-height: 1.6; }
-        .close-btn { font-size: 30px; cursor: pointer; padding: 5px 15px; }
-
-        .save-check { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #3a3a3c; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; }
-        .save-check.saved { background: var(--checkmark-green); border-color: var(--checkmark-green); }
-        .save-check svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 3; display: none; }
-        .save-check.saved svg { display: block; }
+        .modal-overlay {position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:900; display:none; align-items:center; justify-content:center;}
+        .modal-overlay.visible {display:flex;}
+        .modal {background:var(--bg); border:1px solid var(--border); width: 90%; max-width: 500px; max-height: 80vh; border-radius: var(--radius); display: flex; flex-direction: column; overflow: hidden;}
+        .modal-header {padding: 16px 20px; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;}
+        .modal-title {font-family: var(--serif); font-size: 1.25rem;}
+        .modal-close {background:none; border:none; color:var(--text-muted); cursor:pointer;}
+        .modal-content {padding: 0; overflow-y: auto; flex: 1;}
         
-        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 80px; background: rgba(28,28,30,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--separator); display: flex; align-items: center; z-index: 1000; padding-bottom: 15px; }
-        .tab-item { flex: 1; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 17px; cursor: pointer; }
-        .tab-item.active { color: var(--ios-accent); }
-        .done-btn { background: var(--ios-accent); color: #fff; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; margin-top: 20px; cursor: pointer; }
-        #undo-btn { background: #3a3a3c; color: white; width: 100%; padding: 20px; border-radius: 16px; font-size: 20px; font-weight: 700; border: none; cursor: pointer; margin-top: 10px; }
+        .settings-section-title {padding: 16px 20px 8px; font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em; font-weight: 600;}
+        .settings-actions {padding: 0 20px 20px;}
+        .settings-info {padding: 0 20px 10px; font-size: 0.8rem; color: var(--text-dim); line-height: 1.4;}
+        
+        .voice-list {display:flex; flex-direction: column;}
+        .voice-item {padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; cursor: pointer;}
+        .voice-item:hover {background: var(--surface-hover);}
+        .voice-item.selected {background: var(--accent-bg);}
+        .voice-item.selected .voice-name {color: var(--accent);}
+        .voice-radio {accent-color: var(--accent);}
+        .voice-details {flex:1;}
+        .voice-name {font-weight: 500; font-size: 0.95rem;}
+        .voice-tag {font-size: 0.75rem; color: var(--text-muted);}
+        .voice-preview-btn {width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--text); display: flex; align-items: center; justify-content: center; cursor: pointer;}
+        .voice-preview-btn:hover {background: var(--text); color: var(--bg);}
+
+        .action-btn {width: 100%; padding: 12px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface); color: var(--text); font-weight: 500; font-family: var(--sans); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; margin-bottom: 12px;}
+        .action-btn:hover {background: var(--surface-hover);}
+        .action-btn.primary {border-color: var(--accent); color: var(--accent); background: rgba(232,255,71,0.05);}
+        .action-btn.primary:hover {background: var(--accent-bg);}
+        
+        .danger-btn {width: 100%; padding: 12px; border-radius: var(--radius); border: 1px solid var(--error); background: rgba(248,113,113,0.1); color: var(--error); font-weight: 500; font-family: var(--sans); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;}
+        .danger-btn:hover {background: var(--error); color: var(--bg);}
+        .danger-btn svg {width: 18px; height: 18px;}
+
+        .reauth-toast {position:fixed; top:24px; left:50%; transform:translateX(-50%); padding: 12px 24px; background:var(--accent); color:#000; border-radius:var(--radius); font-weight:600; display:flex; align-items:center; gap:12px; z-index: 400; box-shadow: 0 4px 20px rgba(0,0,0,0.4); cursor: pointer; display: none; font-size: 1rem;}
+        .reauth-toast.visible {display: flex;}
     </style>
 </head>
 <body>
-    <div id="loading-overlay">
-        <div class="spinner"></div>
-        <div style="margin-top: 15px; color: #fff; font-weight: 600; font-size: 18px;">Connecting...</div>
-    </div>
-    
-    <div id="working-bar"><div class="bar-pulse"></div><span>Perplexity is researching...</span></div>
-    <div id="ai-result-modal"><div class="modal-header"><h3 id="ai-title">AI Lookup</h3><div class="close-btn" onclick="closeAiModal()">✕</div></div><div id="ai-body" class="modal-body"></div></div>
-    <div id="update-modal"><div class="modal-header"><h3 id="modal-title">Update</h3><div class="close-btn" onclick="closeModal()">✕</div></div><div id="modal-body" class="modal-body"></div></div>
-    
-    <div id="action-sheet-overlay" onclick="closeActionSheet()"></div>
-    <div id="action-sheet">
-        <div id="target-title" style="color:var(--ios-secondary); font-size:14px; margin-bottom:15px; text-align:center; padding:0 10px; line-height:1.4;"></div>
-        <div class="action-btn" onclick="triggerAi('What')">What?</div>
-        <div class="action-btn" onclick="triggerAi('Full')">Full</div>
-        <div class="action-btn" onclick="triggerAi('Short')">Short</div>
-        <div class="action-btn action-cancel" onclick="closeActionSheet()">Cancel</div>
-    </div>
+    <div class="app">
+        <header class="header">
+            <h1 class="logo">Textify<span>.</span></h1>
+            <div class="header-actions">
+                <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-text">Offline</span></div>
+                <button class="icon-btn" id="settings-btn" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg></button>
+                <button class="icon-btn" id="refresh-btn" title="Sync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></button>
+            </div>
+        </header>
+        
+        <div id="reauth-toast" class="reauth-toast">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+            Session Expired. Tap to Renew.
+        </div>
 
-    <div id="view-now" style="display:none;">
-        <header><h1 onclick="refreshFeedOnly()">Newser</h1><div id="update-display" class="update-time"></div></header>
-        <div id="content">
-            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;"><div style="font-size: 50px; margin-bottom: 20px;">🎉</div><div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div><button id="undo-btn" onclick="apiAction('undo')">Undo</button></div>
-            <div id="article-sections">
-                <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
-                <section id="notif-sec" style="display:none;"><h2>📣 Notifications</h2><div id="notif-list"></div></section>
-                <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
-                <section id="alert-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alert-list"></div></section>
-                <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
-                <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-count" style="background:var(--trending-red); color:white; width:28px; height:28px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">0</span></h2><div id="headlines-list" class="list-group"></div></section>
-                <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
+        <main class="main">
+            <div class="auth-screen" id="auth-screen">
+                <svg class="auth-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                <h2 class="auth-title">Connect Google Drive</h2>
+                <p class="auth-desc">Sign in to sync your documents and listen to them securely.</p>
+                <button class="auth-btn" id="auth-btn" disabled>
+                    <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    <span>Loading...</span>
+                </button>
+            </div>
+            <div class="content" id="content">
+                <div class="playlist-container">
+                    <div class="playlist-header"><h2 class="playlist-title">Your Documents</h2><span class="playlist-count" id="playlist-count">0 documents</span></div>
+                    <div class="playlist-empty" id="playlist-empty"><p>No documents found. Click sync to check your folders.</p></div>
+                    <div class="playlist" id="playlist"></div>
+                </div>
+            </div>
+        </main>
+        <div class="player hidden" id="player">
+            <div class="player-card">
+                <div class="player-track-info"><span class="player-track-title" id="player-title">No track selected</span><span class="player-track-position" id="player-position">0 / 0</span></div>
+                <div class="player-progress">
+                    <div class="progress-bar" id="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-times"><span id="current-time">0:00</span><span id="total-time">-0:00</span></div>
+                </div>
+                <div class="player-controls">
+                    <button class="control-btn" id="prev-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+                    <button class="control-btn" id="rewind-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg></button>
+                    <button class="control-btn play-pause" id="play-pause-btn"><svg viewBox="0 0 24 24" fill="currentColor" id="play-icon"><path d="M8 5v14l11-7z"/></svg><svg viewBox="0 0 24 24" fill="currentColor" id="pause-icon" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg></button>
+                    <button class="control-btn" id="forward-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg></button>
+                    <button class="control-btn" id="next-btn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+                    <button class="speed-btn" id="speed-btn">1.5x</button>
+                </div>
             </div>
         </div>
     </div>
-    
-    <div id="view-later" style="display:none;">
-        <header><h1 onclick="refreshFeedOnly()">Later</h1></header>
-        <div id="later-empty">Empty</div>
-        <div id="later-list" class="list-group"></div>
+
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Settings</h3>
+                <button class="modal-close" id="close-settings"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
+            </div>
+            <div class="modal-content">
+                <h4 class="settings-section-title">Voice</h4>
+                <div class="voice-list" id="voice-list"></div>
+                
+                <h4 class="settings-section-title">Storage</h4>
+                <div class="settings-info">Clearing documents sets the sync time to "now".</div>
+                <div class="settings-actions">
+                    <button id="download-merged-btn" class="action-btn primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Download Playlist as Single MP3
+                    </button>
+                    <button id="clear-all-btn" class="danger-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 01 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Clear All Documents
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <div class="toast" id="toast"></div>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+    <script>
+    // Config
+    // REPLACE THIS URL with your Cloudflare Worker URL (found in Cloudflare dashboard under Workers & Pages)
+    var WORKER_URL = 'https://lucky-bird-16ad.briandigate.workers.dev/'; 
     
-    <div class="tab-bar"><div id="tab-now" class="tab-item active" onclick="switchViewOnly('now')">Now</div><div id="tab-later" class="tab-item" onclick="switchViewOnly('later')">Later</div></div>
+    var CLIENT_ID = '959875839996-h7cogpr60gugmqco9f9i5ehkjr0hq569.apps.googleusercontent.com';
+    var ALLOWED_USER = 'briandigate';
+    var FOLDER_IDS = ['1YEj74qrmNYMZcQ90l_6wlq6c6DDk4YbR','1kc57wQ2rCLI4yKOK7h2pbhS1XMUFGs9y','1kedNH3hNJUh6frA1iN2xoXc5g--FNvZs'];
+    var SCOPES = 'https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/userinfo.email';
 
-<script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
-    let currentTab = 'now'; let globalLaterData = [];
-    let pressTimer; let currentTargetHeadline = "";
+    // State
+    var tokenClient, gapiInited = false, gisInited = false, accessToken = null;
+    var playlist = [], currentTrackIndex = -1, isPlaying = false;
+    var playbackSpeed = 1.5, speeds = [0.75, 1, 1.25, 1.5, 1.75, 2];
+    var db, deletedIds = new Set();
+    var audio = new Audio();
+    var selectedVoiceId = localStorage.getItem('selectedVoice') || 'en-US-Neural2-J';
+    var lastSyncTime = localStorage.getItem('lastSyncTime');
+    var isDragging = false;
+    var currentDocId = null;
 
-    function stripEmojis(str) { return str.toString().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim(); }
-    function openModal(title, content) { document.getElementById('modal-title').innerText = stripEmojis(title); document.getElementById('modal-body').innerHTML = content.toString().replace(/\*/g, "").replace(/[\[\]]/g, "").trim(); document.getElementById('update-modal').style.display = 'flex'; document.body.classList.add('no-scroll'); }
-    function closeModal() { document.getElementById('update-modal').style.display = 'none'; document.body.classList.remove('no-scroll'); }
-    function closeAiModal() { document.getElementById('ai-result-modal').style.display = 'none'; document.body.classList.remove('no-scroll'); }
+    const BACKUP_VOICES = [
+        { name: 'en-US-Neural2-A', ssmlGender: 'MALE' },
+        { name: 'en-US-Neural2-C', ssmlGender: 'FEMALE' },
+        { name: 'en-US-Neural2-D', ssmlGender: 'MALE' },
+        { name: 'en-US-Neural2-E', ssmlGender: 'FEMALE' },
+        { name: 'en-US-Neural2-F', ssmlGender: 'FEMALE' },
+        { name: 'en-US-Neural2-G', ssmlGender: 'FEMALE' },
+        { name: 'en-US-Neural2-H', ssmlGender: 'FEMALE' },
+        { name: 'en-US-Neural2-I', ssmlGender: 'MALE' },
+        { name: 'en-US-Neural2-J', ssmlGender: 'MALE' }
+    ];
 
-    function switchViewOnly(tab) { currentTab = tab; document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none'; document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none'; document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active')); document.getElementById('tab-' + tab).classList.add('active'); window.scrollTo(0,0); }
-    function refreshFeedOnly() { document.getElementById('loading-overlay').style.display = 'flex'; load(); }
-    async function apiAction(act) { document.getElementById('loading-overlay').style.display = 'flex'; await fetch(`${API_URL}?action=${act}`); load(); }
-    async function backgroundSave(act, params) { fetch(`${API_URL}?action=${act}${params}`); }
+    // DOM Elements
+    var authScreen = document.getElementById('auth-screen');
+    var authBtn = document.getElementById('auth-btn');
+    var content = document.getElementById('content');
+    var syncDot = document.getElementById('sync-dot');
+    var syncText = document.getElementById('sync-text');
+    var refreshBtn = document.getElementById('refresh-btn');
+    var settingsBtn = document.getElementById('settings-btn');
+    var settingsModal = document.getElementById('settings-modal');
+    var closeSettingsBtn = document.getElementById('close-settings');
+    var voiceListEl = document.getElementById('voice-list');
+    var clearAllBtn = document.getElementById('clear-all-btn');
+    var playlistEl = document.getElementById('playlist');
+    var playlistEmpty = document.getElementById('playlist-empty');
+    var playlistCount = document.getElementById('playlist-count');
+    var player = document.getElementById('player');
+    var playerTitle = document.getElementById('player-title');
+    var playerPosition = document.getElementById('player-position');
+    var progressBar = document.getElementById('progress-bar');
+    var progressFill = document.getElementById('progress-fill');
+    var currentTimeEl = document.getElementById('current-time');
+    var totalTimeEl = document.getElementById('total-time');
+    var playPauseBtn = document.getElementById('play-pause-btn');
+    var playIcon = document.getElementById('play-icon');
+    var pauseIcon = document.getElementById('pause-icon');
+    var speedBtn = document.getElementById('speed-btn');
+    var toast = document.getElementById('toast');
+    var reauthToast = document.getElementById('reauth-toast');
 
-    function openActionSheet(headline) { currentTargetHeadline = headline; document.getElementById('target-title').innerText = headline; document.getElementById('action-sheet-overlay').style.display = 'block'; document.getElementById('action-sheet').style.display = 'flex'; }
-    function closeActionSheet() { document.getElementById('action-sheet-overlay').style.display = 'none'; document.getElementById('action-sheet').style.display = 'none'; }
-
-    async function triggerAi(type) {
-        closeActionSheet();
-        const bar = document.getElementById('working-bar');
-        bar.style.display = 'flex';
-        try {
-            const res = await fetch(`${API_URL}?action=aiLookup&type=${type}&headline=${encodeURIComponent(currentTargetHeadline)}`);
-            const text = await res.text();
-            bar.style.display = 'none';
-            document.getElementById('ai-title').innerText = type + ": " + stripEmojis(currentTargetHeadline);
-            document.getElementById('ai-body').innerHTML = text;
-            document.getElementById('ai-result-modal').style.display = 'flex';
-            document.body.classList.add('no-scroll');
-        } catch(e) { bar.style.display = 'none'; alert("AI Error"); }
+    function init() {
+        initDB().then(function() {
+            loadDeletedIds();
+            loadCachedPlaylist();
+            initGoogleAPI();
+            setupEvents();
+            fetchVoices(); 
+        });
     }
 
-    function renderItem(item, showCircle = false) {
-        const div = document.createElement('div'), r = parseInt(item.repeats), isSaved = globalLaterData.some(l => l.title.trim() === item.title.trim());
-        
-        if (r === -3) { div.className = 'death-box'; div.innerText = stripEmojis(item.title); let l = JSON.parse(item.link || "[]"); if(l[0]) div.onclick = () => window.open(l[0].link, '_blank'); return div; }
-        
-        if (r === -4) { 
-            div.className = 'notif-box'; 
-            const txt = document.createElement('div'); txt.innerText = item.title; txt.style.flex = "1";
-            let l = []; try { l = JSON.parse(item.link); } catch(e){}
-            if (l.length > 0 && l[0].link) txt.onclick = () => window.open(l[0].link, '_blank');
-            div.appendChild(txt);
-            if (currentTab === 'later') div.appendChild(createCircle(item, isSaved));
-            return div; 
-        }
-
-        if (r === -5) { div.className = 'update-box'; const row = document.createElement('div'); row.className = 'card-main-row'; const txt = document.createElement('div'); txt.style.flex = "1"; txt.innerText = stripEmojis(item.title); txt.onclick = () => openModal(item.title, item.link); row.appendChild(txt); row.appendChild(createCircle(item, isSaved)); div.appendChild(row); return div; }
-        
-        const isTrending = r >= 2, isAlert = r === -99; 
-        div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
-        
-        div.oncontextmenu = (e) => e.preventDefault();
-        div.ontouchstart = () => { div.classList.add('card-active'); pressTimer = setTimeout(() => { div.classList.remove('card-active'); openActionSheet(item.title); }, 600); };
-        div.ontouchend = () => { div.classList.remove('card-active'); clearTimeout(pressTimer); };
-        
-        let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
-        const mainRow = document.createElement('div'); mainRow.className = 'card-main-row';
-        const content = document.createElement('div'); content.className = 'article-content';
-        
-        function formatDate(iso) {
-            if(!iso) return "";
-            const d = new Date(iso), now = new Date();
-            const isToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-            if (isToday) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-            return `${d.toLocaleDateString('en-US', { weekday: 'long' })} ${d.getMonth() + 1}/${d.getDate()} ${d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`;
-        }
-
-        const badgeHtml = isAlert ? '<span class="badge">ALERT</span>' : (isTrending ? `<span class="badge">${r} Sources</span>` : '');
-        const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon">▶</span>' : '';
-        
-        content.innerHTML = `<div class="article-link" onclick="window.open('${links[0].link}', '_blank')">${stripEmojis(item.title)}</div><div class="meta">${badgeHtml} ${formatDate(item.timestamp)}${arrowSpan}</div>`;
-        mainRow.appendChild(content);
-        if (showCircle || currentTab === 'later' || (!isTrending && !isAlert)) mainRow.appendChild(createCircle(item, isSaved));
-        div.appendChild(mainRow);
-
-        if ((isTrending || isAlert) && links.length > 1) {
-            const list = document.createElement('div'); list.className = 'source-list';
-            links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">• ${l.title}</a>`; });
-            div.appendChild(list);
-            content.querySelector('.meta').onclick = (e) => { 
-                e.stopPropagation(); 
-                const isV = list.style.display === 'block'; 
-                list.style.display = isV ? 'none' : 'block'; 
-                content.querySelector('.arrow-icon').innerText = isV ? '▶' : '▼'; 
+    function initDB() {
+        return new Promise(function(resolve) {
+            var req = indexedDB.open('TextifyDB', 2);
+            req.onupgradeneeded = function(e) { 
+                var db = e.target.result;
+                if(!db.objectStoreNames.contains('docs')) {
+                    db.createObjectStore('docs', {keyPath: 'id'});
+                }
             };
-        }
-        
-        return div;
+            req.onsuccess = function(e) { db = e.target.result; resolve(); };
+            req.onerror = function() { resolve(); };
+        });
     }
 
-    function createCircle(item, isSaved) {
-        const circle = document.createElement('div'); circle.className = 'save-check' + (isSaved ? ' saved' : '');
-        circle.innerHTML = `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-        circle.onclick = (e) => { e.stopPropagation(); const cur = circle.classList.contains('saved'); circle.classList.toggle('saved'); backgroundSave(cur ? 'unsave' : 'save', `&title=${encodeURIComponent(item.title)}&link=${encodeURIComponent(item.link)}&repeats=${item.repeats}`); if(currentTab==='later') setTimeout(load, 500); };
-        return circle;
+    function saveDoc(id, text, meta, audioChunks) {
+        var tx = db.transaction('docs', 'readwrite');
+        var data = {id: id, text: text, meta: meta};
+        if(audioChunks) data.audio = audioChunks;
+        tx.objectStore('docs').put(data);
     }
 
-    async function load() {
-        try {
-            const res = await fetch(API_URL), data = await res.json();
-            globalLaterData = data.laterArticles;
-            document.getElementById('loading-overlay').style.display = 'none';
-            document.getElementById('update-display').innerText = "Last checked " + (data.refreshTime ? new Date(data.refreshTime).toLocaleTimeString() : "");
-            
-            if (data.articles.length === 0) {
-                document.getElementById('empty-state').style.display = 'block';
-                document.getElementById('article-sections').style.display = 'none';
-            } else {
-                document.getElementById('empty-state').style.display = 'none';
-                document.getElementById('article-sections').style.display = 'block';
-            }
+    function getAllDocs(callback) {
+        var tx = db.transaction('docs', 'readonly');
+        var req = tx.objectStore('docs').getAll();
+        req.onsuccess = function() { callback(req.result || []); };
+    }
 
-            document.getElementById('later-empty').style.display = globalLaterData.length === 0 ? 'block' : 'none';
+    function deleteDoc(id) {
+        var tx = db.transaction('docs', 'readwrite');
+        tx.objectStore('docs').delete(id);
+    }
 
-            const mapping = { death: -3, notif: -4, updates: -5, alert: -99, trending: 2, headlines: 1 };
-            Object.keys(mapping).forEach(key => {
-                const el = document.getElementById(key + '-list'); if (!el) return; el.innerHTML = '';
-                let filtered = data.articles.filter(a => { let val = parseInt(a.repeats); if (key === 'trending') return val >= 2; if (key === 'headlines') return val === 1; return val === mapping[key]; });
-                if (key === 'headlines') { filtered.reverse(); document.getElementById('headline-count').innerText = filtered.length; }
-                filtered.forEach(item => el.appendChild(renderItem(item, (key === 'updates' || key === 'headlines'))));
-                const sec = document.getElementById(key + '-sec'); if (sec) sec.style.display = filtered.length ? 'block' : 'none';
+    function loadDeletedIds() {
+        var s = localStorage.getItem('deleted');
+        if (s) deletedIds = new Set(JSON.parse(s));
+    }
+
+    function saveDeletedIds() {
+        localStorage.setItem('deleted', JSON.stringify(Array.from(deletedIds)));
+    }
+
+    function initGoogleAPI() {
+        gapi.load('client', function() {
+            gapi.client.init({
+                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
+            }).then(function() {
+                gapiInited = true;
+                checkInitState();
             });
-            const laterList = document.getElementById('later-list'); laterList.innerHTML = '';
-            globalLaterData.forEach(item => laterList.appendChild(renderItem(item, true)));
-            switchViewOnly(currentTab);
-        } catch (e) { document.getElementById('loading-overlay').style.display = 'none'; }
+        });
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: onAuthResponse
+        });
+        gisInited = true;
+        checkInitState();
     }
-    load();
-</script>
+
+    function checkInitState() {
+        if (gapiInited && gisInited) {
+            authBtn.disabled = false;
+            authBtn.querySelector('span').textContent = 'Sign in with Google';
+            checkStoredToken();
+        }
+    }
+
+    function checkStoredToken() {
+        var token = localStorage.getItem('token');
+        if (token && gapiInited) {
+            accessToken = token;
+            gapi.client.setToken({access_token: token});
+            verifyUser(true);
+        }
+    }
+
+    function verifyUser(silent) {
+        fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+            headers: {'Authorization': 'Bearer ' + accessToken}
+        }).then(function(r) { 
+            if (r.status === 401) {
+                if(silent && playlist.length > 0) {
+                    showReauthToast();
+                    showContent(); 
+                } else signOut();
+                return null; 
+            }
+            return r.json(); 
+        }).then(function(user) {
+            if (!user) return; 
+            if (user.email && user.email.split('@')[0].toLowerCase() === ALLOWED_USER) {
+                localStorage.setItem('user_email', user.email);
+                reauthToast.classList.remove('visible'); 
+                showContent();
+                syncDrive();
+            } else {
+                showToast('Access denied', 'error');
+                signOut();
+            }
+        }).catch(() => { if(playlist.length > 0) showContent(); });
+    }
+
+    function onAuthResponse(resp) {
+        if (resp.error) return;
+        accessToken = resp.access_token;
+        localStorage.setItem('token', accessToken);
+        reauthToast.classList.remove('visible');
+        verifyUser(false);
+    }
+
+    function signIn() {
+        if (gapiInited && gisInited) {
+            var opts = {};
+            var email = localStorage.getItem('user_email');
+            if(email) opts.login_hint = email;
+            tokenClient.requestAccessToken(opts); 
+        }
+    }
+
+    function showReauthToast() { reauthToast.classList.add('visible'); }
+
+    function signOut() {
+        if (accessToken) google.accounts.oauth2.revoke(accessToken);
+        accessToken = null;
+        localStorage.removeItem('token');
+        authScreen.classList.remove('hidden');
+        content.classList.remove('visible');
+        player.classList.add('hidden');
+        syncDot.className = 'sync-dot';
+        syncText.textContent = 'Offline';
+    }
+
+    function showContent() {
+        authScreen.classList.add('hidden');
+        content.classList.add('visible');
+        if (playlist.length > 0) player.classList.remove('hidden');
+    }
+
+    function syncDrive() {
+        syncDot.className = 'sync-dot syncing';
+        syncText.textContent = 'Scanning...';
+        refreshBtn.classList.add('spinning');
+        var files = [];
+        var foldersDone = 0;
+        var query = "trashed=false and mimeType='application/vnd.google-apps.document'";
+        if (lastSyncTime) query += " and createdTime > '" + lastSyncTime + "'";
+
+        FOLDER_IDS.forEach(function(folderId) {
+            gapi.client.drive.files.get({fileId: folderId, fields: 'name'}).then(function(folderResp) {
+                var folderName = folderResp.result.name;
+                gapi.client.drive.files.list({
+                    q: "'" + folderId + "' in parents and " + query,
+                    fields: 'files(id,name,modifiedTime,createdTime)', 
+                    orderBy: 'createdTime asc'
+                }).then(function(resp) {
+                    (resp.result.files || []).forEach(f => {
+                        if (!deletedIds.has(f.id)) {
+                            files.push({id: f.id, name: f.name, folder: folderName, modified: f.modifiedTime, created: f.createdTime});
+                        }
+                    });
+                    foldersDone++;
+                    if (foldersDone === FOLDER_IDS.length) finishSync(files);
+                });
+            }).catch(err => {
+                if(err.status === 401) showReauthToast(); 
+                foldersDone++;
+                if (foldersDone === FOLDER_IDS.length) finishSync(files);
+            });
+        });
+    }
+
+    function finishSync(newFiles) {
+        newFiles.sort((a, b) => new Date(a.created) - new Date(b.created));
+        getAllDocs(function(cached) {
+            var existingIds = new Set(playlist.map(p => p.id));
+            var addedCount = 0;
+            var filesToDownload = [];
+            for (var i = 0; i < newFiles.length; i++) {
+                var f = newFiles[i];
+                if (!existingIds.has(f.id)) {
+                    var newItem = { id: f.id, name: f.name, folder: f.folder, modified: f.modified, created: f.created, status: 'pending', text: null };
+                    playlist.push(newItem);
+                    filesToDownload.push(newItem);
+                    addedCount++;
+                }
+            }
+            if (!localStorage.getItem('playlist_reordered')) {
+                playlist.sort((a, b) => new Date(a.created) - new Date(b.created));
+            }
+            localStorage.setItem('playlist', JSON.stringify(playlist));
+            if (addedCount > 0 || !lastSyncTime) {
+                lastSyncTime = new Date().toISOString();
+                localStorage.setItem('lastSyncTime', lastSyncTime);
+            }
+            renderPlaylist();
+            syncDot.className = 'sync-dot synced';
+            syncText.textContent = playlist.length + ' docs';
+            refreshBtn.classList.remove('spinning');
+            if (filesToDownload.length > 0) processDownloadQueue(filesToDownload);
+        });
+    }
+
+    async function processDownloadQueue(items) {
+        for (let item of items) {
+            let currentIdx = playlist.findIndex(p => p.id === item.id);
+            if (currentIdx !== -1) await downloadSingleItem(currentIdx, true);
+        }
+        showToast('Docs cached offline', 'success');
+    }
+
+    async function downloadSingleItem(i, dlAudio) {
+        if (!playlist[i] || playlist[i].status === 'downloaded') return;
+        playlist[i].status = 'generating';
+        renderPlaylist();
+        try {
+            const resp = await gapi.client.drive.files.export({fileId: playlist[i].id, mimeType: 'text/plain'});
+            var text = resp.body;
+            if (text && text.trim()) {
+                if (dlAudio) await fetchAndSaveAudio(i, text);
+                else {
+                    saveDoc(playlist[i].id, text, { name: playlist[i].name, folder: playlist[i].folder, modified: playlist[i].modified }, null);
+                    playlist[i].text = text;
+                    playlist[i].status = 'cached';
+                    renderPlaylist();
+                }
+            }
+        } catch (err) {
+            if(err.status === 401) showReauthToast();
+            playlist[i].status = 'pending';
+            renderPlaylist();
+        }
+    }
+
+    async function fetchAndSaveAudio(i, text) {
+        var chunks = chunkText(text);
+        var audioData = [];
+        for (let j = 0; j < chunks.length; j++) {
+            let content = await synthesizeText(chunks[j], selectedVoiceId);
+            if (content) audioData.push(content);
+            else {
+                playlist[i].status = 'cached';
+                renderPlaylist();
+                return null;
+            }
+        }
+        saveDoc(playlist[i].id, text, { name: playlist[i].name, folder: playlist[i].folder, modified: playlist[i].modified }, audioData);
+        playlist[i].text = text;
+        playlist[i].status = 'downloaded'; 
+        renderPlaylist();
+        if (i === currentTrackIndex && !isPlaying) playMergedAudio(audioData, i, playlist[i].name, playlist[i].id);
+        return audioData;
+    }
+
+    async function synthesizeText(text, voiceId) {
+        // SECURE PROXY CALL TO CLOUDFLARE WORKER
+        const url = WORKER_URL; 
+        const payload = {
+            input: { text: text },
+            voice: { languageCode: 'en-US', name: voiceId },
+            audioConfig: { audioEncoding: 'MP3' }
+        };
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            return data.audioContent; 
+        } catch (e) {
+            showToast('TTS Proxy Error', 'error');
+            return null;
+        }
+    }
+
+    async function fetchVoices() {
+        renderVoiceList(BACKUP_VOICES);
+    }
+
+    function chunkText(text) {
+        const limit = 4500; 
+        const chunks = [];
+        let index = 0;
+        while (index < text.length) {
+            let endIndex = Math.min(index + limit, text.length);
+            if (endIndex < text.length) {
+                const lastPeriod = text.lastIndexOf('.', endIndex);
+                if (lastPeriod > index) endIndex = lastPeriod + 1;
+            }
+            chunks.push(text.substring(index, endIndex));
+            index = endIndex;
+        }
+        return chunks;
+    }
+
+    async function play(i) {
+        if (i < 0 || i >= playlist.length) return;
+        if (currentTrackIndex !== i) { stopAudio(); currentTrackIndex = i; }
+        var p = playlist[i];
+        var tx = db.transaction('docs', 'readonly');
+        var req = tx.objectStore('docs').get(p.id);
+        req.onsuccess = async function() {
+            var doc = req.result;
+            if (doc && doc.audio && doc.audio.length > 0) {
+                 playMergedAudio(doc.audio, i, p.name, p.id);
+                 return;
+            }
+            if (doc && doc.text) { await fetchAndSaveAudio(i, doc.text); return; }
+            downloadSingleItem(i, true); 
+        };
+    }
+
+    function playMergedAudio(audioChunks, trackIdx, title, docId) {
+        currentDocId = docId;
+        const byteArrays = audioChunks.map(b64 => {
+            const byteChars = atob(b64);
+            const byteNums = new Array(byteChars.length);
+            for (let i = 0; i < byteChars.length; i++) byteNums[i] = byteChars.charCodeAt(i);
+            return new Uint8Array(byteNums);
+        });
+        const blob = new Blob(byteArrays, { type: 'audio/mpeg' });
+        const blobUrl = URL.createObjectURL(blob);
+        playerTitle.textContent = title;
+        playerPosition.textContent = (trackIdx + 1) + ' / ' + playlist.length;
+        audio.src = blobUrl;
+        audio.playbackRate = playbackSpeed;
+        
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.metadata = new MediaMetadata({ title: title, artist: 'Textify' });
+        }
+
+        const savedTime = localStorage.getItem('playback_pos_' + docId);
+        audio.play().then(() => {
+            isPlaying = true;
+            updateUI();
+            if (savedTime) audio.currentTime = parseFloat(savedTime);
+        });
+
+        audio.onended = function() {
+            URL.revokeObjectURL(blobUrl);
+            localStorage.removeItem('playback_pos_' + docId);
+            if (trackIdx < playlist.length - 1) play(trackIdx + 1);
+            else { isPlaying = false; updateUI(); }
+        };
+    }
+
+    audio.ontimeupdate = function() {
+        if (isDragging) return;
+        if (currentDocId && audio.currentTime > 0) localStorage.setItem('playback_pos_' + currentDocId, audio.currentTime);
+        if (audio.duration) {
+            const progress = (audio.currentTime / audio.duration) * 100;
+            progressFill.style.width = progress + '%';
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+            totalTimeEl.textContent = '-' + formatTime(audio.duration - audio.currentTime);
+        }
+    };
+
+    function formatTime(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return m + ":" + (s < 10 ? "0" : "") + s;
+    }
+
+    function togglePlay() {
+        if (currentTrackIndex === -1) { if (playlist.length > 0) play(0); return; }
+        if (audio.paused && audio.src) { audio.play(); isPlaying = true; }
+        else { audio.pause(); isPlaying = false; }
+        updateUI();
+    }
+
+    function updateUI() {
+        playIcon.style.display = isPlaying ? 'none' : 'block';
+        pauseIcon.style.display = isPlaying ? 'block' : 'none';
+        renderPlaylist();
+    }
+
+    function stopAudio() {
+        audio.pause();
+        if (currentDocId) localStorage.setItem('playback_pos_' + currentDocId, audio.currentTime);
+        audio.currentTime = 0;
+        isPlaying = false;
+        updateUI();
+    }
+
+    function renderPlaylist() {
+        if (playlist.length === 0) {
+            playlistEmpty.style.display = 'block';
+            playlistEl.innerHTML = '';
+            player.classList.add('hidden');
+            return;
+        }
+        playlistEmpty.style.display = 'none';
+        var html = '';
+        for (var i = 0; i < playlist.length; i++) {
+            var p = playlist[i];
+            var active = i === currentTrackIndex;
+            html += `<div class="track ${active ? 'active' : ''}" data-i="${i}">
+                <div class="track-number"><span>${i+1}</span></div>
+                <div class="track-info">
+                    <div class="track-title">${p.name}</div>
+                    <div class="track-meta"><span class="status-badge ${p.status}">${p.status}</span></div>
+                </div>
+            </div>`;
+        }
+        playlistEl.innerHTML = html;
+        playlistEl.querySelectorAll('.track').forEach(t => {
+            t.onclick = function() { play(parseInt(this.getAttribute('data-i'))); };
+        });
+        player.classList.remove('hidden');
+    }
+
+    function setupEvents() {
+        authBtn.onclick = signIn;
+        refreshBtn.onclick = syncDrive;
+        playPauseBtn.onclick = togglePlay;
+        speedBtn.onclick = function() {
+            var idx = speeds.indexOf(playbackSpeed);
+            playbackSpeed = speeds[(idx + 1) % speeds.length];
+            speedBtn.textContent = playbackSpeed + 'x';
+            audio.playbackRate = playbackSpeed;
+        };
+        settingsBtn.onclick = () => settingsModal.classList.add('visible');
+        closeSettingsBtn.onclick = () => settingsModal.classList.remove('visible');
+        reauthToast.onclick = signIn;
+    }
+
+    function loadCachedPlaylist() {
+        var saved = localStorage.getItem('playlist');
+        if (saved) {
+            playlist = JSON.parse(saved);
+            renderPlaylist();
+        }
+    }
+
+    init();
+    </script>
 </body>
 </html>
