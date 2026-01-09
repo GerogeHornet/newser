@@ -13,19 +13,14 @@
             --blue: #6d9eeb; --orange: #ff9500; --trending-red: #ff3b30; --checkmark-green: #32d74b;
         }
         
-        /* NO-COPY RULES FOR IOS Headlines */
         body { 
-            font-family: -apple-system, sans-serif; 
-            background: var(--ios-bg); color: var(--ios-text); 
+            font-family: -apple-system, sans-serif; background: var(--ios-bg); color: var(--ios-text); 
             margin: 0; padding: env(safe-area-inset-top) 16px 100px 16px; 
-            -webkit-tap-highlight-color: transparent;
-            -webkit-user-select: none;
-            user-select: none;
+            -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none;
         }
         
         .modal-body { -webkit-user-select: text; user-select: text; }
         body.no-scroll { overflow: hidden; position: fixed; width: 100%; }
-        
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--ios-accent); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -37,9 +32,12 @@
         header h1 { font-size: 42px; font-weight: 800; margin: 0; cursor: pointer; letter-spacing: -1px; }
         .update-time { font-size: 14px; color: var(--ios-secondary); margin-bottom: 20px; font-weight: 500; }
         h2 { font-size: 24px; font-weight: 700; margin: 35px 0 15px 0; display: flex; align-items: center; gap: 10px; }
-        
         .list-group { border-radius: 14px; overflow: hidden; background: var(--ios-card); margin-bottom: 20px; }
+        
+        /* BORDERS RESTORED */
         .article-card { padding: 22px 18px; border-bottom: 0.5px solid var(--separator); transition: transform 0.1s ease; }
+        .alert-border { border: 2.5px solid var(--red); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); transition: transform 0.1s ease; }
+        .trending-border { border: 2.5px solid var(--orange); border-radius: 18px; margin-bottom: 15px; padding: 22px 18px; background: var(--ios-bg); transition: transform 0.1s ease; }
         .card-active { transform: scale(0.96); } 
 
         .card-main-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
@@ -51,8 +49,11 @@
         .notif-box { background: var(--green) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
         
-        #later-empty { background: #2c2c2e; padding: 30px; border-radius: 14px; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 18px; display: none; margin-top: 20px; }
+        .source-list { display: none; margin-top: 15px; padding-top: 15px; border-top: 0.5px solid var(--separator); width: 100%; }
+        .source-link { display: block; color: var(--blue) !important; font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 15px; text-decoration: none !important; }
+        .arrow-icon { font-size: 12px; margin-left: 6px; }
 
+        #later-empty { background: #2c2c2e; padding: 30px; border-radius: 14px; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 18px; display: none; margin-top: 20px; }
         #action-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10003; display: none; }
         #action-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #1c1c1e; border-top-left-radius: 20px; border-top-right-radius: 20px; z-index: 10004; display: none; flex-direction: column; padding: 20px; padding-bottom: 40px; animation: slideIn 0.3s ease; }
         @keyframes slideIn { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -93,15 +94,17 @@
 
     <div id="view-now" style="display:none;">
         <header><h1 onclick="refreshFeedOnly()">Newser</h1><div id="update-display" class="update-time"></div></header>
-        <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;"><div style="font-size: 50px; margin-bottom: 20px;">🎉</div><div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div><button id="undo-btn" onclick="apiAction('undo')">Undo</button></div>
-        <div id="article-sections">
-            <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
-            <section id="notif-sec" style="display:none;"><h2>📣 Notifications</h2><div id="notif-list"></div></section>
-            <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
-            <section id="alert-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alert-list"></div></section>
-            <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
-            <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-count" style="background:var(--trending-red); color:white; width:28px; height:28px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">0</span></h2><div id="headlines-list" class="list-group"></div></section>
-            <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
+        <div id="content">
+            <div id="empty-state" style="display:none; text-align:center; padding: 100px 20px;"><div style="font-size: 50px; margin-bottom: 20px;">🎉</div><div style="font-size: 24px; font-weight: 700; margin-bottom: 10px;">All Caught Up!</div><button id="undo-btn" onclick="apiAction('undo')">Undo</button></div>
+            <div id="article-sections">
+                <section id="death-sec" style="display:none;"><h2>💀 Death</h2><div id="death-list"></div></section>
+                <section id="notif-sec" style="display:none;"><h2>📣 Notifications</h2><div id="notif-list"></div></section>
+                <section id="updates-sec" style="display:none;"><h2>✨ Updates</h2><div id="updates-list"></div></section>
+                <section id="alert-sec" style="display:none;"><h2>🚨 Alerts</h2><div id="alert-list"></div></section>
+                <section id="trending-sec" style="display:none;"><h2>🔥 Trending</h2><div id="trending-list"></div></section>
+                <section id="headlines-sec"><h2>🗞️ Headlines <span id="headline-count" style="background:var(--trending-red); color:white; width:28px; height:28px; border-radius:14px; display:inline-flex; align-items:center; justify-content:center; font-size:16px;">0</span></h2><div id="headlines-list" class="list-group"></div></section>
+                <button class="done-btn" onclick="apiAction('clear')">Done for Now</button>
+            </div>
         </div>
     </div>
     
@@ -159,18 +162,46 @@
             return div; 
         }
         if (r === -5) { div.className = 'update-box'; const row = document.createElement('div'); row.className = 'card-main-row'; const txt = document.createElement('div'); txt.style.flex = "1"; txt.innerText = stripEmojis(item.title); txt.onclick = () => openModal(item.title, item.link); row.appendChild(txt); row.appendChild(createCircle(item, isSaved)); div.appendChild(row); return div; }
-        const isTrending = r >= 2, isAlert = r === -99; div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
+        
+        const isTrending = r >= 2, isAlert = r === -99; 
+        div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
+        
         div.oncontextmenu = (e) => e.preventDefault();
         div.ontouchstart = () => { div.classList.add('card-active'); pressTimer = setTimeout(() => { div.classList.remove('card-active'); openActionSheet(item.title); }, 600); };
         div.ontouchend = () => { div.classList.remove('card-active'); clearTimeout(pressTimer); };
-        let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
+        
+        let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{title: item.title, link: item.link}]; }
         const mainRow = document.createElement('div'); mainRow.className = 'card-main-row';
         const content = document.createElement('div'); content.className = 'article-content';
-        const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : "";
-        content.innerHTML = `<div class="article-link" onclick="window.open('${links[0].link}', '_blank')">${stripEmojis(item.title)}</div><div class="meta">${isAlert ? '<span class="badge">ALERT</span>' : (isTrending ? `<span class="badge">${r} Sources</span>` : '')} ${timeStr}</div>`;
+        
+        function formatDate(iso) {
+            if(!iso) return "";
+            const d = new Date(iso), now = new Date();
+            const isToday = d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            if (isToday) return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+            return `${d.toLocaleDateString('en-US', { weekday: 'long' })} ${d.getMonth() + 1}/${d.getDate()} ${d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true })}`;
+        }
+
+        const badgeHtml = isAlert ? '<span class="badge">ALERT</span>' : (isTrending ? `<span class="badge">${r} Sources</span>` : '');
+        const arrowSpan = (isTrending || isAlert) && links.length > 1 ? '<span class="arrow-icon">▶</span>' : '';
+        
+        content.innerHTML = `<div class="article-link" onclick="window.open('${links[0].link}', '_blank')">${stripEmojis(item.title)}</div><div class="meta">${badgeHtml} ${formatDate(item.timestamp)}${arrowSpan}</div>`;
         mainRow.appendChild(content);
         if (showCircle || currentTab === 'later' || (!isTrending && !isAlert)) mainRow.appendChild(createCircle(item, isSaved));
         div.appendChild(mainRow);
+
+        if ((isTrending || isAlert) && links.length > 1) {
+            const list = document.createElement('div'); list.className = 'source-list';
+            links.slice(1).forEach(l => { list.innerHTML += `<a class="source-link" href="${l.link}" target="_blank">• ${l.title}</a>`; });
+            div.appendChild(list);
+            content.querySelector('.meta').onclick = (e) => { 
+                e.stopPropagation(); 
+                const isV = list.style.display === 'block'; 
+                list.style.display = isV ? 'none' : 'block'; 
+                content.querySelector('.arrow-icon').innerText = isV ? '▶' : '▼'; 
+            };
+        }
+        
         return div;
     }
 
@@ -188,7 +219,6 @@
             document.getElementById('loading-overlay').style.display = 'none';
             document.getElementById('update-display').innerText = "Last checked " + (data.refreshTime ? new Date(data.refreshTime).toLocaleTimeString() : "");
             
-            // Empty State Logic for Now Tab
             if (data.articles.length === 0) {
                 document.getElementById('empty-state').style.display = 'block';
                 document.getElementById('article-sections').style.display = 'none';
@@ -197,7 +227,6 @@
                 document.getElementById('article-sections').style.display = 'block';
             }
 
-            // Empty State Logic for Later Tab
             document.getElementById('later-empty').style.display = globalLaterData.length === 0 ? 'block' : 'none';
 
             const mapping = { death: -3, notif: -4, updates: -5, alert: -99, trending: 2, headlines: 1 };
