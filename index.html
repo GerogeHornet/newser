@@ -175,7 +175,7 @@
         div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
         
         div.oncontextmenu = (e) => e.preventDefault();
-        div.ontouchstart = () => { div.classList.add('card-active'); pressTimer = setTimeout(() => { div.classList.remove('card-active'); openActionSheet(item.title); }, 600); };
+        div.ontouchstart = () => { div.classList.add('card-active'); pressTimer = setTimeout(() => { div.classList.remove('card-active'); openActionSheet(item.title); }, 1200); };
         div.ontouchend = () => { div.classList.remove('card-active'); clearTimeout(pressTimer); };
         
         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
