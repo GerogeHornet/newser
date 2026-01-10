@@ -20,7 +20,7 @@
         }
         
         .modal-body { -webkit-user-select: text; user-select: text; }
-        body.no-scroll { overflow: hidden; position: fixed; width: 100%; }
+        body.no-scroll { overflow: hidden; position: fixed; width: 100%; top: 0; left: 0; right: 0; }
         
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--ios-accent); border-radius: 50%; animation: spin 1s linear infinite; }
@@ -51,7 +51,7 @@
         .update-box { background: var(--blue) !important; padding: 22px 18px; border-radius: 14px; margin-bottom: 12px; font-weight: 700; color: #fff; font-size: 20px; cursor: pointer; }
         
         .source-list { display: none; margin-top: 15px; padding-top: 15px; border-top: 0.5px solid var(--separator); width: 100%; }
-        .source-link { display: block; color: var(--ios-accent) !important; font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 15px; text-decoration: none !important; }
+        .source-link { display: block; color: var(--blue) !important; font-size: 17px; font-weight: 700; line-height: 1.4; margin-bottom: 15px; text-decoration: none !important; }
         .arrow-icon { font-size: 12px; margin-left: 6px; }
 
         #later-empty { background: #2c2c2e; padding: 30px; border-radius: 14px; text-align: center; color: var(--ios-secondary); font-weight: 600; font-size: 18px; display: none; margin-top: 20px; }
@@ -125,11 +125,31 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbyLYvUaKUZ2QLz0qFtXnl7fbZ7-EyX9w0HLQ-G2Y5hWqBEPPk0GHzzTjebaHdn4ZVupTA/exec";
     let currentTab = 'now'; let globalLaterData = [];
     let pressTimer; let currentTargetHeadline = "";
+    let lastScrollY = 0;
 
     function stripEmojis(str) { return str.toString().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '').trim(); }
-    function openModal(title, content) { document.getElementById('modal-title').innerText = stripEmojis(title); document.getElementById('modal-body').innerHTML = content.toString().replace(/\*/g, "").replace(/[\[\]]/g, "").trim(); document.getElementById('update-modal').style.display = 'flex'; document.body.classList.add('no-scroll'); }
-    function closeModal() { document.getElementById('update-modal').style.display = 'none'; document.body.classList.remove('no-scroll'); }
-    function closeAiModal() { document.getElementById('ai-result-modal').style.display = 'none'; document.body.classList.remove('no-scroll'); }
+    
+    // MODAL SCROLL MANAGEMENT
+    function openModal(title, content) { 
+        lastScrollY = window.scrollY;
+        document.getElementById('modal-title').innerText = stripEmojis(title); 
+        document.getElementById('modal-body').innerHTML = content.toString().replace(/\*/g, "").replace(/[\[\]]/g, "").trim(); 
+        document.getElementById('update-modal').style.display = 'flex'; 
+        document.body.classList.add('no-scroll'); 
+        document.body.style.top = `-${lastScrollY}px`;
+    }
+    
+    function closeModal() { 
+        document.getElementById('update-modal').style.display = 'none'; 
+        document.body.classList.remove('no-scroll'); 
+        window.scrollTo(0, lastScrollY);
+    }
+    
+    function closeAiModal() { 
+        document.getElementById('ai-result-modal').style.display = 'none'; 
+        document.body.classList.remove('no-scroll'); 
+        window.scrollTo(0, lastScrollY);
+    }
 
     function switchViewOnly(tab) { currentTab = tab; document.getElementById('view-now').style.display = tab === 'now' ? 'block' : 'none'; document.getElementById('view-later').style.display = tab === 'later' ? 'block' : 'none'; document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active')); document.getElementById('tab-' + tab).classList.add('active'); window.scrollTo(0,0); }
     function refreshFeedOnly() { document.getElementById('loading-overlay').style.display = 'flex'; load(); }
@@ -141,6 +161,7 @@
 
     async function triggerAi(type) {
         closeActionSheet();
+        lastScrollY = window.scrollY;
         const bar = document.getElementById('working-bar');
         bar.style.display = 'flex';
         try {
@@ -151,14 +172,13 @@
             document.getElementById('ai-body').innerHTML = text;
             document.getElementById('ai-result-modal').style.display = 'flex';
             document.body.classList.add('no-scroll');
+            document.body.style.top = `-${lastScrollY}px`;
         } catch(e) { bar.style.display = 'none'; alert("AI Error"); }
     }
 
     function renderItem(item, showCircle = false) {
         const div = document.createElement('div'), r = parseInt(item.repeats), isSaved = globalLaterData.some(l => l.title.trim() === item.title.trim());
-        
         if (r === -3) { div.className = 'death-box'; div.innerText = stripEmojis(item.title); let l = JSON.parse(item.link || "[]"); if(l[0]) div.onclick = () => window.open(l[0].link, '_blank'); return div; }
-        
         if (r === -4) { 
             div.className = 'notif-box'; 
             const txt = document.createElement('div'); txt.innerText = item.title; txt.style.flex = "1";
@@ -168,15 +188,14 @@
             if (currentTab === 'later') div.appendChild(createCircle(item, isSaved));
             return div; 
         }
-
         if (r === -5) { div.className = 'update-box'; const row = document.createElement('div'); row.className = 'card-main-row'; const txt = document.createElement('div'); txt.style.flex = "1"; txt.innerText = stripEmojis(item.title); txt.onclick = () => openModal(item.title, item.link); row.appendChild(txt); row.appendChild(createCircle(item, isSaved)); div.appendChild(row); return div; }
         
         const isTrending = r >= 2, isAlert = r === -99; 
         div.className = isAlert ? 'alert-border' : (isTrending ? 'trending-border' : 'article-card');
         
         div.oncontextmenu = (e) => e.preventDefault();
-        div.ontouchstart = () => { div.classList.add('card-active'); pressTimer = setTimeout(() => { div.classList.remove('card-active'); openActionSheet(item.title); }, 1200); };
-        div.ontouchend = () => { div.classList.remove('card-active'); clearTimeout(pressTimer); };
+        div.ontouchstart = () => { pressTimer = setTimeout(() => { openActionSheet(item.title); }, 600); };
+        div.ontouchend = () => { clearTimeout(pressTimer); };
         
         let links = []; try { links = JSON.parse(item.link); } catch(e) { links = [{link: item.link}]; }
         const mainRow = document.createElement('div'); mainRow.className = 'card-main-row';
